@@ -104,7 +104,9 @@ def home():
 
             <h2>Photography.</h2>
         </section>
-
+<section class="gallery">
+    <img src="/static/images/DSC00686-2.JPG" alt="Martin Photography">
+</section>
         <section class="about" id="about">
             <h2>About Me</h2>
 
