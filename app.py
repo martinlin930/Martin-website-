@@ -82,7 +82,17 @@ def home():
                 border-top: 1px solid #222;
                 color: #555;
             }
-        </style>
+
+        .gallery {
+    padding: 40px 7%;
+}
+
+.gallery img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+    </sytle>
     </head>
 
     <body>
