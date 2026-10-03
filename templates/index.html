@@ -1,19 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1, viewport-fit=cover">
 
-    <title>Martin — Photography</title>
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, viewport-fit=cover"
+    >
 
-    <meta name="description"
-          content="Martin Photography">
+    <title>Martin Photography</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossorigin>
+    <meta
+        name="description"
+        content="Martin Photography — Moments through my perspective."
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
 
     <link
         href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500&family=Outfit:wght@800&display=swap"
@@ -25,8 +37,7 @@
         :root {
             --paper: #f3f3ee;
             --ink: #0b0b0b;
-            --void: #000000;
-            --gutter: clamp(16px, 2.6vw, 40px);
+            --gutter: clamp(22px, 3vw, 44px);
 
             --display:
                 "Outfit",
@@ -51,14 +62,21 @@
         body {
             margin: 0;
             padding: 0;
-            background: #000;
+
+            width: 100%;
+            min-height: 100%;
+
+            background: var(--paper);
         }
 
 
         body {
             font-family: var(--body);
+
             color: var(--ink);
+
             -webkit-font-smoothing: antialiased;
+
             overflow-x: hidden;
         }
 
@@ -66,26 +84,28 @@
         .hero {
             position: relative;
 
+            width: 100%;
+
             height: 100vh;
             height: 100svh;
 
-            min-height: 480px;
+            min-height: 540px;
 
             overflow: hidden;
 
-            background: #000;
+            background: var(--paper);
 
             isolation: isolate;
 
             touch-action: pan-y;
-
-            -webkit-tap-highlight-color: transparent;
         }
 
 
-        /* VIDEO */
+        /* =========================
+           PHOTO UNDER THE PAPER
+        ========================= */
 
-        .hero__video {
+        .hero__photo {
             position: absolute;
 
             inset: 0;
@@ -95,15 +115,19 @@
 
             object-fit: cover;
 
+            object-position: center;
+
             z-index: 0;
 
             pointer-events: none;
 
-            background: #000;
+            background: var(--paper);
         }
 
 
-        /* PAPER */
+        /* =========================
+           FALLBACK PAPER
+        ========================= */
 
         .hero__paper {
             position: absolute;
@@ -121,23 +145,23 @@
 
 
         .hero__title {
+            margin: 0;
+
             font-family: var(--display);
 
             font-weight: 800;
 
-            font-size: 19vw;
+            font-size: 18vw;
 
             line-height: 1;
 
-            letter-spacing: -0.02em;
+            letter-spacing: -0.055em;
 
             color: var(--ink);
 
             white-space: nowrap;
 
             user-select: none;
-
-            margin: 0;
         }
 
 
@@ -151,7 +175,9 @@
         }
 
 
-        /* WEBGL */
+        /* =========================
+           WEBGL CANVAS
+        ========================= */
 
         .hero__reveal {
             position: absolute;
@@ -169,7 +195,9 @@
         }
 
 
-        /* UI */
+        /* =========================
+           UI
+        ========================= */
 
         .chrome {
             position: absolute;
@@ -178,12 +206,6 @@
 
             z-index: 3;
 
-            pointer-events: none;
-
-            mix-blend-mode: difference;
-
-            color: #fff;
-
             padding: var(--gutter);
 
             display: flex;
@@ -191,6 +213,12 @@
             flex-direction: column;
 
             justify-content: space-between;
+
+            pointer-events: none;
+
+            mix-blend-mode: difference;
+
+            color: #ffffff;
         }
 
 
@@ -202,55 +230,60 @@
         .intro__lede {
             margin: 0;
 
-            font-size: clamp(16px, 1.35vw, 22px);
+            font-size: clamp(18px, 1.6vw, 26px);
 
-            line-height: 1.12;
+            line-height: 1.03;
 
-            letter-spacing: -0.01em;
+            letter-spacing: -0.025em;
 
             font-weight: 400;
         }
 
 
-        /* BUTTON */
+        /* =========================
+           CTA
+        ========================= */
 
         .cta {
             display: inline-flex;
 
             align-items: center;
 
-            gap: 10px;
+            gap: 13px;
 
-            margin-top: clamp(16px, 1.6vw, 26px);
+            margin-top: 28px;
 
-            padding: 11px 16px 11px 18px;
+            padding: 14px 21px 14px 23px;
 
             border-radius: 999px;
 
-            background: #fff;
+            background: #ffffff;
 
-            color: #000;
+            color: #000000;
 
-            font: 500 11px/1 var(--body);
+            font:
+                500 12px/1
+                var(--body);
 
-            letter-spacing: 0.06em;
+            letter-spacing: 0.07em;
 
             text-transform: uppercase;
 
             text-decoration: none;
 
             transition:
-                transform .35s cubic-bezier(.2,.8,.2,1);
+                transform .35s
+                cubic-bezier(.2,.8,.2,1);
         }
 
 
         .cta svg {
-            width: 14px;
-
-            height: 14px;
+            width: 15px;
+            height: 15px;
 
             transition:
-                transform .35s cubic-bezier(.2,.8,.2,1);
+                transform .35s
+                cubic-bezier(.2,.8,.2,1);
         }
 
 
@@ -264,15 +297,9 @@
         }
 
 
-        .cta:focus-visible,
-        .links a:focus-visible {
-            outline: 2px solid #fff;
-
-            outline-offset: 3px;
-        }
-
-
-        /* BOTTOM */
+        /* =========================
+           BOTTOM
+        ========================= */
 
         .foot {
             display: flex;
@@ -281,9 +308,9 @@
 
             align-items: flex-end;
 
-            gap: 16px;
+            gap: 20px;
 
-            font-size: 11px;
+            font-size: 12px;
 
             line-height: 1.2;
         }
@@ -292,9 +319,9 @@
         .links {
             display: flex;
 
-            gap: 8px;
-
             align-items: center;
+
+            gap: 10px;
 
             font-weight: 500;
 
@@ -314,18 +341,20 @@
         .links a:hover {
             text-decoration: underline;
 
-            text-underline-offset: 3px;
+            text-underline-offset: 4px;
         }
 
 
-        /* HINT */
+        /* =========================
+           HINT
+        ========================= */
 
         .hint {
             position: absolute;
 
             left: 50%;
 
-            bottom: calc(var(--gutter) + 1px);
+            bottom: calc(var(--gutter) + 2px);
 
             transform: translateX(-50%);
 
@@ -333,11 +362,11 @@
 
             font-size: 11px;
 
-            letter-spacing: 0.06em;
+            letter-spacing: 0.08em;
 
             text-transform: uppercase;
 
-            opacity: .5;
+            opacity: .45;
 
             transition: opacity .6s ease;
 
@@ -361,6 +390,7 @@
                 display: none;
             }
 
+
             .hint .touch {
                 display: inline;
             }
@@ -368,40 +398,83 @@
         }
 
 
+        /* =========================
+           MOBILE
+        ========================= */
+
         @media (max-width: 767px) {
 
-            .hero__video {
-                inset: auto;
+            :root {
+                --gutter: 30px;
+            }
 
-                left: 0;
 
-                top: 50%;
+            html,
+            body {
+                background: var(--paper);
+            }
 
-                width: 100%;
 
-                height: auto;
+            .hero {
+                height: 100svh;
 
-                aspect-ratio: 16 / 9;
+                min-height: 620px;
 
-                transform: translateY(-50%);
+                background: var(--paper);
+            }
 
-                object-fit: contain;
+
+            .hero__photo {
+                object-fit: cover;
+
+                object-position: center;
             }
 
 
             .intro__lede {
-                font-size: 16px;
+                font-size: 27px;
+
+                line-height: 1.02;
+            }
+
+
+            .cta {
+                margin-top: 30px;
+
+                padding: 17px 28px;
+
+                font-size: 13px;
             }
 
 
             .foot {
-                font-size: 10px;
+                font-size: 11px;
+            }
+
+
+            .links {
+                font-size: 11px;
             }
 
 
             .hint {
-                bottom:
-                    calc(var(--gutter) + 24px);
+                bottom: calc(
+                    var(--gutter) + 28px
+                );
+            }
+
+        }
+
+
+        @media (max-width: 520px) {
+
+            .foot {
+                gap: 12px;
+            }
+
+
+            .links {
+                gap: 8px;
             }
 
         }
@@ -416,40 +489,45 @@
 <section
     class="hero"
     id="hero"
-    aria-label="MARTIN"
+    aria-label="Martin Photography"
 >
 
 
-    <video
-        class="hero__video"
-        id="heroVideo"
-        src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260928_183857_1e589ec6-07af-4ef6-8995-3b2e5844b5a8.mp4"
-        autoplay
-        muted
-        loop
-        playsinline
-        preload="auto"
-        aria-hidden="true">
-    </video>
+    <!-- YOUR PHOTO UNDER THE PAPER -->
 
+    <img
+        class="hero__photo"
+        id="heroPhoto"
+        src="/static/images/DSC00686-2.JPG"
+        alt=""
+        aria-hidden="true"
+    >
+
+
+    <!-- FALLBACK PAPER -->
 
     <div class="hero__paper">
 
         <h1
             class="hero__title"
-            id="heroTitle">
+            id="heroTitle"
+        >
             MARTIN
         </h1>
 
     </div>
 
 
+    <!-- LIQUID REVEAL -->
+
     <canvas
         class="hero__reveal"
         id="heroReveal"
-        aria-hidden="true">
-    </canvas>
+        aria-hidden="true"
+    ></canvas>
 
+
+    <!-- UI -->
 
     <div class="chrome">
 
@@ -464,14 +542,16 @@
 
             <a
                 class="cta"
-                href="/work">
+                href="/work"
+            >
 
                 View my work
 
                 <svg
                     viewBox="0 0 16 16"
                     fill="none"
-                    aria-hidden="true">
+                    aria-hidden="true"
+                >
 
                     <path
                         d="M2 8h11m0 0L8.5 3.5M13 8l-4.5 4.5"
@@ -495,13 +575,20 @@
 
             <nav
                 class="links"
-                aria-label="Social">
+                aria-label="Social"
+            >
 
-                <a href="#">Instagram</a>
+                <a href="#">
+                    Instagram
+                </a>
 
-                <span aria-hidden="true">/</span>
+                <span aria-hidden="true">
+                    /
+                </span>
 
-                <a href="#">Contact</a>
+                <a href="#">
+                    Contact
+                </a>
 
             </nav>
 
@@ -511,7 +598,8 @@
         <p
             class="hint"
             id="hint"
-            aria-hidden="true">
+            aria-hidden="true"
+        >
 
             <span class="mouse">
                 Move to reveal
@@ -531,13 +619,15 @@
 
 
 <script>
+
 (() => {
+
+    /* =========================
+       ELEMENTS
+    ========================= */
 
     const hero =
         document.getElementById("hero");
-
-    const video =
-        document.getElementById("heroVideo");
 
     const canvas =
         document.getElementById("heroReveal");
@@ -546,15 +636,9 @@
         document.getElementById("hint");
 
 
-    const WORD = {
-        x0: 0.055,
-        x1: 0.945,
-        y0: 0.33,
-        y1: 0.665
-    };
-
-
-    const VIDEO_AR = 16 / 9;
+    /* =========================
+       CONSTANTS
+    ========================= */
 
     const PAPER = [
         0xf3 / 255,
@@ -562,16 +646,24 @@
         0xee / 255
     ];
 
+
     const INK = [
         0x0b / 255,
         0x0b / 255,
         0x0b / 255
     ];
 
-    const TRAIL_SCALE = 0.35;
+
+    const TRAIL_SCALE =
+        0.35;
+
 
     const DPR =
-        Math.min(window.devicePixelRatio || 1, 2);
+        Math.min(
+            window.devicePixelRatio || 1,
+            2
+        );
+
 
     const reduceMotion =
         window.matchMedia(
@@ -579,107 +671,94 @@
         ).matches;
 
 
+    /* =========================
+       SIZE
+    ========================= */
+
     let W = 1;
+
     let H = 1;
 
-    let videoRect;
+
+    let baseRadius = 60;
 
 
-    const trailCv =
+    /* =========================
+       OFFSCREEN CANVASES
+    ========================= */
+
+    const textCanvas =
         document.createElement("canvas");
 
-    const trailCtx =
-        trailCv.getContext("2d");
-
-
-    const textCv =
-        document.createElement("canvas");
 
     const textCtx =
-        textCv.getContext("2d");
+        textCanvas.getContext("2d");
 
 
-    let baseRadius = 50;
+    const trailCanvas =
+        document.createElement("canvas");
 
 
-    let pointer = {
+    const trailCtx =
+        trailCanvas.getContext("2d");
+
+
+    /* =========================
+       POINTER
+    ========================= */
+
+    const pointer = {
+
         active: false,
+
         x: 0,
         y: 0,
+
         px: 0,
         py: 0,
+
         vx: 0,
         vy: 0
+
     };
 
 
     let droplets = [];
 
+
     let lastMove =
         performance.now();
 
 
-    function clamp(v, a, b) {
+    /* =========================
+       HELPERS
+    ========================= */
+
+    function clamp(
+        value,
+        min,
+        max
+    ) {
 
         return Math.max(
-            a,
-            Math.min(b, v)
+            min,
+            Math.min(
+                max,
+                value
+            )
         );
 
     }
 
 
-    function getVideoRect() {
-
-        if (W < 768) {
-
-            const h =
-                W / VIDEO_AR;
-
-            return {
-                x: 0,
-                y: (H - h) / 2,
-                w: W,
-                h
-            };
-
-        }
-
-
-        let w;
-        let h;
-
-
-        if (W / H > VIDEO_AR) {
-
-            w = W;
-            h = W / VIDEO_AR;
-
-        } else {
-
-            h = H;
-            w = H * VIDEO_AR;
-
-        }
-
-
-        return {
-
-            x: (W - w) / 2,
-
-            y: (H - h) / 2,
-
-            w,
-            h
-        };
-
-    }
-
+    /* =========================
+       TRAIL STAMP
+    ========================= */
 
     function stamp(
         x,
         y,
-        r,
+        radius,
         vx,
         vy,
         alpha
@@ -688,57 +767,108 @@
         const sx =
             x * TRAIL_SCALE;
 
+
         const sy =
             y * TRAIL_SCALE;
+
 
         const sr =
             Math.max(
                 1,
-                r * TRAIL_SCALE
+                radius *
+                TRAIL_SCALE
             );
 
 
-        const k = 0.012;
+        const k =
+            0.012;
 
 
-        const R = Math.round(
-            128 +
-            clamp(vx * k, -1, 1) * 127
-        );
+        const red =
+            Math.round(
+
+                128 +
+
+                clamp(
+                    vx * k,
+                    -1,
+                    1
+                ) *
+
+                127
+
+            );
 
 
-        const G = Math.round(
-            128 +
-            clamp(vy * k, -1, 1) * 127
-        );
+        const green =
+            Math.round(
+
+                128 +
+
+                clamp(
+                    vy * k,
+                    -1,
+                    1
+                ) *
+
+                127
+
+            );
 
 
         const gradient =
             trailCtx.createRadialGradient(
+
                 sx,
                 sy,
                 0,
+
                 sx,
                 sy,
                 sr
+
             );
 
 
         gradient.addColorStop(
+
             0,
-            `rgba(${R},${G},0,${alpha})`
+
+            `rgba(
+                ${red},
+                ${green},
+                0,
+                ${alpha}
+            )`
+
         );
 
 
         gradient.addColorStop(
+
             0.5,
-            `rgba(${R},${G},0,${alpha * .85})`
+
+            `rgba(
+                ${red},
+                ${green},
+                0,
+                ${alpha * .85}
+            )`
+
         );
 
 
         gradient.addColorStop(
+
             1,
-            `rgba(${R},${G},0,0)`
+
+            `rgba(
+                ${red},
+                ${green},
+                0,
+                0
+            )`
+
         );
 
 
@@ -748,6 +878,7 @@
 
         trailCtx.beginPath();
 
+
         trailCtx.arc(
             sx,
             sy,
@@ -756,36 +887,53 @@
             Math.PI * 2
         );
 
+
         trailCtx.fill();
 
     }
 
 
+    /* =========================
+       UPDATE TRAIL
+    ========================= */
+
     function updateTrail(dt) {
 
-        const f =
+        const frame =
             dt * 60;
 
+
+        /*
+        fade old trail
+        */
 
         trailCtx.globalCompositeOperation =
             "destination-out";
 
 
         trailCtx.fillStyle =
-            `rgba(0,0,0,${
-                1 -
-                Math.pow(
-                    1 - 0.03,
-                    f
-                )
-            })`;
+            `rgba(
+                0,
+                0,
+                0,
+                ${
+                    1 -
+                    Math.pow(
+                        1 - 0.03,
+                        frame
+                    )
+                }
+            )`;
 
 
         trailCtx.fillRect(
+
             0,
             0,
-            trailCv.width,
-            trailCv.height
+
+            trailCanvas.width,
+            trailCanvas.height
+
         );
 
 
@@ -793,62 +941,108 @@
             "source-over";
 
 
-        if (pointer.active) {
+        /*
+        pointer stroke
+        */
+
+        if (
+            pointer.active
+        ) {
 
             const dx =
                 pointer.x -
                 pointer.px;
+
 
             const dy =
                 pointer.y -
                 pointer.py;
 
 
-            const dist =
-                Math.hypot(dx, dy);
+            const distance =
+                Math.hypot(
+                    dx,
+                    dy
+                );
 
 
-            if (dist > 0.5) {
+            if (
+                distance >
+                0.5
+            ) {
 
                 pointer.vx +=
+
                     (
-                        dx / f -
+                        dx /
+                        Math.max(
+                            frame,
+                            0.001
+                        ) -
+
                         pointer.vx
-                    ) * 0.5;
+                    ) *
+
+                    0.5;
 
 
                 pointer.vy +=
+
                     (
-                        dy / f -
+                        dy /
+                        Math.max(
+                            frame,
+                            0.001
+                        ) -
+
                         pointer.vy
-                    ) * 0.5;
+                    ) *
+
+                    0.5;
 
 
                 const speed =
                     Math.hypot(
+
                         pointer.vx,
+
                         pointer.vy
+
                     );
 
 
-                const R =
+                const radius =
+
                     baseRadius *
+
                     (
                         0.75 +
+
                         Math.min(
                             speed / 45,
                             1
-                        ) * 0.75
+                        ) *
+
+                        0.75
                     );
 
 
                 const steps =
                     Math.max(
+
                         1,
+
                         Math.ceil(
-                            dist /
-                            (R * 0.22)
+
+                            distance /
+
+                            (
+                                radius *
+                                0.22
+                            )
+
                         )
+
                     );
 
 
@@ -870,49 +1064,67 @@
                         pointer.py +
                         dy * t,
 
-                        R,
+                        radius,
 
                         pointer.vx * 6,
 
                         pointer.vy * 6,
 
-                        0.9
+                        0.92
 
                     );
 
                 }
 
 
-                if (!reduceMotion) {
+                /*
+                droplets
+                */
 
-                    const n =
+                if (
+                    !reduceMotion
+                ) {
+
+                    const count =
                         Math.min(
+
                             3,
+
                             Math.floor(
                                 speed / 14
                             )
+
                         );
 
 
                     for (
                         let i = 0;
-                        i < n;
+                        i < count;
                         i++
                     ) {
 
                         const angle =
+
                             Math.atan2(
+
                                 pointer.vy,
+
                                 pointer.vx
+
                             ) +
+
                             (
                                 Math.random() -
                                 0.5
-                            ) * 1.4;
+                            ) *
+
+                            1.4;
 
 
-                        const sp =
+                        const dropSpeed =
+
                             speed *
+
                             (
                                 0.35 +
                                 Math.random() *
@@ -923,34 +1135,57 @@
                         droplets.push({
 
                             x:
+
                                 pointer.x +
+
                                 (
                                     Math.random() -
                                     0.5
-                                ) * R,
+                                ) *
+
+                                radius,
+
 
                             y:
+
                                 pointer.y +
+
                                 (
                                     Math.random() -
                                     0.5
-                                ) * R,
+                                ) *
+
+                                radius,
+
 
                             vx:
-                                Math.cos(angle) *
-                                sp,
+
+                                Math.cos(
+                                    angle
+                                ) *
+
+                                dropSpeed,
+
 
                             vy:
-                                Math.sin(angle) *
-                                sp,
 
-                            r:
-                                R *
+                                Math.sin(
+                                    angle
+                                ) *
+
+                                dropSpeed,
+
+
+                            radius:
+
+                                radius *
+
                                 (
-                                    0.25 +
+                                    0.20 +
                                     Math.random() *
-                                    0.45
+                                    0.35
                                 ),
+
 
                             life: 1
 
@@ -965,8 +1200,12 @@
                     ) {
 
                         droplets.splice(
+
                             0,
-                            droplets.length - 90
+
+                            droplets.length -
+                            90
+
                         );
 
                     }
@@ -977,19 +1216,29 @@
                 pointer.px =
                     pointer.x;
 
+
                 pointer.py =
                     pointer.y;
 
-            } else {
+            }
 
-                pointer.vx *= 0.8;
+            else {
 
-                pointer.vy *= 0.8;
+                pointer.vx *=
+                    0.8;
+
+
+                pointer.vy *=
+                    0.8;
 
             }
 
         }
 
+
+        /*
+        update droplets
+        */
 
         for (
             let i =
@@ -1000,47 +1249,62 @@
             i--
         ) {
 
-            const d =
+            const drop =
                 droplets[i];
 
 
-            d.x +=
-                d.vx * f;
-
-            d.y +=
-                d.vy * f;
+            drop.x +=
+                drop.vx *
+                frame;
 
 
-            d.vx *=
+            drop.y +=
+                drop.vy *
+                frame;
+
+
+            drop.vx *=
                 Math.pow(
-                    0.9,
-                    f
+                    0.90,
+                    frame
                 );
 
 
-            d.vy =
-                d.vy *
+            drop.vy =
+
+                drop.vy *
+
                 Math.pow(
-                    0.9,
-                    f
+                    0.90,
+                    frame
                 ) +
-                0.25 * f;
+
+                0.25 *
+                frame;
 
 
-            d.life -=
-                0.022 * f;
+            drop.life -=
+                0.022 *
+                frame;
 
 
-            d.r *=
+            drop.radius *=
                 Math.pow(
                     0.985,
-                    f
+                    frame
                 );
 
 
             if (
-                d.life <= 0 ||
-                d.r < 2
+
+                drop.life <=
+                0
+
+                ||
+
+                drop.radius <
+                2
+
             ) {
 
                 droplets.splice(
@@ -1048,18 +1312,27 @@
                     1
                 );
 
+
                 continue;
 
             }
 
 
             stamp(
-                d.x,
-                d.y,
-                d.r,
-                d.vx * 6,
-                d.vy * 6,
-                0.85 * d.life
+
+                drop.x,
+
+                drop.y,
+
+                drop.radius,
+
+                drop.vx * 6,
+
+                drop.vy * 6,
+
+                0.85 *
+                drop.life
+
             );
 
         }
@@ -1067,22 +1340,48 @@
     }
 
 
-    function move(x, y) {
+    /* =========================
+       POINTER INPUT
+    ========================= */
 
-        if (!pointer.active) {
+    function onMove(
+        x,
+        y
+    ) {
 
-            pointer.active = true;
+        if (
+            !pointer.active
+        ) {
 
-            pointer.x = x;
-            pointer.y = y;
+            pointer.active =
+                true;
 
-            pointer.px = x;
-            pointer.py = y;
 
-        } else {
+            pointer.x =
+                x;
 
-            pointer.x = x;
-            pointer.y = y;
+
+            pointer.y =
+                y;
+
+
+            pointer.px =
+                x;
+
+
+            pointer.py =
+                y;
+
+        }
+
+        else {
+
+            pointer.x =
+                x;
+
+
+            pointer.y =
+                y;
 
         }
 
@@ -1102,33 +1401,44 @@
 
 
     hero.addEventListener(
+
         "pointermove",
+
         event => {
 
             if (
                 event.pointerType ===
                 "touch"
-            ) return;
+            ) {
+
+                return;
+
+            }
 
 
             const rect =
                 hero.getBoundingClientRect();
 
 
-            move(
+            onMove(
+
                 event.clientX -
                 rect.left,
 
                 event.clientY -
                 rect.top
+
             );
 
         }
+
     );
 
 
     hero.addEventListener(
+
         "pointerleave",
+
         event => {
 
             if (
@@ -1142,18 +1452,31 @@
             }
 
         }
+
     );
 
 
+    /* =========================
+       TOUCH
+    ========================= */
+
     hero.addEventListener(
+
         "touchstart",
+
         event => {
 
             const touch =
                 event.touches[0];
 
 
-            if (!touch) return;
+            if (
+                !touch
+            ) {
+
+                return;
+
+            }
 
 
             const rect =
@@ -1161,10 +1484,13 @@
 
 
             const x =
+
                 touch.clientX -
                 rect.left;
 
+
             const y =
+
                 touch.clientY -
                 rect.top;
 
@@ -1172,20 +1498,32 @@
             pointer.active =
                 true;
 
+
             pointer.x =
-                pointer.px = x;
+                pointer.px =
+                x;
+
 
             pointer.y =
-                pointer.py = y;
+                pointer.py =
+                y;
 
 
             stamp(
+
                 x,
+
                 y,
-                baseRadius * 1.1,
+
+                baseRadius *
+                1.1,
+
                 0,
+
                 0,
+
                 0.95
+
             );
 
 
@@ -1201,80 +1539,113 @@
             wake();
 
         },
+
         {
             passive: true
         }
+
     );
 
 
     hero.addEventListener(
+
         "touchmove",
+
         event => {
 
             const touch =
                 event.touches[0];
 
 
-            if (!touch) return;
+            if (
+                !touch
+            ) {
+
+                return;
+
+            }
 
 
             const rect =
                 hero.getBoundingClientRect();
 
 
-            move(
+            onMove(
+
                 touch.clientX -
                 rect.left,
 
                 touch.clientY -
                 rect.top
+
             );
 
         },
+
         {
             passive: true
         }
+
     );
 
 
     hero.addEventListener(
+
         "touchend",
+
         () => {
 
             pointer.active =
                 false;
 
         },
+
         {
             passive: true
         }
+
     );
 
 
-    /* WEBGL */
+    /* =========================
+       WEBGL
+    ========================= */
 
     const gl =
         canvas.getContext(
+
             "webgl",
+
             {
                 premultipliedAlpha: true,
+
                 alpha: true,
+
                 antialias: false,
+
                 depth: false
             }
+
         );
 
 
-    if (!gl) {
+    if (
+        !gl
+    ) {
 
         console.warn(
-            "WebGL unavailable."
+            "WebGL not available"
         );
+
 
         return;
 
     }
 
+
+    /* =========================
+       VERTEX SHADER
+    ========================= */
 
     const vertexSource = `
 
@@ -1286,8 +1657,11 @@
         void main() {
 
             vUv = vec2(
+
                 aPos.x * .5 + .5,
+
                 .5 - aPos.y * .5
+
             );
 
 
@@ -1302,6 +1676,10 @@
 
     `;
 
+
+    /* =========================
+       FRAGMENT SHADER
+    ========================= */
 
     const fragmentSource = `
 
@@ -1324,306 +1702,103 @@
         uniform float uTime;
 
 
-        vec3 mod289(vec3 x) {
-            return x -
-            floor(x * (1.0 / 289.0)) *
-            289.0;
-        }
+        float hash(vec2 p) {
 
+            return fract(
 
-        vec4 mod289(vec4 x) {
-            return x -
-            floor(x * (1.0 / 289.0)) *
-            289.0;
-        }
+                sin(
 
+                    dot(
 
-        vec4 permute(vec4 x) {
-            return mod289(
-                ((x * 34.0) + 1.0) * x
-            );
-        }
+                        p,
 
-
-        vec4 taylorInvSqrt(vec4 r) {
-            return
-                1.79284291400159 -
-                0.85373472095314 * r;
-        }
-
-
-        float snoise(vec3 v) {
-
-            const vec2 C =
-                vec2(
-                    1.0 / 6.0,
-                    1.0 / 3.0
-                );
-
-            const vec4 D =
-                vec4(
-                    0.0,
-                    0.5,
-                    1.0,
-                    2.0
-                );
-
-
-            vec3 i =
-                floor(
-                    v +
-                    dot(v, C.yyy)
-                );
-
-
-            vec3 x0 =
-                v -
-                i +
-                dot(i, C.xxx);
-
-
-            vec3 g =
-                step(
-                    x0.yzx,
-                    x0.xyz
-                );
-
-
-            vec3 l =
-                1.0 - g;
-
-
-            vec3 i1 =
-                min(
-                    g.xyz,
-                    l.zxy
-                );
-
-
-            vec3 i2 =
-                max(
-                    g.xyz,
-                    l.zxy
-                );
-
-
-            vec3 x1 =
-                x0 -
-                i1 +
-                C.xxx;
-
-
-            vec3 x2 =
-                x0 -
-                i2 +
-                C.yyy;
-
-
-            vec3 x3 =
-                x0 -
-                D.yyy;
-
-
-            i =
-                mod289(i);
-
-
-            vec4 p =
-                permute(
-                    permute(
-                        permute(
-                            i.z +
-                            vec4(
-                                0.0,
-                                i1.z,
-                                i2.z,
-                                1.0
-                            )
-                        ) +
-                        i.y +
-                        vec4(
-                            0.0,
-                            i1.y,
-                            i2.y,
-                            1.0
+                        vec2(
+                            127.1,
+                            311.7
                         )
-                    ) +
-                    i.x +
-                    vec4(
+
+                    )
+
+                ) *
+
+                43758.5453123
+
+            );
+
+        }
+
+
+        float noise(vec2 p) {
+
+            vec2 i =
+                floor(p);
+
+
+            vec2 f =
+                fract(p);
+
+
+            f =
+                f *
+                f *
+                (
+                    3.0 -
+                    2.0 *
+                    f
+                );
+
+
+            float a =
+                hash(i);
+
+
+            float b =
+                hash(
+                    i +
+                    vec2(
+                        1.0,
+                        0.0
+                    )
+                );
+
+
+            float c =
+                hash(
+                    i +
+                    vec2(
                         0.0,
-                        i1.x,
-                        i2.x,
                         1.0
                     )
                 );
 
 
-            float n_ =
-                0.142857142857;
-
-
-            vec3 ns =
-                n_ *
-                D.wyz -
-                D.xzx;
-
-
-            vec4 j =
-                p -
-                49.0 *
-                floor(
-                    p *
-                    ns.z *
-                    ns.z
-                );
-
-
-            vec4 x_ =
-                floor(
-                    j * ns.z
-                );
-
-
-            vec4 y_ =
-                floor(
-                    j -
-                    7.0 * x_
-                );
-
-
-            vec4 x =
-                x_ * ns.x +
-                ns.yyyy;
-
-
-            vec4 y =
-                y_ * ns.x +
-                ns.yyyy;
-
-
-            vec4 h =
-                1.0 -
-                abs(x) -
-                abs(y);
-
-
-            vec4 b0 =
-                vec4(
-                    x.xy,
-                    y.xy
-                );
-
-
-            vec4 b1 =
-                vec4(
-                    x.zw,
-                    y.zw
-                );
-
-
-            vec4 s0 =
-                floor(b0) *
-                2.0 +
-                1.0;
-
-
-            vec4 s1 =
-                floor(b1) *
-                2.0 +
-                1.0;
-
-
-            vec4 sh =
-                -step(
-                    h,
-                    vec4(0.0)
-                );
-
-
-            vec4 a0 =
-                b0.xzyw +
-                s0.xzyw *
-                sh.xxyy;
-
-
-            vec4 a1 =
-                b1.xzyw +
-                s1.xzyw *
-                sh.zzww;
-
-
-            vec3 p0 =
-                vec3(
-                    a0.xy,
-                    h.x
-                );
-
-
-            vec3 p1 =
-                vec3(
-                    a0.zw,
-                    h.y
-                );
-
-
-            vec3 p2 =
-                vec3(
-                    a1.xy,
-                    h.z
-                );
-
-
-            vec3 p3 =
-                vec3(
-                    a1.zw,
-                    h.w
-                );
-
-
-            vec4 norm =
-                taylorInvSqrt(
-                    vec4(
-                        dot(p0,p0),
-                        dot(p1,p1),
-                        dot(p2,p2),
-                        dot(p3,p3)
+            float d =
+                hash(
+                    i +
+                    vec2(
+                        1.0,
+                        1.0
                     )
                 );
 
 
-            p0 *= norm.x;
-            p1 *= norm.y;
-            p2 *= norm.z;
-            p3 *= norm.w;
+            return mix(
 
+                mix(
+                    a,
+                    b,
+                    f.x
+                ),
 
-            vec4 m =
-                max(
-                    0.6 -
-                    vec4(
-                        dot(x0,x0),
-                        dot(x1,x1),
-                        dot(x2,x2),
-                        dot(x3,x3)
-                    ),
-                    0.0
-                );
+                mix(
+                    c,
+                    d,
+                    f.x
+                ),
 
+                f.y
 
-            m = m * m;
-
-
-            return
-                42.0 *
-                dot(
-                    m * m,
-                    vec4(
-                        dot(p0,x0),
-                        dot(p1,x1),
-                        dot(p2,x2),
-                        dot(p3,x3)
-                    )
-                );
+            );
 
         }
 
@@ -1634,7 +1809,7 @@
                 vUv;
 
 
-            vec2 asp =
+            vec2 aspect =
                 vec2(
                     uRes.x /
                     uRes.y,
@@ -1643,99 +1818,191 @@
 
 
             float n1 =
-                snoise(
-                    vec3(
-                        uv * asp * 2.6,
-                        uTime * .35
+
+                noise(
+
+                    uv *
+                    aspect *
+                    4.0 +
+
+                    vec2(
+                        uTime *
+                        .18,
+                        0.0
                     )
-                );
+
+                ) -
+
+                .5;
 
 
             float n2 =
-                snoise(
-                    vec3(
-                        uv * asp * 2.6 +
-                        17.3,
-                        uTime * .35
+
+                noise(
+
+                    uv *
+                    aspect *
+                    4.0 +
+
+                    vec2(
+                        12.7,
+                        uTime *
+                        .20
                     )
-                );
+
+                ) -
+
+                .5;
 
 
-            vec4 t =
-                texture2D(
-                    uTrail,
-                    uv +
-                    vec2(n1,n2) *
-                    .018
-                );
+            vec2 wobble =
 
-
-            float m =
-                t.a +
-                snoise(
-                    vec3(
-                        uv * asp * 7.0,
-                        uTime * .6
-                    )
+                vec2(
+                    n1,
+                    n2
                 ) *
-                .05;
+
+                .022;
+
+
+            vec4 trail =
+
+                texture2D(
+
+                    uTrail,
+
+                    uv +
+                    wobble
+
+                );
+
+
+            float edgeNoise =
+
+                (
+
+                    noise(
+
+                        uv *
+                        aspect *
+                        13.0 +
+
+                        uTime *
+                        .15
+
+                    ) -
+
+                    .5
+
+                ) *
+
+                .10;
+
+
+            float mask =
+
+                trail.a +
+                edgeNoise;
 
 
             float hole =
+
                 smoothstep(
-                    .40,
-                    .47,
-                    m
+
+                    .38,
+
+                    .48,
+
+                    mask
+
                 );
 
 
-            vec2 vel =
-                (t.rg - .5) *
+            /*
+            velocity encoded in red / green
+            */
+
+            vec2 velocity =
+
+                (
+                    trail.rg -
+                    .5
+                ) *
+
                 2.0;
 
 
             float drag =
+
                 smoothstep(
+
                     .03,
+
                     .42,
-                    t.a
+
+                    trail.a
+
                 );
 
 
-            vec2 suv =
+            vec2 smearUv =
+
                 uv -
-                vel *
+
+                velocity *
+
                 drag *
+
                 vec2(
-                    .12 / asp.x,
-                    .12
+
+                    .11 /
+
+                    aspect.x,
+
+                    .11
+
                 );
 
 
-            float ink =
+            float textAlpha =
+
                 texture2D(
+
                     uText,
-                    suv
+
+                    smearUv
+
                 ).a;
 
 
-            vec3 col =
+            vec3 colour =
+
                 mix(
+
                     uPaper,
+
                     uInk,
-                    ink
+
+                    textAlpha
+
                 );
 
 
-            float a =
+            float alpha =
+
                 1.0 -
                 hole;
 
 
             gl_FragColor =
+
                 vec4(
-                    col * a,
-                    a
+
+                    colour *
+                    alpha,
+
+                    alpha
+
                 );
 
         }
@@ -1743,36 +2010,56 @@
     `;
 
 
-    function shader(type, source) {
+    /* =========================
+       SHADER COMPILE
+    ========================= */
 
-        const s =
-            gl.createShader(type);
+    function createShader(
+        type,
+        source
+    ) {
+
+        const shader =
+            gl.createShader(
+                type
+            );
 
 
         gl.shaderSource(
-            s,
+            shader,
             source
         );
 
 
-        gl.compileShader(s);
+        gl.compileShader(
+            shader
+        );
 
 
         if (
+
             !gl.getShaderParameter(
-                s,
+
+                shader,
+
                 gl.COMPILE_STATUS
+
             )
+
         ) {
 
             console.error(
-                gl.getShaderInfoLog(s)
+
+                gl.getShaderInfoLog(
+                    shader
+                )
+
             );
 
         }
 
 
-        return s;
+        return shader;
 
     }
 
@@ -1782,134 +2069,209 @@
 
 
     gl.attachShader(
+
         program,
-        shader(
+
+        createShader(
+
             gl.VERTEX_SHADER,
+
             vertexSource
+
         )
+
     );
 
 
     gl.attachShader(
+
         program,
-        shader(
+
+        createShader(
+
             gl.FRAGMENT_SHADER,
+
             fragmentSource
+
         )
+
     );
 
 
-    gl.linkProgram(program);
+    gl.linkProgram(
+        program
+    );
 
 
     if (
+
         !gl.getProgramParameter(
+
             program,
+
             gl.LINK_STATUS
+
         )
+
     ) {
 
         console.error(
+
             gl.getProgramInfoLog(
                 program
             )
+
         );
+
 
         return;
 
     }
 
 
-    gl.useProgram(program);
+    gl.useProgram(
+        program
+    );
 
+
+    /* =========================
+       FULLSCREEN QUAD
+    ========================= */
 
     const buffer =
         gl.createBuffer();
 
 
     gl.bindBuffer(
+
         gl.ARRAY_BUFFER,
+
         buffer
+
     );
 
 
     gl.bufferData(
+
         gl.ARRAY_BUFFER,
+
         new Float32Array([
-            -1,-1,
-             1,-1,
-            -1, 1,
-             1, 1
+
+            -1, -1,
+
+             1, -1,
+
+            -1,  1,
+
+             1,  1
+
         ]),
+
         gl.STATIC_DRAW
+
     );
 
 
-    const aPos =
+    const position =
         gl.getAttribLocation(
+
             program,
+
             "aPos"
+
         );
 
 
     gl.enableVertexAttribArray(
-        aPos
+        position
     );
 
 
     gl.vertexAttribPointer(
-        aPos,
+
+        position,
+
         2,
+
         gl.FLOAT,
+
         false,
+
         0,
+
         0
+
     );
 
 
-    function makeTexture(unit) {
+    /* =========================
+       TEXTURES
+    ========================= */
+
+    function createTexture(unit) {
 
         const texture =
             gl.createTexture();
 
 
         gl.activeTexture(
+
             gl.TEXTURE0 +
             unit
+
         );
 
 
         gl.bindTexture(
+
             gl.TEXTURE_2D,
+
             texture
+
         );
 
 
         gl.texParameteri(
+
             gl.TEXTURE_2D,
+
             gl.TEXTURE_WRAP_S,
+
             gl.CLAMP_TO_EDGE
+
         );
 
 
         gl.texParameteri(
+
             gl.TEXTURE_2D,
+
             gl.TEXTURE_WRAP_T,
+
             gl.CLAMP_TO_EDGE
+
         );
 
 
         gl.texParameteri(
+
             gl.TEXTURE_2D,
+
             gl.TEXTURE_MIN_FILTER,
+
             gl.LINEAR
+
         );
 
 
         gl.texParameteri(
+
             gl.TEXTURE_2D,
+
             gl.TEXTURE_MAG_FILTER,
+
             gl.LINEAR
+
         );
 
 
@@ -1919,74 +2281,104 @@
 
 
     const textTexture =
-        makeTexture(0);
+        createTexture(0);
+
 
     const trailTexture =
-        makeTexture(1);
+        createTexture(1);
 
 
     gl.uniform1i(
+
         gl.getUniformLocation(
+
             program,
+
             "uText"
+
         ),
+
         0
+
     );
 
 
     gl.uniform1i(
+
         gl.getUniformLocation(
+
             program,
+
             "uTrail"
+
         ),
+
         1
+
     );
 
 
     gl.uniform3fv(
+
         gl.getUniformLocation(
+
             program,
+
             "uPaper"
+
         ),
+
         PAPER
+
     );
 
 
     gl.uniform3fv(
+
         gl.getUniformLocation(
+
             program,
+
             "uInk"
+
         ),
+
         INK
+
     );
 
 
-    const uRes =
+    const resolutionUniform =
         gl.getUniformLocation(
+
             program,
+
             "uRes"
+
         );
 
 
-    const uTime =
+    const timeUniform =
         gl.getUniformLocation(
+
             program,
+
             "uTime"
+
         );
 
 
-    gl.pixelStorei(
-        gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,
-        false
+    gl.enable(
+        gl.BLEND
     );
-
-
-    gl.enable(gl.BLEND);
 
 
     gl.blendFunc(
+
         gl.ONE,
+
         gl.ONE_MINUS_SRC_ALPHA
+
     );
 
 
@@ -1995,153 +2387,83 @@
     );
 
 
-    function drawText() {
+    /* =========================
+       DRAW MARTIN TEXT
+    ========================= */
+
+    function drawTextTexture() {
 
         textCtx.clearRect(
+
             0,
             0,
-            textCv.width,
-            textCv.height
+
+            textCanvas.width,
+            textCanvas.height
+
         );
 
 
         textCtx.setTransform(
+
             DPR,
             0,
             0,
             DPR,
             0,
             0
+
         );
 
 
-        let probe = 200;
+        const maxWidth =
+            W * .90;
 
 
-        textCtx.font =
-            `800 ${probe}px Outfit, "Arial Black", sans-serif`;
-
-
-        if (
-            "letterSpacing" in textCtx
-        ) {
-
-            textCtx.letterSpacing =
-                `${-0.02 * probe}px`;
-
-        }
-
-
-        let metrics =
-            textCtx.measureText(
-                "MARTIN"
-            );
-
-
-        let gw =
-            metrics.actualBoundingBoxLeft +
-            metrics.actualBoundingBoxRight;
-
-
-        let gh =
-            metrics.actualBoundingBoxAscent +
-            metrics.actualBoundingBoxDescent;
-
-
-        const wordW =
-            (WORD.x1 - WORD.x0) *
-            videoRect.w;
-
-
-        const wordH =
-            (WORD.y1 - WORD.y0) *
-            videoRect.h;
-
-
-        const cx =
-            videoRect.x +
-            (
-                WORD.x0 +
-                WORD.x1
-            ) /
-            2 *
-            videoRect.w;
-
-
-        const cy =
-            videoRect.y +
-            (
-                WORD.y0 +
-                WORD.y1
-            ) /
-            2 *
-            videoRect.h;
-
-
-        const scale =
+        let fontSize =
             Math.min(
 
-                Math.min(
-                    wordW,
-                    W * .96
-                ) / gw,
+                W * .23,
 
-                (
-                    wordH *
-                    1.02
-                ) / gh
+                H * .32
 
             );
 
 
-        const size =
-            probe * scale;
-
-
         textCtx.font =
-            `800 ${size}px Outfit, "Arial Black", sans-serif`;
+            `800 ${fontSize}px Outfit, "Arial Black", sans-serif`;
 
 
-        if (
-            "letterSpacing" in textCtx
-        ) {
-
-            textCtx.letterSpacing =
-                `${-0.02 * size}px`;
-
-        }
-
-
-        metrics =
+        let measured =
             textCtx.measureText(
                 "MARTIN"
             );
 
 
-        const width =
-            metrics.actualBoundingBoxLeft +
-            metrics.actualBoundingBoxRight;
+        if (
+            measured.width >
+            maxWidth
+        ) {
+
+            fontSize *=
+
+                maxWidth /
+
+                measured.width;
 
 
-        const height =
-            metrics.actualBoundingBoxAscent +
-            metrics.actualBoundingBoxDescent;
+            textCtx.font =
+                `800 ${fontSize}px Outfit, "Arial Black", sans-serif`;
+
+        }
 
 
-        const x =
-            cx -
-            width / 2 +
-            metrics.actualBoundingBoxLeft;
-
-
-        const y =
-            cy -
-            height / 2 +
-            metrics.actualBoundingBoxAscent;
+        textCtx.textAlign =
+            "center";
 
 
         textCtx.textBaseline =
-            "alphabetic";
+            "middle";
 
 
         textCtx.fillStyle =
@@ -2149,9 +2471,13 @@
 
 
         textCtx.fillText(
+
             "MARTIN",
-            x,
-            y
+
+            W / 2,
+
+            H / 2
+
         );
 
 
@@ -2161,27 +2487,42 @@
 
 
         gl.bindTexture(
+
             gl.TEXTURE_2D,
+
             textTexture
+
         );
 
 
         gl.texImage2D(
+
             gl.TEXTURE_2D,
+
             0,
+
             gl.RGBA,
+
             gl.RGBA,
+
             gl.UNSIGNED_BYTE,
-            textCv
+
+            textCanvas
+
         );
 
     }
 
 
+    /* =========================
+       RESIZE
+    ========================= */
+
     function resize() {
 
         W =
             hero.clientWidth;
+
 
         H =
             hero.clientHeight;
@@ -2189,83 +2530,117 @@
 
         canvas.width =
             Math.max(
+
                 2,
+
                 Math.round(
-                    W * DPR
+                    W *
+                    DPR
                 )
+
             );
 
 
         canvas.height =
             Math.max(
+
                 2,
+
                 Math.round(
-                    H * DPR
+                    H *
+                    DPR
                 )
+
             );
 
 
-        textCv.width =
+        textCanvas.width =
             canvas.width;
 
-        textCv.height =
+
+        textCanvas.height =
             canvas.height;
 
 
-        trailCv.width =
+        trailCanvas.width =
             Math.max(
+
                 2,
+
                 Math.round(
+
                     W *
                     TRAIL_SCALE
+
                 )
+
             );
 
 
-        trailCv.height =
+        trailCanvas.height =
             Math.max(
+
                 2,
+
                 Math.round(
+
                     H *
                     TRAIL_SCALE
+
                 )
+
             );
 
 
         baseRadius =
-            Math.max(W,H) *
+
+            Math.max(
+                W,
+                H
+            ) *
+
             (
                 W < 768
-                ? 0.085
-                : 0.055
+                ?
+                0.085
+                :
+                0.055
             );
 
 
-        videoRect =
-            getVideoRect();
-
-
         gl.viewport(
+
             0,
             0,
+
             canvas.width,
             canvas.height
+
         );
 
 
         gl.uniform2f(
-            uRes,
+
+            resolutionUniform,
+
             W,
+
             H
+
         );
 
 
-        drawText();
+        drawTextTexture();
+
 
         draw();
 
     }
 
+
+    /* =========================
+       DRAW
+    ========================= */
 
     function draw() {
 
@@ -2288,43 +2663,68 @@
 
 
         gl.bindTexture(
+
             gl.TEXTURE_2D,
+
             trailTexture
+
         );
 
 
         gl.texImage2D(
+
             gl.TEXTURE_2D,
+
             0,
+
             gl.RGBA,
+
             gl.RGBA,
+
             gl.UNSIGNED_BYTE,
-            trailCv
+
+            trailCanvas
+
         );
 
 
         gl.uniform1f(
-            uTime,
+
+            timeUniform,
+
             performance.now() /
             1000
+
         );
 
 
         gl.drawArrays(
+
             gl.TRIANGLE_STRIP,
+
             0,
+
             4
+
         );
 
     }
 
 
-    let running = false;
+    /* =========================
+       ANIMATION LOOP
+    ========================= */
 
-    let last =
+    let running =
+        false;
+
+
+    let lastFrame =
         performance.now();
 
-    let visible = true;
+
+    let visible =
+        true;
 
 
     function wake() {
@@ -2332,12 +2732,18 @@
         if (
             running ||
             !visible
-        ) return;
+        ) {
+
+            return;
+
+        }
 
 
-        running = true;
+        running =
+            true;
 
-        last =
+
+        lastFrame =
             performance.now();
 
 
@@ -2350,31 +2756,60 @@
 
     function tick(now) {
 
-        if (!running) return;
+        if (
+            !running
+        ) {
+
+            return;
+
+        }
 
 
         const dt =
             clamp(
-                (now - last) /
+
+                (
+                    now -
+                    lastFrame
+                ) /
+
                 1000,
+
                 0.001,
+
                 0.05
+
             );
 
 
-        last = now;
+        lastFrame =
+            now;
 
 
-        updateTrail(dt);
+        updateTrail(
+            dt
+        );
+
 
         draw();
 
 
         if (
-            now - lastMove >
-            4500 &&
-            droplets.length === 0 &&
+
+            now -
+            lastMove >
+
+            4500
+
+            &&
+
+            droplets.length ===
+            0
+
+            &&
+
             !pointer.active
+
         ) {
 
             running =
@@ -2382,14 +2817,19 @@
 
 
             trailCtx.clearRect(
+
                 0,
                 0,
-                trailCv.width,
-                trailCv.height
+
+                trailCanvas.width,
+
+                trailCanvas.height
+
             );
 
 
             draw();
+
 
             return;
 
@@ -2403,14 +2843,13 @@
     }
 
 
-    window.addEventListener(
-        "resize",
-        resize
-    );
-
+    /* =========================
+       OBSERVER
+    ========================= */
 
     const observer =
         new IntersectionObserver(
+
             entries => {
 
                 visible =
@@ -2418,61 +2857,76 @@
                     .isIntersecting;
 
 
-                if (visible) {
-
-                    video
-                        .play()
-                        .catch(() => {});
-
+                if (
+                    visible
+                ) {
 
                     wake();
-
-                } else {
-
-                    video.pause();
 
                 }
 
             }
+
         );
 
 
-    observer.observe(hero);
+    observer.observe(
+        hero
+    );
+
+
+    /* =========================
+       INIT
+    ========================= */
+
+    window.addEventListener(
+
+        "resize",
+
+        resize
+
+    );
 
 
     resize();
 
 
     if (
-        document.fonts &&
+
+        document.fonts
+
+        &&
+
         document.fonts.load
+
     ) {
 
         document.fonts
+
             .load(
                 "800 100px Outfit"
             )
-            .then(() => {
 
-                drawText();
+            .then(
+                () => {
 
-                draw();
+                    drawTextTexture();
 
-            });
+                    draw();
+
+                }
+            );
 
     }
-
-
-    video
-        .play()
-        .catch(() => {});
 
 
     wake();
 
 })();
+
 </script>
 
 
 </body>
+
 </html>
