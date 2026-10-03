@@ -1,0 +1,2478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+    <title>Martin — Photography</title>
+
+    <meta name="description"
+          content="Martin Photography">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500&family=Outfit:wght@800&display=swap"
+        rel="stylesheet"
+    >
+
+    <style>
+
+        :root {
+            --paper: #f3f3ee;
+            --ink: #0b0b0b;
+            --void: #000000;
+            --gutter: clamp(16px, 2.6vw, 40px);
+
+            --display:
+                "Outfit",
+                "Arial Black",
+                system-ui,
+                sans-serif;
+
+            --body:
+                "Inter Tight",
+                "Helvetica Neue",
+                Arial,
+                sans-serif;
+        }
+
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+        }
+
+
+        body {
+            font-family: var(--body);
+            color: var(--ink);
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+
+        .hero {
+            position: relative;
+
+            height: 100vh;
+            height: 100svh;
+
+            min-height: 480px;
+
+            overflow: hidden;
+
+            background: #000;
+
+            isolation: isolate;
+
+            touch-action: pan-y;
+
+            -webkit-tap-highlight-color: transparent;
+        }
+
+
+        /* VIDEO */
+
+        .hero__video {
+            position: absolute;
+
+            inset: 0;
+
+            width: 100%;
+            height: 100%;
+
+            object-fit: cover;
+
+            z-index: 0;
+
+            pointer-events: none;
+
+            background: #000;
+        }
+
+
+        /* PAPER */
+
+        .hero__paper {
+            position: absolute;
+
+            inset: 0;
+
+            z-index: 1;
+
+            background: var(--paper);
+
+            display: grid;
+
+            place-items: center;
+        }
+
+
+        .hero__title {
+            font-family: var(--display);
+
+            font-weight: 800;
+
+            font-size: 19vw;
+
+            line-height: 1;
+
+            letter-spacing: -0.02em;
+
+            color: var(--ink);
+
+            white-space: nowrap;
+
+            user-select: none;
+
+            margin: 0;
+        }
+
+
+        .hero.gl-on .hero__paper {
+            background: transparent;
+        }
+
+
+        .hero.gl-on .hero__title {
+            color: transparent;
+        }
+
+
+        /* WEBGL */
+
+        .hero__reveal {
+            position: absolute;
+
+            inset: 0;
+
+            width: 100%;
+            height: 100%;
+
+            z-index: 2;
+
+            pointer-events: none;
+
+            display: block;
+        }
+
+
+        /* UI */
+
+        .chrome {
+            position: absolute;
+
+            inset: 0;
+
+            z-index: 3;
+
+            pointer-events: none;
+
+            mix-blend-mode: difference;
+
+            color: #fff;
+
+            padding: var(--gutter);
+
+            display: flex;
+
+            flex-direction: column;
+
+            justify-content: space-between;
+        }
+
+
+        .chrome a {
+            pointer-events: auto;
+        }
+
+
+        .intro__lede {
+            margin: 0;
+
+            font-size: clamp(16px, 1.35vw, 22px);
+
+            line-height: 1.12;
+
+            letter-spacing: -0.01em;
+
+            font-weight: 400;
+        }
+
+
+        /* BUTTON */
+
+        .cta {
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 10px;
+
+            margin-top: clamp(16px, 1.6vw, 26px);
+
+            padding: 11px 16px 11px 18px;
+
+            border-radius: 999px;
+
+            background: #fff;
+
+            color: #000;
+
+            font: 500 11px/1 var(--body);
+
+            letter-spacing: 0.06em;
+
+            text-transform: uppercase;
+
+            text-decoration: none;
+
+            transition:
+                transform .35s cubic-bezier(.2,.8,.2,1);
+        }
+
+
+        .cta svg {
+            width: 14px;
+
+            height: 14px;
+
+            transition:
+                transform .35s cubic-bezier(.2,.8,.2,1);
+        }
+
+
+        .cta:hover svg {
+            transform: translateX(3px);
+        }
+
+
+        .cta:active {
+            transform: scale(.97);
+        }
+
+
+        .cta:focus-visible,
+        .links a:focus-visible {
+            outline: 2px solid #fff;
+
+            outline-offset: 3px;
+        }
+
+
+        /* BOTTOM */
+
+        .foot {
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: flex-end;
+
+            gap: 16px;
+
+            font-size: 11px;
+
+            line-height: 1.2;
+        }
+
+
+        .links {
+            display: flex;
+
+            gap: 8px;
+
+            align-items: center;
+
+            font-weight: 500;
+
+            letter-spacing: 0.06em;
+
+            text-transform: uppercase;
+        }
+
+
+        .links a {
+            color: inherit;
+
+            text-decoration: none;
+        }
+
+
+        .links a:hover {
+            text-decoration: underline;
+
+            text-underline-offset: 3px;
+        }
+
+
+        /* HINT */
+
+        .hint {
+            position: absolute;
+
+            left: 50%;
+
+            bottom: calc(var(--gutter) + 1px);
+
+            transform: translateX(-50%);
+
+            margin: 0;
+
+            font-size: 11px;
+
+            letter-spacing: 0.06em;
+
+            text-transform: uppercase;
+
+            opacity: .5;
+
+            transition: opacity .6s ease;
+
+            white-space: nowrap;
+        }
+
+
+        .hint.is-gone {
+            opacity: 0;
+        }
+
+
+        .hint .touch {
+            display: none;
+        }
+
+
+        @media (hover: none) {
+
+            .hint .mouse {
+                display: none;
+            }
+
+            .hint .touch {
+                display: inline;
+            }
+
+        }
+
+
+        @media (max-width: 767px) {
+
+            .hero__video {
+                inset: auto;
+
+                left: 0;
+
+                top: 50%;
+
+                width: 100%;
+
+                height: auto;
+
+                aspect-ratio: 16 / 9;
+
+                transform: translateY(-50%);
+
+                object-fit: contain;
+            }
+
+
+            .intro__lede {
+                font-size: 16px;
+            }
+
+
+            .foot {
+                font-size: 10px;
+            }
+
+
+            .hint {
+                bottom:
+                    calc(var(--gutter) + 24px);
+            }
+
+        }
+
+    </style>
+</head>
+
+
+<body>
+
+
+<section
+    class="hero"
+    id="hero"
+    aria-label="Imagine"
+>
+
+
+    <video
+        class="hero__video"
+        id="heroVideo"
+        src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260928_183857_1e589ec6-07af-4ef6-8995-3b2e5844b5a8.mp4"
+        autoplay
+        muted
+        loop
+        playsinline
+        preload="auto"
+        aria-hidden="true">
+    </video>
+
+
+    <div class="hero__paper">
+
+        <h1
+            class="hero__title"
+            id="heroTitle">
+            IMAGINE
+        </h1>
+
+    </div>
+
+
+    <canvas
+        class="hero__reveal"
+        id="heroReveal"
+        aria-hidden="true">
+    </canvas>
+
+
+    <div class="chrome">
+
+
+        <div class="intro">
+
+            <p class="intro__lede">
+                Martin Photography.<br>
+                Moments through my perspective.
+            </p>
+
+
+            <a
+                class="cta"
+                href="#contact">
+
+                View my work
+
+                <svg
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    aria-hidden="true">
+
+                    <path
+                        d="M2 8h11m0 0L8.5 3.5M13 8l-4.5 4.5"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                    />
+
+                </svg>
+
+            </a>
+
+        </div>
+
+
+        <div class="foot">
+
+            <span>
+                Photographer — Martin
+            </span>
+
+
+            <nav
+                class="links"
+                aria-label="Social">
+
+                <a href="#">Instagram</a>
+
+                <span aria-hidden="true">/</span>
+
+                <a href="#">Contact</a>
+
+            </nav>
+
+        </div>
+
+
+        <p
+            class="hint"
+            id="hint"
+            aria-hidden="true">
+
+            <span class="mouse">
+                Move to reveal
+            </span>
+
+            <span class="touch">
+                Touch to reveal
+            </span>
+
+        </p>
+
+
+    </div>
+
+
+</section>
+
+
+<script>
+(() => {
+
+    const hero =
+        document.getElementById("hero");
+
+    const video =
+        document.getElementById("heroVideo");
+
+    const canvas =
+        document.getElementById("heroReveal");
+
+    const hint =
+        document.getElementById("hint");
+
+
+    const WORD = {
+        x0: 0.055,
+        x1: 0.945,
+        y0: 0.33,
+        y1: 0.665
+    };
+
+
+    const VIDEO_AR = 16 / 9;
+
+    const PAPER = [
+        0xf3 / 255,
+        0xf3 / 255,
+        0xee / 255
+    ];
+
+    const INK = [
+        0x0b / 255,
+        0x0b / 255,
+        0x0b / 255
+    ];
+
+    const TRAIL_SCALE = 0.35;
+
+    const DPR =
+        Math.min(window.devicePixelRatio || 1, 2);
+
+    const reduceMotion =
+        window.matchMedia(
+            "(prefers-reduced-motion: reduce)"
+        ).matches;
+
+
+    let W = 1;
+    let H = 1;
+
+    let videoRect;
+
+
+    const trailCv =
+        document.createElement("canvas");
+
+    const trailCtx =
+        trailCv.getContext("2d");
+
+
+    const textCv =
+        document.createElement("canvas");
+
+    const textCtx =
+        textCv.getContext("2d");
+
+
+    let baseRadius = 50;
+
+
+    let pointer = {
+        active: false,
+        x: 0,
+        y: 0,
+        px: 0,
+        py: 0,
+        vx: 0,
+        vy: 0
+    };
+
+
+    let droplets = [];
+
+    let lastMove =
+        performance.now();
+
+
+    function clamp(v, a, b) {
+
+        return Math.max(
+            a,
+            Math.min(b, v)
+        );
+
+    }
+
+
+    function getVideoRect() {
+
+        if (W < 768) {
+
+            const h =
+                W / VIDEO_AR;
+
+            return {
+                x: 0,
+                y: (H - h) / 2,
+                w: W,
+                h
+            };
+
+        }
+
+
+        let w;
+        let h;
+
+
+        if (W / H > VIDEO_AR) {
+
+            w = W;
+            h = W / VIDEO_AR;
+
+        } else {
+
+            h = H;
+            w = H * VIDEO_AR;
+
+        }
+
+
+        return {
+
+            x: (W - w) / 2,
+
+            y: (H - h) / 2,
+
+            w,
+            h
+        };
+
+    }
+
+
+    function stamp(
+        x,
+        y,
+        r,
+        vx,
+        vy,
+        alpha
+    ) {
+
+        const sx =
+            x * TRAIL_SCALE;
+
+        const sy =
+            y * TRAIL_SCALE;
+
+        const sr =
+            Math.max(
+                1,
+                r * TRAIL_SCALE
+            );
+
+
+        const k = 0.012;
+
+
+        const R = Math.round(
+            128 +
+            clamp(vx * k, -1, 1) * 127
+        );
+
+
+        const G = Math.round(
+            128 +
+            clamp(vy * k, -1, 1) * 127
+        );
+
+
+        const gradient =
+            trailCtx.createRadialGradient(
+                sx,
+                sy,
+                0,
+                sx,
+                sy,
+                sr
+            );
+
+
+        gradient.addColorStop(
+            0,
+            `rgba(${R},${G},0,${alpha})`
+        );
+
+
+        gradient.addColorStop(
+            0.5,
+            `rgba(${R},${G},0,${alpha * .85})`
+        );
+
+
+        gradient.addColorStop(
+            1,
+            `rgba(${R},${G},0,0)`
+        );
+
+
+        trailCtx.fillStyle =
+            gradient;
+
+
+        trailCtx.beginPath();
+
+        trailCtx.arc(
+            sx,
+            sy,
+            sr,
+            0,
+            Math.PI * 2
+        );
+
+        trailCtx.fill();
+
+    }
+
+
+    function updateTrail(dt) {
+
+        const f =
+            dt * 60;
+
+
+        trailCtx.globalCompositeOperation =
+            "destination-out";
+
+
+        trailCtx.fillStyle =
+            `rgba(0,0,0,${
+                1 -
+                Math.pow(
+                    1 - 0.03,
+                    f
+                )
+            })`;
+
+
+        trailCtx.fillRect(
+            0,
+            0,
+            trailCv.width,
+            trailCv.height
+        );
+
+
+        trailCtx.globalCompositeOperation =
+            "source-over";
+
+
+        if (pointer.active) {
+
+            const dx =
+                pointer.x -
+                pointer.px;
+
+            const dy =
+                pointer.y -
+                pointer.py;
+
+
+            const dist =
+                Math.hypot(dx, dy);
+
+
+            if (dist > 0.5) {
+
+                pointer.vx +=
+                    (
+                        dx / f -
+                        pointer.vx
+                    ) * 0.5;
+
+
+                pointer.vy +=
+                    (
+                        dy / f -
+                        pointer.vy
+                    ) * 0.5;
+
+
+                const speed =
+                    Math.hypot(
+                        pointer.vx,
+                        pointer.vy
+                    );
+
+
+                const R =
+                    baseRadius *
+                    (
+                        0.75 +
+                        Math.min(
+                            speed / 45,
+                            1
+                        ) * 0.75
+                    );
+
+
+                const steps =
+                    Math.max(
+                        1,
+                        Math.ceil(
+                            dist /
+                            (R * 0.22)
+                        )
+                    );
+
+
+                for (
+                    let i = 1;
+                    i <= steps;
+                    i++
+                ) {
+
+                    const t =
+                        i / steps;
+
+
+                    stamp(
+
+                        pointer.px +
+                        dx * t,
+
+                        pointer.py +
+                        dy * t,
+
+                        R,
+
+                        pointer.vx * 6,
+
+                        pointer.vy * 6,
+
+                        0.9
+
+                    );
+
+                }
+
+
+                if (!reduceMotion) {
+
+                    const n =
+                        Math.min(
+                            3,
+                            Math.floor(
+                                speed / 14
+                            )
+                        );
+
+
+                    for (
+                        let i = 0;
+                        i < n;
+                        i++
+                    ) {
+
+                        const angle =
+                            Math.atan2(
+                                pointer.vy,
+                                pointer.vx
+                            ) +
+                            (
+                                Math.random() -
+                                0.5
+                            ) * 1.4;
+
+
+                        const sp =
+                            speed *
+                            (
+                                0.35 +
+                                Math.random() *
+                                0.45
+                            );
+
+
+                        droplets.push({
+
+                            x:
+                                pointer.x +
+                                (
+                                    Math.random() -
+                                    0.5
+                                ) * R,
+
+                            y:
+                                pointer.y +
+                                (
+                                    Math.random() -
+                                    0.5
+                                ) * R,
+
+                            vx:
+                                Math.cos(angle) *
+                                sp,
+
+                            vy:
+                                Math.sin(angle) *
+                                sp,
+
+                            r:
+                                R *
+                                (
+                                    0.25 +
+                                    Math.random() *
+                                    0.45
+                                ),
+
+                            life: 1
+
+                        });
+
+                    }
+
+
+                    if (
+                        droplets.length >
+                        90
+                    ) {
+
+                        droplets.splice(
+                            0,
+                            droplets.length - 90
+                        );
+
+                    }
+
+                }
+
+
+                pointer.px =
+                    pointer.x;
+
+                pointer.py =
+                    pointer.y;
+
+            } else {
+
+                pointer.vx *= 0.8;
+
+                pointer.vy *= 0.8;
+
+            }
+
+        }
+
+
+        for (
+            let i =
+                droplets.length - 1;
+
+            i >= 0;
+
+            i--
+        ) {
+
+            const d =
+                droplets[i];
+
+
+            d.x +=
+                d.vx * f;
+
+            d.y +=
+                d.vy * f;
+
+
+            d.vx *=
+                Math.pow(
+                    0.9,
+                    f
+                );
+
+
+            d.vy =
+                d.vy *
+                Math.pow(
+                    0.9,
+                    f
+                ) +
+                0.25 * f;
+
+
+            d.life -=
+                0.022 * f;
+
+
+            d.r *=
+                Math.pow(
+                    0.985,
+                    f
+                );
+
+
+            if (
+                d.life <= 0 ||
+                d.r < 2
+            ) {
+
+                droplets.splice(
+                    i,
+                    1
+                );
+
+                continue;
+
+            }
+
+
+            stamp(
+                d.x,
+                d.y,
+                d.r,
+                d.vx * 6,
+                d.vy * 6,
+                0.85 * d.life
+            );
+
+        }
+
+    }
+
+
+    function move(x, y) {
+
+        if (!pointer.active) {
+
+            pointer.active = true;
+
+            pointer.x = x;
+            pointer.y = y;
+
+            pointer.px = x;
+            pointer.py = y;
+
+        } else {
+
+            pointer.x = x;
+            pointer.y = y;
+
+        }
+
+
+        lastMove =
+            performance.now();
+
+
+        hint.classList.add(
+            "is-gone"
+        );
+
+
+        wake();
+
+    }
+
+
+    hero.addEventListener(
+        "pointermove",
+        event => {
+
+            if (
+                event.pointerType ===
+                "touch"
+            ) return;
+
+
+            const rect =
+                hero.getBoundingClientRect();
+
+
+            move(
+                event.clientX -
+                rect.left,
+
+                event.clientY -
+                rect.top
+            );
+
+        }
+    );
+
+
+    hero.addEventListener(
+        "pointerleave",
+        event => {
+
+            if (
+                event.pointerType !==
+                "touch"
+            ) {
+
+                pointer.active =
+                    false;
+
+            }
+
+        }
+    );
+
+
+    hero.addEventListener(
+        "touchstart",
+        event => {
+
+            const touch =
+                event.touches[0];
+
+
+            if (!touch) return;
+
+
+            const rect =
+                hero.getBoundingClientRect();
+
+
+            const x =
+                touch.clientX -
+                rect.left;
+
+            const y =
+                touch.clientY -
+                rect.top;
+
+
+            pointer.active =
+                true;
+
+            pointer.x =
+                pointer.px = x;
+
+            pointer.y =
+                pointer.py = y;
+
+
+            stamp(
+                x,
+                y,
+                baseRadius * 1.1,
+                0,
+                0,
+                0.95
+            );
+
+
+            lastMove =
+                performance.now();
+
+
+            hint.classList.add(
+                "is-gone"
+            );
+
+
+            wake();
+
+        },
+        {
+            passive: true
+        }
+    );
+
+
+    hero.addEventListener(
+        "touchmove",
+        event => {
+
+            const touch =
+                event.touches[0];
+
+
+            if (!touch) return;
+
+
+            const rect =
+                hero.getBoundingClientRect();
+
+
+            move(
+                touch.clientX -
+                rect.left,
+
+                touch.clientY -
+                rect.top
+            );
+
+        },
+        {
+            passive: true
+        }
+    );
+
+
+    hero.addEventListener(
+        "touchend",
+        () => {
+
+            pointer.active =
+                false;
+
+        },
+        {
+            passive: true
+        }
+    );
+
+
+    /* WEBGL */
+
+    const gl =
+        canvas.getContext(
+            "webgl",
+            {
+                premultipliedAlpha: true,
+                alpha: true,
+                antialias: false,
+                depth: false
+            }
+        );
+
+
+    if (!gl) {
+
+        console.warn(
+            "WebGL unavailable."
+        );
+
+        return;
+
+    }
+
+
+    const vertexSource = `
+
+        attribute vec2 aPos;
+
+        varying vec2 vUv;
+
+
+        void main() {
+
+            vUv = vec2(
+                aPos.x * .5 + .5,
+                .5 - aPos.y * .5
+            );
+
+
+            gl_Position =
+                vec4(
+                    aPos,
+                    0.0,
+                    1.0
+                );
+
+        }
+
+    `;
+
+
+    const fragmentSource = `
+
+        precision highp float;
+
+
+        varying vec2 vUv;
+
+
+        uniform sampler2D uText;
+
+        uniform sampler2D uTrail;
+
+        uniform vec2 uRes;
+
+        uniform vec3 uPaper;
+
+        uniform vec3 uInk;
+
+        uniform float uTime;
+
+
+        vec3 mod289(vec3 x) {
+            return x -
+            floor(x * (1.0 / 289.0)) *
+            289.0;
+        }
+
+
+        vec4 mod289(vec4 x) {
+            return x -
+            floor(x * (1.0 / 289.0)) *
+            289.0;
+        }
+
+
+        vec4 permute(vec4 x) {
+            return mod289(
+                ((x * 34.0) + 1.0) * x
+            );
+        }
+
+
+        vec4 taylorInvSqrt(vec4 r) {
+            return
+                1.79284291400159 -
+                0.85373472095314 * r;
+        }
+
+
+        float snoise(vec3 v) {
+
+            const vec2 C =
+                vec2(
+                    1.0 / 6.0,
+                    1.0 / 3.0
+                );
+
+            const vec4 D =
+                vec4(
+                    0.0,
+                    0.5,
+                    1.0,
+                    2.0
+                );
+
+
+            vec3 i =
+                floor(
+                    v +
+                    dot(v, C.yyy)
+                );
+
+
+            vec3 x0 =
+                v -
+                i +
+                dot(i, C.xxx);
+
+
+            vec3 g =
+                step(
+                    x0.yzx,
+                    x0.xyz
+                );
+
+
+            vec3 l =
+                1.0 - g;
+
+
+            vec3 i1 =
+                min(
+                    g.xyz,
+                    l.zxy
+                );
+
+
+            vec3 i2 =
+                max(
+                    g.xyz,
+                    l.zxy
+                );
+
+
+            vec3 x1 =
+                x0 -
+                i1 +
+                C.xxx;
+
+
+            vec3 x2 =
+                x0 -
+                i2 +
+                C.yyy;
+
+
+            vec3 x3 =
+                x0 -
+                D.yyy;
+
+
+            i =
+                mod289(i);
+
+
+            vec4 p =
+                permute(
+                    permute(
+                        permute(
+                            i.z +
+                            vec4(
+                                0.0,
+                                i1.z,
+                                i2.z,
+                                1.0
+                            )
+                        ) +
+                        i.y +
+                        vec4(
+                            0.0,
+                            i1.y,
+                            i2.y,
+                            1.0
+                        )
+                    ) +
+                    i.x +
+                    vec4(
+                        0.0,
+                        i1.x,
+                        i2.x,
+                        1.0
+                    )
+                );
+
+
+            float n_ =
+                0.142857142857;
+
+
+            vec3 ns =
+                n_ *
+                D.wyz -
+                D.xzx;
+
+
+            vec4 j =
+                p -
+                49.0 *
+                floor(
+                    p *
+                    ns.z *
+                    ns.z
+                );
+
+
+            vec4 x_ =
+                floor(
+                    j * ns.z
+                );
+
+
+            vec4 y_ =
+                floor(
+                    j -
+                    7.0 * x_
+                );
+
+
+            vec4 x =
+                x_ * ns.x +
+                ns.yyyy;
+
+
+            vec4 y =
+                y_ * ns.x +
+                ns.yyyy;
+
+
+            vec4 h =
+                1.0 -
+                abs(x) -
+                abs(y);
+
+
+            vec4 b0 =
+                vec4(
+                    x.xy,
+                    y.xy
+                );
+
+
+            vec4 b1 =
+                vec4(
+                    x.zw,
+                    y.zw
+                );
+
+
+            vec4 s0 =
+                floor(b0) *
+                2.0 +
+                1.0;
+
+
+            vec4 s1 =
+                floor(b1) *
+                2.0 +
+                1.0;
+
+
+            vec4 sh =
+                -step(
+                    h,
+                    vec4(0.0)
+                );
+
+
+            vec4 a0 =
+                b0.xzyw +
+                s0.xzyw *
+                sh.xxyy;
+
+
+            vec4 a1 =
+                b1.xzyw +
+                s1.xzyw *
+                sh.zzww;
+
+
+            vec3 p0 =
+                vec3(
+                    a0.xy,
+                    h.x
+                );
+
+
+            vec3 p1 =
+                vec3(
+                    a0.zw,
+                    h.y
+                );
+
+
+            vec3 p2 =
+                vec3(
+                    a1.xy,
+                    h.z
+                );
+
+
+            vec3 p3 =
+                vec3(
+                    a1.zw,
+                    h.w
+                );
+
+
+            vec4 norm =
+                taylorInvSqrt(
+                    vec4(
+                        dot(p0,p0),
+                        dot(p1,p1),
+                        dot(p2,p2),
+                        dot(p3,p3)
+                    )
+                );
+
+
+            p0 *= norm.x;
+            p1 *= norm.y;
+            p2 *= norm.z;
+            p3 *= norm.w;
+
+
+            vec4 m =
+                max(
+                    0.6 -
+                    vec4(
+                        dot(x0,x0),
+                        dot(x1,x1),
+                        dot(x2,x2),
+                        dot(x3,x3)
+                    ),
+                    0.0
+                );
+
+
+            m = m * m;
+
+
+            return
+                42.0 *
+                dot(
+                    m * m,
+                    vec4(
+                        dot(p0,x0),
+                        dot(p1,x1),
+                        dot(p2,x2),
+                        dot(p3,x3)
+                    )
+                );
+
+        }
+
+
+        void main() {
+
+            vec2 uv =
+                vUv;
+
+
+            vec2 asp =
+                vec2(
+                    uRes.x /
+                    uRes.y,
+                    1.0
+                );
+
+
+            float n1 =
+                snoise(
+                    vec3(
+                        uv * asp * 2.6,
+                        uTime * .35
+                    )
+                );
+
+
+            float n2 =
+                snoise(
+                    vec3(
+                        uv * asp * 2.6 +
+                        17.3,
+                        uTime * .35
+                    )
+                );
+
+
+            vec4 t =
+                texture2D(
+                    uTrail,
+                    uv +
+                    vec2(n1,n2) *
+                    .018
+                );
+
+
+            float m =
+                t.a +
+                snoise(
+                    vec3(
+                        uv * asp * 7.0,
+                        uTime * .6
+                    )
+                ) *
+                .05;
+
+
+            float hole =
+                smoothstep(
+                    .40,
+                    .47,
+                    m
+                );
+
+
+            vec2 vel =
+                (t.rg - .5) *
+                2.0;
+
+
+            float drag =
+                smoothstep(
+                    .03,
+                    .42,
+                    t.a
+                );
+
+
+            vec2 suv =
+                uv -
+                vel *
+                drag *
+                vec2(
+                    .12 / asp.x,
+                    .12
+                );
+
+
+            float ink =
+                texture2D(
+                    uText,
+                    suv
+                ).a;
+
+
+            vec3 col =
+                mix(
+                    uPaper,
+                    uInk,
+                    ink
+                );
+
+
+            float a =
+                1.0 -
+                hole;
+
+
+            gl_FragColor =
+                vec4(
+                    col * a,
+                    a
+                );
+
+        }
+
+    `;
+
+
+    function shader(type, source) {
+
+        const s =
+            gl.createShader(type);
+
+
+        gl.shaderSource(
+            s,
+            source
+        );
+
+
+        gl.compileShader(s);
+
+
+        if (
+            !gl.getShaderParameter(
+                s,
+                gl.COMPILE_STATUS
+            )
+        ) {
+
+            console.error(
+                gl.getShaderInfoLog(s)
+            );
+
+        }
+
+
+        return s;
+
+    }
+
+
+    const program =
+        gl.createProgram();
+
+
+    gl.attachShader(
+        program,
+        shader(
+            gl.VERTEX_SHADER,
+            vertexSource
+        )
+    );
+
+
+    gl.attachShader(
+        program,
+        shader(
+            gl.FRAGMENT_SHADER,
+            fragmentSource
+        )
+    );
+
+
+    gl.linkProgram(program);
+
+
+    if (
+        !gl.getProgramParameter(
+            program,
+            gl.LINK_STATUS
+        )
+    ) {
+
+        console.error(
+            gl.getProgramInfoLog(
+                program
+            )
+        );
+
+        return;
+
+    }
+
+
+    gl.useProgram(program);
+
+
+    const buffer =
+        gl.createBuffer();
+
+
+    gl.bindBuffer(
+        gl.ARRAY_BUFFER,
+        buffer
+    );
+
+
+    gl.bufferData(
+        gl.ARRAY_BUFFER,
+        new Float32Array([
+            -1,-1,
+             1,-1,
+            -1, 1,
+             1, 1
+        ]),
+        gl.STATIC_DRAW
+    );
+
+
+    const aPos =
+        gl.getAttribLocation(
+            program,
+            "aPos"
+        );
+
+
+    gl.enableVertexAttribArray(
+        aPos
+    );
+
+
+    gl.vertexAttribPointer(
+        aPos,
+        2,
+        gl.FLOAT,
+        false,
+        0,
+        0
+    );
+
+
+    function makeTexture(unit) {
+
+        const texture =
+            gl.createTexture();
+
+
+        gl.activeTexture(
+            gl.TEXTURE0 +
+            unit
+        );
+
+
+        gl.bindTexture(
+            gl.TEXTURE_2D,
+            texture
+        );
+
+
+        gl.texParameteri(
+            gl.TEXTURE_2D,
+            gl.TEXTURE_WRAP_S,
+            gl.CLAMP_TO_EDGE
+        );
+
+
+        gl.texParameteri(
+            gl.TEXTURE_2D,
+            gl.TEXTURE_WRAP_T,
+            gl.CLAMP_TO_EDGE
+        );
+
+
+        gl.texParameteri(
+            gl.TEXTURE_2D,
+            gl.TEXTURE_MIN_FILTER,
+            gl.LINEAR
+        );
+
+
+        gl.texParameteri(
+            gl.TEXTURE_2D,
+            gl.TEXTURE_MAG_FILTER,
+            gl.LINEAR
+        );
+
+
+        return texture;
+
+    }
+
+
+    const textTexture =
+        makeTexture(0);
+
+    const trailTexture =
+        makeTexture(1);
+
+
+    gl.uniform1i(
+        gl.getUniformLocation(
+            program,
+            "uText"
+        ),
+        0
+    );
+
+
+    gl.uniform1i(
+        gl.getUniformLocation(
+            program,
+            "uTrail"
+        ),
+        1
+    );
+
+
+    gl.uniform3fv(
+        gl.getUniformLocation(
+            program,
+            "uPaper"
+        ),
+        PAPER
+    );
+
+
+    gl.uniform3fv(
+        gl.getUniformLocation(
+            program,
+            "uInk"
+        ),
+        INK
+    );
+
+
+    const uRes =
+        gl.getUniformLocation(
+            program,
+            "uRes"
+        );
+
+
+    const uTime =
+        gl.getUniformLocation(
+            program,
+            "uTime"
+        );
+
+
+    gl.pixelStorei(
+        gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,
+        false
+    );
+
+
+    gl.enable(gl.BLEND);
+
+
+    gl.blendFunc(
+        gl.ONE,
+        gl.ONE_MINUS_SRC_ALPHA
+    );
+
+
+    hero.classList.add(
+        "gl-on"
+    );
+
+
+    function drawText() {
+
+        textCtx.clearRect(
+            0,
+            0,
+            textCv.width,
+            textCv.height
+        );
+
+
+        textCtx.setTransform(
+            DPR,
+            0,
+            0,
+            DPR,
+            0,
+            0
+        );
+
+
+        let probe = 200;
+
+
+        textCtx.font =
+            `800 ${probe}px Outfit, "Arial Black", sans-serif`;
+
+
+        if (
+            "letterSpacing" in textCtx
+        ) {
+
+            textCtx.letterSpacing =
+                `${-0.02 * probe}px`;
+
+        }
+
+
+        let metrics =
+            textCtx.measureText(
+                "IMAGINE"
+            );
+
+
+        let gw =
+            metrics.actualBoundingBoxLeft +
+            metrics.actualBoundingBoxRight;
+
+
+        let gh =
+            metrics.actualBoundingBoxAscent +
+            metrics.actualBoundingBoxDescent;
+
+
+        const wordW =
+            (WORD.x1 - WORD.x0) *
+            videoRect.w;
+
+
+        const wordH =
+            (WORD.y1 - WORD.y0) *
+            videoRect.h;
+
+
+        const cx =
+            videoRect.x +
+            (
+                WORD.x0 +
+                WORD.x1
+            ) /
+            2 *
+            videoRect.w;
+
+
+        const cy =
+            videoRect.y +
+            (
+                WORD.y0 +
+                WORD.y1
+            ) /
+            2 *
+            videoRect.h;
+
+
+        const scale =
+            Math.min(
+
+                Math.min(
+                    wordW,
+                    W * .96
+                ) / gw,
+
+                (
+                    wordH *
+                    1.02
+                ) / gh
+
+            );
+
+
+        const size =
+            probe * scale;
+
+
+        textCtx.font =
+            `800 ${size}px Outfit, "Arial Black", sans-serif`;
+
+
+        if (
+            "letterSpacing" in textCtx
+        ) {
+
+            textCtx.letterSpacing =
+                `${-0.02 * size}px`;
+
+        }
+
+
+        metrics =
+            textCtx.measureText(
+                "IMAGINE"
+            );
+
+
+        const width =
+            metrics.actualBoundingBoxLeft +
+            metrics.actualBoundingBoxRight;
+
+
+        const height =
+            metrics.actualBoundingBoxAscent +
+            metrics.actualBoundingBoxDescent;
+
+
+        const x =
+            cx -
+            width / 2 +
+            metrics.actualBoundingBoxLeft;
+
+
+        const y =
+            cy -
+            height / 2 +
+            metrics.actualBoundingBoxAscent;
+
+
+        textCtx.textBaseline =
+            "alphabetic";
+
+
+        textCtx.fillStyle =
+            "#ffffff";
+
+
+        textCtx.fillText(
+            "IMAGINE",
+            x,
+            y
+        );
+
+
+        gl.activeTexture(
+            gl.TEXTURE0
+        );
+
+
+        gl.bindTexture(
+            gl.TEXTURE_2D,
+            textTexture
+        );
+
+
+        gl.texImage2D(
+            gl.TEXTURE_2D,
+            0,
+            gl.RGBA,
+            gl.RGBA,
+            gl.UNSIGNED_BYTE,
+            textCv
+        );
+
+    }
+
+
+    function resize() {
+
+        W =
+            hero.clientWidth;
+
+        H =
+            hero.clientHeight;
+
+
+        canvas.width =
+            Math.max(
+                2,
+                Math.round(
+                    W * DPR
+                )
+            );
+
+
+        canvas.height =
+            Math.max(
+                2,
+                Math.round(
+                    H * DPR
+                )
+            );
+
+
+        textCv.width =
+            canvas.width;
+
+        textCv.height =
+            canvas.height;
+
+
+        trailCv.width =
+            Math.max(
+                2,
+                Math.round(
+                    W *
+                    TRAIL_SCALE
+                )
+            );
+
+
+        trailCv.height =
+            Math.max(
+                2,
+                Math.round(
+                    H *
+                    TRAIL_SCALE
+                )
+            );
+
+
+        baseRadius =
+            Math.max(W,H) *
+            (
+                W < 768
+                ? 0.085
+                : 0.055
+            );
+
+
+        videoRect =
+            getVideoRect();
+
+
+        gl.viewport(
+            0,
+            0,
+            canvas.width,
+            canvas.height
+        );
+
+
+        gl.uniform2f(
+            uRes,
+            W,
+            H
+        );
+
+
+        drawText();
+
+        draw();
+
+    }
+
+
+    function draw() {
+
+        gl.clearColor(
+            0,
+            0,
+            0,
+            0
+        );
+
+
+        gl.clear(
+            gl.COLOR_BUFFER_BIT
+        );
+
+
+        gl.activeTexture(
+            gl.TEXTURE1
+        );
+
+
+        gl.bindTexture(
+            gl.TEXTURE_2D,
+            trailTexture
+        );
+
+
+        gl.texImage2D(
+            gl.TEXTURE_2D,
+            0,
+            gl.RGBA,
+            gl.RGBA,
+            gl.UNSIGNED_BYTE,
+            trailCv
+        );
+
+
+        gl.uniform1f(
+            uTime,
+            performance.now() /
+            1000
+        );
+
+
+        gl.drawArrays(
+            gl.TRIANGLE_STRIP,
+            0,
+            4
+        );
+
+    }
+
+
+    let running = false;
+
+    let last =
+        performance.now();
+
+    let visible = true;
+
+
+    function wake() {
+
+        if (
+            running ||
+            !visible
+        ) return;
+
+
+        running = true;
+
+        last =
+            performance.now();
+
+
+        requestAnimationFrame(
+            tick
+        );
+
+    }
+
+
+    function tick(now) {
+
+        if (!running) return;
+
+
+        const dt =
+            clamp(
+                (now - last) /
+                1000,
+                0.001,
+                0.05
+            );
+
+
+        last = now;
+
+
+        updateTrail(dt);
+
+        draw();
+
+
+        if (
+            now - lastMove >
+            4500 &&
+            droplets.length === 0 &&
+            !pointer.active
+        ) {
+
+            running =
+                false;
+
+
+            trailCtx.clearRect(
+                0,
+                0,
+                trailCv.width,
+                trailCv.height
+            );
+
+
+            draw();
+
+            return;
+
+        }
+
+
+        requestAnimationFrame(
+            tick
+        );
+
+    }
+
+
+    window.addEventListener(
+        "resize",
+        resize
+    );
+
+
+    const observer =
+        new IntersectionObserver(
+            entries => {
+
+                visible =
+                    entries[0]
+                    .isIntersecting;
+
+
+                if (visible) {
+
+                    video
+                        .play()
+                        .catch(() => {});
+
+
+                    wake();
+
+                } else {
+
+                    video.pause();
+
+                }
+
+            }
+        );
+
+
+    observer.observe(hero);
+
+
+    resize();
+
+
+    if (
+        document.fonts &&
+        document.fonts.load
+    ) {
+
+        document.fonts
+            .load(
+                "800 100px Outfit"
+            )
+            .then(() => {
+
+                drawText();
+
+                draw();
+
+            });
+
+    }
+
+
+    video
+        .play()
+        .catch(() => {});
+
+
+    wake();
+
+})();
+</script>
+
+
+</body>
+</html>
