@@ -35,14 +35,23 @@
             --paper: #f3f3ee;
             --ink: #0b0b0b;
 
-            --body:
-                "Inter Tight",
-                Arial,
-                sans-serif;
+            --gutter:
+                clamp(
+                    20px,
+                    2.8vw,
+                    42px
+                );
 
             --display:
                 "Outfit",
                 "Arial Black",
+                system-ui,
+                sans-serif;
+
+            --body:
+                "Inter Tight",
+                "Helvetica Neue",
+                Arial,
                 sans-serif;
         }
 
@@ -56,9 +65,11 @@
             margin: 0;
             padding: 0;
 
-            scroll-behavior: smooth;
+            background:
+                var(--paper);
 
-            background: var(--paper);
+            scroll-behavior:
+                smooth;
         }
 
 
@@ -66,356 +77,569 @@
             margin: 0;
             padding: 0;
 
-            width: 100%;
+            background:
+                var(--paper);
 
-            background: var(--paper);
+            color:
+                var(--ink);
 
-            color: var(--ink);
+            font-family:
+                var(--body);
 
-            font-family: var(--body);
+            -webkit-font-smoothing:
+                antialiased;
 
-            overflow-x: hidden;
-
-            -webkit-font-smoothing: antialiased;
+            overflow-x:
+                hidden;
         }
 
 
         a {
             color: inherit;
 
-            text-decoration: none;
+            text-decoration:
+                none;
         }
 
 
-        button {
-            font-family: inherit;
-        }
-
-
-        /* ==========================================
-           HOME
-        ========================================== */
+        /* ==================================================
+           ORIGINAL MARTIN HERO
+        ================================================== */
 
         .hero {
-            position: relative;
+            position:
+                relative;
 
-            width: 100%;
+            width:
+                100%;
 
-            height: 100vh;
-            height: 100svh;
+            height:
+                100vh;
 
-            min-height: 620px;
+            height:
+                100svh;
 
-            overflow: hidden;
+            min-height:
+                540px;
 
-            background: var(--paper);
+            overflow:
+                hidden;
 
-            isolation: isolate;
+            background:
+                var(--paper);
 
-            touch-action: pan-y;
+            isolation:
+                isolate;
+
+            touch-action:
+                pan-y;
+
+            -webkit-tap-highlight-color:
+                transparent;
         }
 
 
-        /* PHOTO UNDER MARTIN */
+        /* PHOTO UNDER PAPER */
 
-        .hero-photo {
-            position: absolute;
+        .hero__photo {
+            position:
+                absolute;
 
-            inset: 0;
+            inset:
+                0;
 
-            width: 100%;
-            height: 100%;
+            width:
+                100%;
 
-            object-fit: cover;
+            height:
+                100%;
 
-            object-position: center;
+            object-fit:
+                cover;
 
-            z-index: 0;
+            object-position:
+                center;
 
-            pointer-events: none;
+            z-index:
+                0;
+
+            pointer-events:
+                none;
         }
 
 
-        /* CANVAS PAPER */
+        /* FALLBACK PAPER */
 
-        #revealCanvas {
-            position: absolute;
+        .hero__paper {
+            position:
+                absolute;
 
-            inset: 0;
+            inset:
+                0;
 
-            width: 100%;
-            height: 100%;
+            z-index:
+                1;
 
-            display: block;
+            display:
+                grid;
 
-            z-index: 1;
+            place-items:
+                center;
 
-            pointer-events: none;
+            background:
+                var(--paper);
         }
 
 
-        /* HOME UI */
+        .hero__title {
+            margin:
+                0;
 
-        .home-ui {
-            position: absolute;
+            font-family:
+                var(--display);
 
-            inset: 0;
+            font-weight:
+                800;
 
-            z-index: 3;
+            font-size:
+                18vw;
+
+            line-height:
+                1;
+
+            letter-spacing:
+                -0.055em;
+
+            color:
+                var(--ink);
+
+            white-space:
+                nowrap;
+
+            user-select:
+                none;
+        }
+
+
+        .hero.gl-on
+        .hero__paper {
+            background:
+                transparent;
+        }
+
+
+        .hero.gl-on
+        .hero__title {
+            color:
+                transparent;
+        }
+
+
+        /* WEBGL */
+
+        .hero__reveal {
+            position:
+                absolute;
+
+            inset:
+                0;
+
+            width:
+                100%;
+
+            height:
+                100%;
+
+            z-index:
+                2;
+
+            display:
+                block;
+
+            pointer-events:
+                none;
+        }
+
+
+        /* UI */
+
+        .chrome {
+            position:
+                absolute;
+
+            inset:
+                0;
+
+            z-index:
+                3;
 
             padding:
-                max(28px, env(safe-area-inset-top))
-                30px
-                max(28px, env(safe-area-inset-bottom));
+                var(--gutter);
 
-            display: flex;
+            display:
+                flex;
 
-            flex-direction: column;
+            flex-direction:
+                column;
 
-            justify-content: space-between;
+            justify-content:
+                space-between;
 
-            pointer-events: none;
+            pointer-events:
+                none;
 
-            mix-blend-mode: difference;
+            mix-blend-mode:
+                difference;
 
-            color: white;
+            color:
+                #ffffff;
         }
 
 
-        .home-ui a {
-            pointer-events: auto;
+        .chrome a {
+            pointer-events:
+                auto;
         }
 
 
-        .intro {
-            max-width: 500px;
-        }
+        .intro__lede {
+            margin:
+                0;
 
+            font-size:
+                clamp(
+                    18px,
+                    1.55vw,
+                    25px
+                );
 
-        .intro p {
-            margin: 0;
+            line-height:
+                1.05;
 
-            font-size: clamp(20px, 2vw, 30px);
-
-            line-height: 1.02;
-
-            letter-spacing: -0.03em;
+            letter-spacing:
+                -0.02em;
         }
 
 
         .cta {
-            display: inline-flex;
+            display:
+                inline-flex;
 
-            align-items: center;
+            align-items:
+                center;
 
-            gap: 14px;
+            gap:
+                12px;
 
-            margin-top: 30px;
+            margin-top:
+                26px;
 
-            padding: 16px 26px;
+            padding:
+                14px
+                21px
+                14px
+                23px;
 
-            border-radius: 999px;
+            border-radius:
+                999px;
 
-            background: white;
+            background:
+                #ffffff;
 
-            color: black;
+            color:
+                #000000;
 
-            font-size: 13px;
+            font:
+                500
+                12px/1
+                var(--body);
 
-            font-weight: 500;
+            letter-spacing:
+                .07em;
 
-            letter-spacing: 0.08em;
-
-            text-transform: uppercase;
+            text-transform:
+                uppercase;
 
             transition:
-                transform .3s ease;
+                transform
+                .35s
+                cubic-bezier(.2,.8,.2,1);
         }
 
 
         .cta:hover {
-            transform: translateY(-3px);
+            transform:
+                translateY(-3px);
         }
 
 
         .cta:active {
-            transform: scale(.97);
+            transform:
+                scale(.97);
         }
 
 
         .cta svg {
-            width: 16px;
-            height: 16px;
-        }
-
-
-        .home-footer {
-            display: flex;
-
-            justify-content: space-between;
-
-            align-items: flex-end;
-
-            gap: 20px;
-
-            font-size: 12px;
-
-            line-height: 1.2;
-        }
-
-
-        .socials {
-            display: flex;
-
-            gap: 10px;
-
-            align-items: center;
-
-            text-transform: uppercase;
-
-            letter-spacing: .06em;
-        }
-
-
-        .socials a:hover {
-            text-decoration: underline;
-
-            text-underline-offset: 4px;
-        }
-
-
-        .reveal-hint {
-            position: absolute;
-
-            left: 50%;
-
-            bottom: 30px;
-
-            transform: translateX(-50%);
-
-            margin: 0;
-
-            font-size: 11px;
-
-            letter-spacing: .08em;
-
-            text-transform: uppercase;
-
-            opacity: .45;
-
-            transition: opacity .5s ease;
-        }
-
-
-        .reveal-hint.hidden {
-            opacity: 0;
-        }
-
-
-        .touch-hint {
-            display: none;
-        }
-
-
-        @media (hover: none) {
-
-            .mouse-hint {
-                display: none;
-            }
-
-
-            .touch-hint {
-                display: inline;
-            }
-
-        }
-
-
-        /* ==========================================
-           WHITE VOID / WORK AREA
-        ========================================== */
-
-        .work-stage {
-            position: relative;
-
-            min-height: 100vh;
-            min-height: 100svh;
-
-            background: #ffffff;
-
-            display: flex;
-
-            flex-direction: column;
-
-            align-items: center;
-
-            justify-content: center;
-
-            padding: 90px 20px;
-
-            overflow: hidden;
-        }
-
-
-        .work-label {
-            position: absolute;
-
-            top: 35px;
-
-            left: 35px;
-
-            margin: 0;
-
-            font-size: 11px;
-
-            letter-spacing: .16em;
-
-            text-transform: uppercase;
-
-            color: #777;
-        }
-
-
-        .work-home-link {
-            position: absolute;
-
-            top: 35px;
-
-            right: 35px;
-
-            font-size: 11px;
-
-            letter-spacing: .12em;
-
-            text-transform: uppercase;
-
-            color: #555;
-        }
-
-
-        .work-home-link:hover {
-            color: #000;
-        }
-
-
-        /* ==========================================
-           RETRO COMPUTER
-        ========================================== */
-
-        .computer-button {
-            border: 0;
-
-            background: transparent;
-
-            padding: 0;
-
-            cursor: pointer;
+            width:
+                15px;
+
+            height:
+                15px;
 
             transition:
-                transform .55s
+                transform
+                .35s
+                cubic-bezier(.2,.8,.2,1);
+        }
+
+
+        .cta:hover svg {
+            transform:
+                translateX(3px);
+        }
+
+
+        .foot {
+            display:
+                flex;
+
+            justify-content:
+                space-between;
+
+            align-items:
+                flex-end;
+
+            gap:
+                20px;
+
+            font-size:
+                11px;
+
+            line-height:
+                1.2;
+        }
+
+
+        .links {
+            display:
+                flex;
+
+            gap:
+                9px;
+
+            align-items:
+                center;
+
+            font-weight:
+                500;
+
+            letter-spacing:
+                .06em;
+
+            text-transform:
+                uppercase;
+        }
+
+
+        .links a:hover {
+            text-decoration:
+                underline;
+
+            text-underline-offset:
+                4px;
+        }
+
+
+        .hint {
+            position:
+                absolute;
+
+            left:
+                50%;
+
+            bottom:
+                calc(
+                    var(--gutter)
+                    + 2px
+                );
+
+            transform:
+                translateX(-50%);
+
+            margin:
+                0;
+
+            font-size:
+                11px;
+
+            letter-spacing:
+                .07em;
+
+            text-transform:
+                uppercase;
+
+            opacity:
+                .45;
+
+            transition:
+                opacity
+                .6s
+                ease;
+
+            white-space:
+                nowrap;
+        }
+
+
+        .hint.is-gone {
+            opacity:
+                0;
+        }
+
+
+        .hint .touch {
+            display:
+                none;
+        }
+
+
+        @media (hover:none) {
+
+            .hint .mouse {
+                display:
+                    none;
+            }
+
+
+            .hint .touch {
+                display:
+                    inline;
+            }
+
+        }
+
+
+        /* ==================================================
+           WORK — PURE WHITE VOID
+        ================================================== */
+
+        .work {
+            position:
+                relative;
+
+            width:
+                100%;
+
+            min-height:
+                100vh;
+
+            min-height:
+                100svh;
+
+            display:
+                flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                center;
+
+            overflow:
+                hidden;
+
+            background:
+                #ffffff;
+
+            padding:
+                80px 20px;
+        }
+
+
+        .work__label {
+            position:
+                absolute;
+
+            top:
+                32px;
+
+            left:
+                34px;
+
+            margin:
+                0;
+
+            color:
+                #777;
+
+            font-size:
+                11px;
+
+            letter-spacing:
+                .15em;
+
+            text-transform:
+                uppercase;
+        }
+
+
+        .work__back {
+            position:
+                absolute;
+
+            top:
+                32px;
+
+            right:
+                34px;
+
+            color:
+                #777;
+
+            font-size:
+                11px;
+
+            letter-spacing:
+                .12em;
+
+            text-transform:
+                uppercase;
+        }
+
+
+        .work__back:hover {
+            color:
+                #000;
+        }
+
+
+        /* ==================================================
+           RETRO COMPUTER
+        ================================================== */
+
+        .computer-button {
+            position:
+                relative;
+
+            border:
+                none;
+
+            padding:
+                0;
+
+            background:
+                transparent;
+
+            cursor:
+                pointer;
+
+            transition:
+                transform
+                .55s
                 cubic-bezier(.2,.8,.2,1);
 
-            outline: none;
+            outline:
+                none;
         }
 
 
@@ -432,321 +656,434 @@
         }
 
 
-        .computer {
-            position: relative;
+        .computer-button.opening {
+            transform:
+                scale(1.3);
 
-            width: min(72vw, 430px);
+            pointer-events:
+                none;
+        }
+
+
+        .computer {
+            position:
+                relative;
+
+            width:
+                min(
+                    75vw,
+                    440px
+                );
 
             filter:
                 drop-shadow(
-                    0 30px 28px
+                    0
+                    30px
+                    28px
                     rgba(0,0,0,.10)
                 );
         }
 
 
         .monitor {
-            position: relative;
+            position:
+                relative;
 
-            width: 78%;
+            width:
+                77%;
 
-            height: 355px;
+            height:
+                355px;
 
-            margin: 0 auto;
+            margin:
+                0 auto;
+
+            border:
+                2px
+                solid
+                #baa889;
+
+            border-radius:
+                18px
+                18px
+                11px
+                11px;
 
             background:
                 linear-gradient(
                     145deg,
                     #eee4ce,
-                    #d8c8ab
+                    #d5c4a6
                 );
-
-            border:
-                2px solid
-                #bcaa8e;
-
-            border-radius:
-                18px 18px 11px 11px;
         }
 
 
         .monitor::after {
-            content: "";
+            content:
+                "";
 
-            position: absolute;
+            position:
+                absolute;
 
-            inset: 7px;
-
-            border-radius: 12px;
+            inset:
+                7px;
 
             border:
-                1px solid
+                1px
+                solid
                 rgba(255,255,255,.5);
 
-            pointer-events: none;
+            border-radius:
+                12px;
+
+            pointer-events:
+                none;
         }
 
 
         .screen-frame {
-            position: absolute;
+            position:
+                absolute;
 
-            top: 35px;
+            top:
+                35px;
 
-            left: 50%;
+            left:
+                50%;
 
-            transform: translateX(-50%);
+            width:
+                72%;
 
-            width: 72%;
-            height: 175px;
+            height:
+                175px;
 
-            padding: 11px;
+            padding:
+                11px;
 
-            border-radius: 13px;
+            transform:
+                translateX(-50%);
 
-            background: #313033;
+            border-radius:
+                13px;
+
+            background:
+                #303033;
         }
 
 
         .screen {
-            position: relative;
+            position:
+                relative;
 
-            width: 100%;
-            height: 100%;
+            width:
+                100%;
 
-            overflow: hidden;
+            height:
+                100%;
 
-            border-radius: 7px;
+            overflow:
+                hidden;
+
+            border:
+                2px
+                solid
+                #141414;
+
+            border-radius:
+                7px;
 
             background:
                 linear-gradient(
-                    #cad5cf,
-                    #9facaa
+                    #d5ded9,
+                    #a6b5b0
                 );
-
-            border:
-                2px solid
-                #121212;
         }
 
 
         .screen-bar {
-            height: 18px;
-
-            border-bottom:
-                1px solid
-                rgba(0,0,0,.2);
+            height:
+                18px;
 
             background:
-                #dbe1dd;
+                #e0e4df;
+
+            border-bottom:
+                1px
+                solid
+                rgba(0,0,0,.2);
         }
 
 
         .screen-content {
             height:
-                calc(100% - 18px);
+                calc(
+                    100%
+                    - 18px
+                );
 
-            display: flex;
+            display:
+                flex;
 
-            align-items: center;
+            align-items:
+                center;
 
-            justify-content: center;
+            justify-content:
+                center;
 
             font-family:
                 var(--display);
 
             font-size:
-                clamp(
-                    24px,
-                    5vw,
-                    38px
-                );
+                35px;
 
             letter-spacing:
-                -0.05em;
+                -.05em;
 
-            color: #171717;
+            color:
+                #151515;
         }
 
 
         .disk-slot {
-            position: absolute;
+            position:
+                absolute;
 
-            right: 32px;
+            top:
+                245px;
 
-            top: 245px;
+            right:
+                31px;
 
-            width: 78px;
-            height: 11px;
+            width:
+                78px;
 
-            border-radius: 2px;
+            height:
+                10px;
 
             background:
-                #796d5b;
+                #776b59;
+
+            border-radius:
+                2px;
         }
 
 
         .computer-logo {
-            position: absolute;
+            position:
+                absolute;
 
-            left: 24px;
+            left:
+                25px;
 
-            bottom: 27px;
+            bottom:
+                27px;
 
-            width: 13px;
-            height: 13px;
+            width:
+                13px;
+
+            height:
+                13px;
 
             background:
-                #cdbb9f;
+                #cbb99c;
 
             border:
-                1px solid
-                #ad9a7d;
+                1px
+                solid
+                #ac987a;
         }
 
 
         .computer-neck {
-            width: 69%;
-            height: 16px;
+            width:
+                67%;
 
-            margin: 0 auto;
+            height:
+                17px;
+
+            margin:
+                0 auto;
 
             background:
                 #d2c0a2;
 
             border-left:
-                2px solid
-                #b6a386;
+                2px
+                solid
+                #b3a083;
 
             border-right:
-                2px solid
-                #b6a386;
+                2px
+                solid
+                #b3a083;
         }
 
 
         .keyboard {
-            position: relative;
+            position:
+                relative;
 
-            width: 100%;
+            width:
+                100%;
 
-            height: 105px;
+            min-height:
+                106px;
 
-            padding: 18px 22px;
+            padding:
+                18px
+                22px;
+
+            border:
+                2px
+                solid
+                #baa789;
+
+            border-radius:
+                10px;
 
             background:
                 linear-gradient(
                     145deg,
-                    #e8ddc6,
-                    #d4c2a4
+                    #e9ddc6,
+                    #d3c1a3
                 );
-
-            border:
-                2px solid
-                #baa788;
-
-            border-radius: 10px;
 
             transform:
                 perspective(500px)
                 rotateX(4deg);
 
-            transform-origin: top;
+            transform-origin:
+                top;
         }
 
 
         .keys {
-            display: grid;
+            display:
+                grid;
 
             grid-template-columns:
-                repeat(12,1fr);
+                repeat(
+                    12,
+                    1fr
+                );
 
-            gap: 5px;
+            gap:
+                5px;
         }
 
 
         .key {
-            height: 18px;
+            height:
+                18px;
 
-            border-radius: 2px;
+            border:
+                1px
+                solid
+                #4e4437;
+
+            border-radius:
+                2px;
 
             background:
                 linear-gradient(
-                    #8b7c65,
-                    #645744
+                    #887a64,
+                    #625543
                 );
-
-            border:
-                1px solid
-                #4e4438;
         }
 
 
-        .spacebar {
+        .space {
             grid-column:
                 span 5;
         }
 
 
-        .computer-mouse {
-            position: absolute;
+        .mouse {
+            position:
+                absolute;
 
-            right: -85px;
+            right:
+                -84px;
 
-            bottom: 5px;
+            bottom:
+                3px;
 
-            width: 60px;
-            height: 72px;
+            width:
+                59px;
+
+            height:
+                72px;
+
+            border:
+                2px
+                solid
+                #baa88a;
+
+            border-radius:
+                10px;
 
             background:
                 #ddceb5;
-
-            border:
-                2px solid
-                #baa88a;
-
-            border-radius: 10px;
         }
 
 
-        .computer-mouse::before {
-            content: "";
+        .mouse::before {
+            content:
+                "";
 
-            position: absolute;
+            position:
+                absolute;
 
-            top: 10px;
+            top:
+                11px;
 
-            left: 50%;
+            left:
+                50%;
+
+            width:
+                26px;
 
             transform:
                 translateX(-50%);
 
-            width: 26px;
-
             border-top:
-                2px solid
+                2px
+                solid
                 #b5a184;
         }
 
 
-        .computer-cable {
-            position: absolute;
+        .cable {
+            position:
+                absolute;
 
-            left: -70px;
+            left:
+                -70px;
 
-            bottom: 80px;
+            bottom:
+                80px;
 
-            width: 100px;
-            height: 70px;
+            width:
+                100px;
+
+            height:
+                70px;
 
             border-left:
-                7px solid
-                #a99066;
+                7px
+                solid
+                #a99168;
 
             border-bottom:
-                7px solid
-                #a99066;
+                7px
+                solid
+                #a99168;
 
             border-radius:
-                0 0 0 70px;
+                0
+                0
+                0
+                70px;
 
             transform:
                 rotate(-10deg);
@@ -754,346 +1091,415 @@
 
 
         .computer-caption {
-            margin-top: 32px;
+            position:
+                absolute;
 
-            font-size: 11px;
+            left:
+                50%;
 
-            letter-spacing: .14em;
+            top:
+                calc(
+                    50%
+                    + 310px
+                );
 
-            text-transform: uppercase;
-
-            color: #777;
-        }
-
-
-        /* ==========================================
-           COMPUTER OPEN ANIMATION
-        ========================================== */
-
-        .computer-button.opening {
             transform:
-                scale(1.18)
-                translateY(-5px);
+                translateX(-50%);
 
-            pointer-events: none;
+            margin:
+                0;
+
+            color:
+                #888;
+
+            font-size:
+                11px;
+
+            letter-spacing:
+                .14em;
+
+            text-transform:
+                uppercase;
+
+            white-space:
+                nowrap;
         }
 
 
-        /* ==========================================
+        /* ==================================================
            PHOTO VIEWER
-        ========================================== */
+        ================================================== */
 
-        .photo-viewer {
-            position: fixed;
+        .viewer {
+            position:
+                fixed;
 
-            inset: 0;
+            inset:
+                0;
 
-            z-index: 1000;
+            z-index:
+                1000;
 
-            display: flex;
+            display:
+                flex;
 
-            align-items: center;
+            align-items:
+                center;
 
-            justify-content: center;
+            justify-content:
+                center;
 
-            padding: 30px;
+            padding:
+                25px;
 
             background:
                 rgba(
                     255,
                     255,
                     255,
-                    .98
+                    .985
                 );
 
-            opacity: 0;
+            opacity:
+                0;
 
-            visibility: hidden;
+            visibility:
+                hidden;
 
-            pointer-events: none;
+            pointer-events:
+                none;
 
             transition:
-                opacity .55s ease,
-                visibility .55s ease;
+                opacity
+                .55s
+                ease,
+
+                visibility
+                .55s
+                ease;
         }
 
 
-        .photo-viewer.open {
-            opacity: 1;
+        .viewer.open {
+            opacity:
+                1;
 
-            visibility: visible;
+            visibility:
+                visible;
 
-            pointer-events: auto;
+            pointer-events:
+                auto;
         }
 
 
-        .photo-panel {
-            position: relative;
-
+        .viewer__content {
             width:
                 min(
                     1100px,
                     94vw
                 );
 
-            max-height: 90vh;
+            display:
+                flex;
 
-            display: flex;
+            flex-direction:
+                column;
 
-            flex-direction: column;
+            align-items:
+                center;
 
-            align-items: center;
-
-            justify-content: center;
+            opacity:
+                0;
 
             transform:
-                scale(.83);
-
-            opacity: 0;
+                scale(.78);
 
             transition:
-                transform .7s
+                transform
+                .8s
                 cubic-bezier(.2,.8,.2,1),
 
-                opacity .5s ease;
+                opacity
+                .55s
+                ease;
         }
 
 
-        .photo-viewer.open
-        .photo-panel {
+        .viewer.open
+        .viewer__content {
+            opacity:
+                1;
+
             transform:
                 scale(1);
-
-            opacity: 1;
         }
 
 
-        .photo-panel img {
-            display: block;
+        .viewer img {
+            display:
+                block;
 
-            max-width: 100%;
+            width:
+                auto;
 
-            max-height: 78vh;
+            height:
+                auto;
 
-            width: auto;
-            height: auto;
+            max-width:
+                100%;
 
-            object-fit: contain;
+            max-height:
+                78vh;
+
+            object-fit:
+                contain;
 
             box-shadow:
-                0 30px 80px
+                0
+                28px
+                80px
                 rgba(0,0,0,.13);
         }
 
 
-        .photo-meta {
-            width: 100%;
+        .viewer__meta {
+            width:
+                100%;
 
-            display: flex;
+            display:
+                flex;
 
             justify-content:
                 space-between;
 
-            gap: 20px;
+            gap:
+                20px;
 
-            padding-top: 15px;
+            padding-top:
+                14px;
 
-            font-size: 11px;
+            color:
+                #666;
 
-            letter-spacing: .1em;
+            font-size:
+                11px;
 
-            text-transform: uppercase;
+            letter-spacing:
+                .1em;
 
-            color: #666;
+            text-transform:
+                uppercase;
         }
 
 
-        .close-viewer {
-            position: fixed;
+        .viewer__close {
+            position:
+                fixed;
 
             top:
                 max(
-                    24px,
+                    22px,
                     env(
                         safe-area-inset-top
                     )
                 );
 
-            right: 25px;
+            right:
+                24px;
 
-            z-index: 1002;
+            z-index:
+                1001;
 
-            width: 48px;
-            height: 48px;
+            width:
+                48px;
 
-            border-radius: 50%;
+            height:
+                48px;
 
             border:
-                1px solid
+                1px
+                solid
                 #222;
 
-            background: white;
+            border-radius:
+                50%;
 
-            color: #111;
+            background:
+                #ffffff;
 
-            font-size: 24px;
+            color:
+                #111;
 
-            cursor: pointer;
+            font-size:
+                25px;
 
-            opacity: 0;
-
-            visibility: hidden;
-
-            transition:
-                opacity .3s ease;
+            cursor:
+                pointer;
         }
 
 
-        .photo-viewer.open
-        .close-viewer {
-            opacity: 1;
-
-            visibility: visible;
-        }
-
-
-        /* ==========================================
+        /* ==================================================
            MOBILE
-        ========================================== */
+        ================================================== */
 
-        @media (
-            max-width: 767px
-        ) {
+        @media
+        (max-width: 767px) {
+
+            :root {
+                --gutter:
+                    30px;
+            }
+
 
             .hero {
                 min-height:
-                    100svh;
+                    620px;
             }
 
 
-            .hero-photo {
-                object-position:
-                    center;
-            }
-
-
-            .home-ui {
-                padding:
-                    max(
-                        30px,
-                        env(
-                            safe-area-inset-top
-                        )
-                    )
-                    30px
-                    max(
-                        30px,
-                        env(
-                            safe-area-inset-bottom
-                        )
-                    );
-            }
-
-
-            .intro p {
-                font-size: 27px;
-
-                max-width: 340px;
+            .intro__lede {
+                font-size:
+                    27px;
             }
 
 
             .cta {
+                margin-top:
+                    29px;
+
                 padding:
-                    17px 27px;
+                    17px
+                    28px;
 
-                font-size: 13px;
+                font-size:
+                    13px;
             }
 
 
-            .home-footer {
-                font-size: 11px;
+            .foot {
+                font-size:
+                    10px;
             }
 
 
-            .reveal-hint {
-                bottom: 52px;
+            .hint {
+                bottom:
+                    calc(
+                        var(--gutter)
+                        + 27px
+                    );
             }
 
 
-            .work-label {
-                top: 24px;
-                left: 20px;
+            .work__label {
+                top:
+                    24px;
+
+                left:
+                    20px;
             }
 
 
-            .work-home-link {
-                top: 24px;
-                right: 20px;
+            .work__back {
+                top:
+                    24px;
+
+                right:
+                    20px;
             }
 
 
             .computer {
                 width:
                     min(
-                        75vw,
+                        72vw,
                         330px
                     );
             }
 
 
             .monitor {
-                height: 285px;
+                height:
+                    285px;
             }
 
 
             .screen-frame {
-                top: 28px;
+                top:
+                    28px;
 
-                height: 140px;
+                height:
+                    140px;
+            }
+
+
+            .screen-content {
+                font-size:
+                    28px;
             }
 
 
             .disk-slot {
-                top: 195px;
+                top:
+                    195px;
 
-                width: 58px;
+                width:
+                    58px;
             }
 
 
             .keyboard {
-                height: 85px;
+                min-height:
+                    85px;
 
                 padding:
-                    13px 14px;
+                    13px
+                    14px;
             }
 
 
             .key {
-                height: 14px;
+                height:
+                    14px;
             }
 
 
-            .computer-mouse {
-                right: -55px;
+            .mouse {
+                right:
+                    -53px;
 
-                width: 44px;
-                height: 55px;
+                width:
+                    44px;
+
+                height:
+                    56px;
             }
 
 
-            .computer-cable {
-                display: none;
+            .cable {
+                display:
+                    none;
             }
 
 
-            .photo-viewer {
-                padding: 20px;
+            .computer-caption {
+                top:
+                    calc(
+                        50%
+                        + 250px
+                    );
             }
 
 
-            .photo-panel img {
+            .viewer {
+                padding:
+                    20px;
+            }
+
+
+            .viewer img {
                 max-height:
-                    73vh;
+                    72vh;
             }
 
         }
@@ -1105,42 +1511,57 @@
 <body>
 
 
-<!-- ==========================================
-     HOME
-========================================== -->
+<!-- ==================================================
+     WEBGL MARTIN HOME
+================================================== -->
 
 <section
     class="hero"
     id="home"
+    aria-label="Martin Photography"
 >
 
+
     <img
-        class="hero-photo"
+        class="hero__photo"
         src="/static/images/DSC00686-2.JPG"
         alt=""
         aria-hidden="true"
     >
 
 
+    <div class="hero__paper">
+
+        <h1
+            class="hero__title"
+        >
+            MARTIN
+        </h1>
+
+    </div>
+
+
     <canvas
-        id="revealCanvas"
+        class="hero__reveal"
+        id="heroReveal"
         aria-hidden="true"
     ></canvas>
 
 
-    <div class="home-ui">
+    <div class="chrome">
+
 
         <div class="intro">
 
-            <p>
+            <p class="intro__lede">
                 Martin Photography.<br>
                 Moments through my perspective.
             </p>
 
 
             <a
-                href="#work"
                 class="cta"
+                href="#work"
             >
 
                 View my work
@@ -1164,14 +1585,17 @@
         </div>
 
 
-        <div class="home-footer">
+        <div class="foot">
 
             <span>
                 Photographer — Martin
             </span>
 
 
-            <nav class="socials">
+            <nav
+                class="links"
+                aria-label="Social"
+            >
 
                 <a href="#">
                     Instagram
@@ -1189,19 +1613,15 @@
 
 
         <p
-            class="reveal-hint"
-            id="revealHint"
+            class="hint"
+            id="hint"
         >
 
-            <span
-                class="mouse-hint"
-            >
+            <span class="mouse">
                 Move to reveal
             </span>
 
-            <span
-                class="touch-hint"
-            >
+            <span class="touch">
                 Touch to reveal
             </span>
 
@@ -1212,22 +1632,23 @@
 </section>
 
 
-<!-- ==========================================
+<!-- ==================================================
      WHITE VOID
-========================================== -->
+================================================== -->
 
 <section
-    class="work-stage"
+    class="work"
     id="work"
 >
 
-    <p class="work-label">
+
+    <p class="work__label">
         Martin / Selected Work
     </p>
 
 
     <a
-        class="work-home-link"
+        class="work__back"
         href="#home"
     >
         Back home
@@ -1237,25 +1658,21 @@
     <button
         class="computer-button"
         id="computerButton"
-        aria-label="Open Martin's photography"
+        aria-label="Open photograph"
     >
 
         <div class="computer">
 
-            <div
-                class="computer-cable"
-            ></div>
+
+            <div class="cable"></div>
 
 
             <div class="monitor">
 
-                <div
-                    class="screen-frame"
-                >
 
-                    <div
-                        class="screen"
-                    >
+                <div class="screen-frame">
+
+                    <div class="screen">
 
                         <div
                             class="screen-bar"
@@ -1273,9 +1690,7 @@
                 </div>
 
 
-                <div
-                    class="disk-slot"
-                ></div>
+                <div class="disk-slot"></div>
 
 
                 <div
@@ -1326,10 +1741,7 @@
                     <div class="key"></div>
 
                     <div
-                        class="
-                            key
-                            spacebar
-                        "
+                        class="key space"
                     ></div>
 
                     <div class="key"></div>
@@ -1341,45 +1753,40 @@
             </div>
 
 
-            <div
-                class="computer-mouse"
-            ></div>
+            <div class="mouse"></div>
 
         </div>
 
     </button>
 
 
-    <div
-        class="computer-caption"
-    >
+    <p class="computer-caption">
         Click the computer
-    </div>
+    </p>
 
 </section>
 
 
-<!-- ==========================================
-     PHOTO VIEWER
-========================================== -->
+<!-- ==================================================
+     ONE PHOTO ONLY
+================================================== -->
 
 <div
-    class="photo-viewer"
-    id="photoViewer"
+    class="viewer"
+    id="viewer"
 >
 
+
     <button
-        class="close-viewer"
+        class="viewer__close"
         id="closeViewer"
-        aria-label="Close photograph"
     >
         ×
     </button>
 
 
-    <div
-        class="photo-panel"
-    >
+    <div class="viewer__content">
+
 
         <img
             src="/static/images/DSC00686-2.JPG"
@@ -1387,14 +1794,11 @@
         >
 
 
-        <div
-            class="photo-meta"
-        >
+        <div class="viewer__meta">
 
             <span>
                 01
             </span>
-
 
             <span>
                 Martin Photography
@@ -1411,9 +1815,9 @@
 
 (() => {
 
-    /* ========================================
-       HOME LIQUID REVEAL
-    ======================================== */
+    /* ==================================================
+       WEBGL LIQUID REVEAL
+    ================================================== */
 
     const hero =
         document.querySelector(
@@ -1423,781 +1827,604 @@
 
     const canvas =
         document.getElementById(
-            "revealCanvas"
-        );
-
-
-    const ctx =
-        canvas.getContext(
-            "2d"
+            "heroReveal"
         );
 
 
     const hint =
         document.getElementById(
-            "revealHint"
+            "hint"
         );
 
 
-    let width =
-        0;
+    const PAPER = [
+
+        0xf3 / 255,
+
+        0xf3 / 255,
+
+        0xee / 255
+
+    ];
 
 
-    let height =
-        0;
+    const INK = [
+
+        0x0b / 255,
+
+        0x0b / 255,
+
+        0x0b / 255
+
+    ];
 
 
-    let dpr =
+    const TRAIL_SCALE =
+        .35;
+
+
+    const DPR =
+        Math.min(
+            window.devicePixelRatio || 1,
+            2
+        );
+
+
+    const reduceMotion =
+        window.matchMedia(
+            "(prefers-reduced-motion: reduce)"
+        ).matches;
+
+
+    let W =
         1;
 
 
-    let pointerActive =
-        false;
+    let H =
+        1;
 
 
-    let pointerX =
-        0;
+    let baseRadius =
+        60;
 
 
-    let pointerY =
-        0;
+    const textCanvas =
+        document.createElement(
+            "canvas"
+        );
 
 
-    let previousX =
-        0;
+    const textCtx =
+        textCanvas.getContext(
+            "2d"
+        );
 
 
-    let previousY =
-        0;
+    const trailCanvas =
+        document.createElement(
+            "canvas"
+        );
 
 
-    let firstMove =
-        true;
+    const trailCtx =
+        trailCanvas.getContext(
+            "2d"
+        );
 
 
-    let lastTime =
+    const pointer = {
+
+        active:
+            false,
+
+        x:
+            0,
+
+        y:
+            0,
+
+        px:
+            0,
+
+        py:
+            0,
+
+        vx:
+            0,
+
+        vy:
+            0
+
+    };
+
+
+    let droplets =
+        [];
+
+
+    let lastMove =
         performance.now();
 
 
-    const trails =
-        [];
+    function clamp(
+        value,
+        min,
+        max
+    ) {
 
-
-    const droplets =
-        [];
-
-
-    function resizeCanvas() {
-
-        const rect =
-            hero.getBoundingClientRect();
-
-
-        width =
-            rect.width;
-
-
-        height =
-            rect.height;
-
-
-        dpr =
+        return Math.max(
+            min,
             Math.min(
-                window.devicePixelRatio || 1,
-                2
-            );
-
-
-        canvas.width =
-            Math.round(
-                width * dpr
-            );
-
-
-        canvas.height =
-            Math.round(
-                height * dpr
-            );
-
-
-        canvas.style.width =
-            width + "px";
-
-
-        canvas.style.height =
-            height + "px";
-
-
-        ctx.setTransform(
-            dpr,
-            0,
-            0,
-            dpr,
-            0,
-            0
+                max,
+                value
+            )
         );
 
     }
 
 
-    function drawPaper() {
-
-        ctx.globalCompositeOperation =
-            "source-over";
-
-
-        ctx.clearRect(
-            0,
-            0,
-            width,
-            height
-        );
-
-
-        ctx.fillStyle =
-            "#f3f3ee";
-
-
-        ctx.fillRect(
-            0,
-            0,
-            width,
-            height
-        );
-
-
-        let fontSize =
-            Math.min(
-                width * .23,
-                height * .31
-            );
-
-
-        ctx.font =
-            `800 ${fontSize}px Outfit, Arial Black, sans-serif`;
-
-
-        const measurement =
-            ctx.measureText(
-                "MARTIN"
-            );
-
-
-        const maximum =
-            width * .90;
-
-
-        if (
-            measurement.width >
-            maximum
-        ) {
-
-            fontSize *=
-                maximum /
-                measurement.width;
-
-
-            ctx.font =
-                `800 ${fontSize}px Outfit, Arial Black, sans-serif`;
-
-        }
-
-
-        ctx.textAlign =
-            "center";
-
-
-        ctx.textBaseline =
-            "middle";
-
-
-        ctx.fillStyle =
-            "#0b0b0b";
-
-
-        ctx.fillText(
-            "MARTIN",
-            width / 2,
-            height / 2
-        );
-
-    }
-
-
-    function hole(
+    function stamp(
         x,
         y,
         radius,
-        life
+        vx,
+        vy,
+        alpha
     ) {
 
-        const wobble =
-
-            1 +
-
-            Math.sin(
-
-                performance.now()
-                * .004
-
-                +
-
-                x * .015
-
-                +
-
-                y * .007
-
-            ) *
-
-            .06;
+        const sx =
+            x *
+            TRAIL_SCALE;
 
 
-        const r =
-            radius *
-            wobble;
+        const sy =
+            y *
+            TRAIL_SCALE;
+
+
+        const sr =
+            Math.max(
+                1,
+                radius *
+                TRAIL_SCALE
+            );
+
+
+        const k =
+            .012;
+
+
+        const red =
+            Math.round(
+
+                128 +
+
+                clamp(
+                    vx * k,
+                    -1,
+                    1
+                ) *
+
+                127
+
+            );
+
+
+        const green =
+            Math.round(
+
+                128 +
+
+                clamp(
+                    vy * k,
+                    -1,
+                    1
+                ) *
+
+                127
+
+            );
 
 
         const gradient =
-            ctx.createRadialGradient(
+            trailCtx
+            .createRadialGradient(
 
-                x,
-                y,
+                sx,
+                sy,
                 0,
 
-                x,
-                y,
-                r
+                sx,
+                sy,
+                sr
 
             );
 
 
         gradient.addColorStop(
+
             0,
-            `rgba(0,0,0,${Math.min(1,life * 1.5)})`
+
+            `rgba(${red},${green},0,${alpha})`
+
         );
 
 
         gradient.addColorStop(
-            .65,
-            `rgba(0,0,0,${life})`
+
+            .5,
+
+            `rgba(${red},${green},0,${alpha * .85})`
+
         );
 
 
         gradient.addColorStop(
+
             1,
-            "rgba(0,0,0,0)"
+
+            `rgba(${red},${green},0,0)`
+
         );
 
 
-        ctx.fillStyle =
+        trailCtx.fillStyle =
             gradient;
 
 
-        ctx.beginPath();
+        trailCtx.beginPath();
 
 
-        ctx.arc(
-            x,
-            y,
-            r,
+        trailCtx.arc(
+            sx,
+            sy,
+            sr,
             0,
             Math.PI * 2
         );
 
 
-        ctx.fill();
+        trailCtx.fill();
 
     }
 
 
-    function localPosition(
-        clientX,
-        clientY
+    function updateTrail(
+        dt
     ) {
 
-        const rect =
-            hero.getBoundingClientRect();
+        const frame =
+            dt *
+            60;
 
 
-        return {
-
-            x:
-                clientX -
-                rect.left,
-
-            y:
-                clientY -
-                rect.top
-
-        };
-
-    }
-
-
-    function pointerMove(
-        x,
-        y
-    ) {
-
-        if (
-            firstMove
-        ) {
-
-            previousX =
-                x;
-
-
-            previousY =
-                y;
-
-
-            firstMove =
-                false;
-
-        }
-
-
-        pointerX =
-            x;
-
-
-        pointerY =
-            y;
-
-
-        pointerActive =
-            true;
-
-
-        hint.classList.add(
-            "hidden"
-        );
-
-
-        const dx =
-            pointerX -
-            previousX;
-
-
-        const dy =
-            pointerY -
-            previousY;
-
-
-        const distance =
-            Math.hypot(
-                dx,
-                dy
-            );
-
-
-        const baseRadius =
-            Math.max(
-                width,
-                height
-            ) *
-            (
-                width < 768
-                ? .085
-                : .055
-            );
-
-
-        const radius =
-
-            baseRadius *
-
-            (
-                .9 +
-
-                Math.min(
-                    distance / 50,
-                    .6
-                )
-            );
-
-
-        const steps =
-            Math.max(
-
-                1,
-
-                Math.ceil(
-
-                    distance /
-
-                    Math.max(
-                        10,
-                        radius * .22
-                    )
-
-                )
-
-            );
-
-
-        for (
-            let i = 0;
-            i <= steps;
-            i++
-        ) {
-
-            const t =
-                i / steps;
-
-
-            trails.push({
-
-                x:
-                    previousX +
-                    dx * t,
-
-                y:
-                    previousY +
-                    dy * t,
-
-                r:
-                    radius *
-                    (
-                        .9 +
-                        Math.random() *
-                        .18
-                    ),
-
-                life: 1
-
-            });
-
-        }
-
-
-        if (
-            distance > 9
-        ) {
-
-            const count =
-                Math.min(
-                    3,
-                    Math.floor(
-                        distance / 15
-                    )
-                );
-
-
-            for (
-                let i = 0;
-                i < count;
-                i++
-            ) {
-
-                droplets.push({
-
-                    x:
-                        x +
-                        (
-                            Math.random() -
-                            .5
-                        ) *
-                        radius,
-
-                    y:
-                        y +
-                        (
-                            Math.random() -
-                            .5
-                        ) *
-                        radius,
-
-                    vx:
-                        dx *
-                        (
-                            .04 +
-                            Math.random() *
-                            .08
-                        ),
-
-                    vy:
-                        dy *
-                        (
-                            .04 +
-                            Math.random() *
-                            .08
-                        ),
-
-                    r:
-                        radius *
-                        (
-                            .08 +
-                            Math.random() *
-                            .15
-                        ),
-
-                    life: 1
-
-                });
-
-            }
-
-        }
-
-
-        if (
-            trails.length >
-            220
-        ) {
-
-            trails.splice(
-                0,
-                trails.length - 220
-            );
-
-        }
-
-
-        if (
-            droplets.length >
-            70
-        ) {
-
-            droplets.splice(
-                0,
-                droplets.length - 70
-            );
-
-        }
-
-
-        previousX =
-            pointerX;
-
-
-        previousY =
-            pointerY;
-
-    }
-
-
-    hero.addEventListener(
-        "pointermove",
-        event => {
-
-            if (
-                event.pointerType ===
-                "touch"
-            ) {
-
-                return;
-
-            }
-
-
-            const position =
-                localPosition(
-                    event.clientX,
-                    event.clientY
-                );
-
-
-            pointerMove(
-                position.x,
-                position.y
-            );
-
-        }
-    );
-
-
-    hero.addEventListener(
-        "pointerleave",
-        () => {
-
-            pointerActive =
-                false;
-
-
-            firstMove =
-                true;
-
-        }
-    );
-
-
-    hero.addEventListener(
-        "touchstart",
-        event => {
-
-            const touch =
-                event.touches[0];
-
-
-            if (!touch) {
-                return;
-            }
-
-
-            const position =
-                localPosition(
-                    touch.clientX,
-                    touch.clientY
-                );
-
-
-            firstMove =
-                true;
-
-
-            pointerMove(
-                position.x,
-                position.y
-            );
-
-
-            trails.push({
-
-                x:
-                    position.x,
-
-                y:
-                    position.y,
-
-                r:
-                    Math.max(
-                        width,
-                        height
-                    ) *
-                    .09,
-
-                life: 1
-
-            });
-
-        },
-
-        {
-            passive: true
-        }
-    );
-
-
-    hero.addEventListener(
-        "touchmove",
-        event => {
-
-            const touch =
-                event.touches[0];
-
-
-            if (!touch) {
-                return;
-            }
-
-
-            const position =
-                localPosition(
-                    touch.clientX,
-                    touch.clientY
-                );
-
-
-            pointerMove(
-                position.x,
-                position.y
-            );
-
-        },
-
-        {
-            passive: true
-        }
-    );
-
-
-    hero.addEventListener(
-        "touchend",
-        () => {
-
-            pointerActive =
-                false;
-
-
-            firstMove =
-                true;
-
-        },
-
-        {
-            passive: true
-        }
-    );
-
-
-    function animate(
-        now
-    ) {
-
-        const dt =
-            Math.min(
-                50,
-                now -
-                lastTime
-            );
-
-
-        lastTime =
-            now;
-
-
-        drawPaper();
-
-
-        ctx.globalCompositeOperation =
+        trailCtx.globalCompositeOperation =
             "destination-out";
 
 
-        for (
-            let i =
-                trails.length - 1;
+        trailCtx.fillStyle =
+            `rgba(0,0,0,${
+                1 -
+                Math.pow(
+                    1 - .03,
+                    frame
+                )
+            })`;
 
-            i >= 0;
 
-            i--
+        trailCtx.fillRect(
+
+            0,
+            0,
+
+            trailCanvas.width,
+            trailCanvas.height
+
+        );
+
+
+        trailCtx.globalCompositeOperation =
+            "source-over";
+
+
+        if (
+            pointer.active
         ) {
 
-            const trail =
-                trails[i];
+            const dx =
+                pointer.x -
+                pointer.px;
 
 
-            trail.life -=
-                dt / 1500;
+            const dy =
+                pointer.y -
+                pointer.py;
 
 
-            if (
-                trail.life <= 0
-            ) {
-
-                trails.splice(
-                    i,
-                    1
+            const distance =
+                Math.hypot(
+                    dx,
+                    dy
                 );
 
 
-                continue;
+            if (
+                distance >
+                .5
+            ) {
+
+                pointer.vx +=
+
+                    (
+                        dx /
+                        Math.max(
+                            frame,
+                            .001
+                        )
+
+                        -
+
+                        pointer.vx
+
+                    ) *
+
+                    .5;
+
+
+                pointer.vy +=
+
+                    (
+                        dy /
+                        Math.max(
+                            frame,
+                            .001
+                        )
+
+                        -
+
+                        pointer.vy
+
+                    ) *
+
+                    .5;
+
+
+                const speed =
+                    Math.hypot(
+                        pointer.vx,
+                        pointer.vy
+                    );
+
+
+                const radius =
+
+                    baseRadius *
+
+                    (
+                        .75 +
+
+                        Math.min(
+                            speed / 45,
+                            1
+                        ) *
+
+                        .75
+                    );
+
+
+                const steps =
+                    Math.max(
+
+                        1,
+
+                        Math.ceil(
+
+                            distance /
+
+                            (
+                                radius *
+                                .22
+                            )
+
+                        )
+
+                    );
+
+
+                for (
+                    let i = 1;
+                    i <= steps;
+                    i++
+                ) {
+
+                    const t =
+                        i /
+                        steps;
+
+
+                    stamp(
+
+                        pointer.px +
+                        dx * t,
+
+                        pointer.py +
+                        dy * t,
+
+                        radius,
+
+                        pointer.vx *
+                        6,
+
+                        pointer.vy *
+                        6,
+
+                        .92
+
+                    );
+
+                }
+
+
+                if (
+                    !reduceMotion
+                ) {
+
+                    const count =
+                        Math.min(
+
+                            3,
+
+                            Math.floor(
+                                speed /
+                                14
+                            )
+
+                        );
+
+
+                    for (
+                        let i = 0;
+                        i < count;
+                        i++
+                    ) {
+
+                        const angle =
+
+                            Math.atan2(
+                                pointer.vy,
+                                pointer.vx
+                            )
+
+                            +
+
+                            (
+                                Math.random()
+                                -
+                                .5
+                            ) *
+
+                            1.4;
+
+
+                        const dropSpeed =
+
+                            speed *
+
+                            (
+                                .35 +
+
+                                Math.random() *
+
+                                .45
+                            );
+
+
+                        droplets.push({
+
+                            x:
+
+                                pointer.x +
+
+                                (
+                                    Math.random()
+                                    -
+                                    .5
+                                ) *
+
+                                radius,
+
+
+                            y:
+
+                                pointer.y +
+
+                                (
+                                    Math.random()
+                                    -
+                                    .5
+                                ) *
+
+                                radius,
+
+
+                            vx:
+
+                                Math.cos(
+                                    angle
+                                ) *
+
+                                dropSpeed,
+
+
+                            vy:
+
+                                Math.sin(
+                                    angle
+                                ) *
+
+                                dropSpeed,
+
+
+                            radius:
+
+                                radius *
+
+                                (
+                                    .20 +
+
+                                    Math.random() *
+
+                                    .35
+                                ),
+
+
+                            life:
+                                1
+
+                        });
+
+                    }
+
+
+                    if (
+                        droplets.length >
+                        90
+                    ) {
+
+                        droplets.splice(
+
+                            0,
+
+                            droplets.length
+                            -
+                            90
+
+                        );
+
+                    }
+
+                }
+
+
+                pointer.px =
+                    pointer.x;
+
+
+                pointer.py =
+                    pointer.y;
 
             }
 
+            else {
 
-            hole(
+                pointer.vx *=
+                    .8;
 
-                trail.x,
 
-                trail.y,
+                pointer.vy *=
+                    .8;
 
-                trail.r,
-
-                trail.life
-
-            );
+            }
 
         }
 
@@ -2217,37 +2444,52 @@
 
             drop.x +=
                 drop.vx *
-                dt *
-                .08;
+                frame;
 
 
             drop.y +=
                 drop.vy *
-                dt *
-                .08;
-
-
-            drop.vy +=
-                .012 *
-                dt;
+                frame;
 
 
             drop.vx *=
-                .985;
+                Math.pow(
+                    .90,
+                    frame
+                );
 
 
-            drop.r *=
-                .997;
+            drop.vy =
+
+                drop.vy *
+
+                Math.pow(
+                    .90,
+                    frame
+                )
+
+                +
+
+                .25 *
+                frame;
 
 
             drop.life -=
-                dt / 1200;
+                .022 *
+                frame;
+
+
+            drop.radius *=
+                Math.pow(
+                    .985,
+                    frame
+                );
 
 
             if (
                 drop.life <= 0
                 ||
-                drop.r < 1
+                drop.radius < 2
             ) {
 
                 droplets.splice(
@@ -2261,66 +2503,2017 @@
             }
 
 
-            hole(
+            stamp(
 
                 drop.x,
 
                 drop.y,
 
-                drop.r,
+                drop.radius,
 
+                drop.vx *
+                6,
+
+                drop.vy *
+                6,
+
+                .85 *
                 drop.life
 
             );
 
         }
 
+    }
 
-        requestAnimationFrame(
-            animate
+
+    function onMove(
+        x,
+        y
+    ) {
+
+        if (
+            !pointer.active
+        ) {
+
+            pointer.active =
+                true;
+
+
+            pointer.x =
+                x;
+
+
+            pointer.y =
+                y;
+
+
+            pointer.px =
+                x;
+
+
+            pointer.py =
+                y;
+
+        }
+
+        else {
+
+            pointer.x =
+                x;
+
+
+            pointer.y =
+                y;
+
+        }
+
+
+        lastMove =
+            performance.now();
+
+
+        hint
+        .classList
+        .add(
+            "is-gone"
+        );
+
+
+        wake();
+
+    }
+
+
+    hero.addEventListener(
+
+        "pointermove",
+
+        event => {
+
+            if (
+                event.pointerType ===
+                "touch"
+            ) {
+
+                return;
+
+            }
+
+
+            const rect =
+                hero
+                .getBoundingClientRect();
+
+
+            onMove(
+
+                event.clientX
+                -
+                rect.left,
+
+                event.clientY
+                -
+                rect.top
+
+            );
+
+        }
+
+    );
+
+
+    hero.addEventListener(
+
+        "pointerleave",
+
+        event => {
+
+            if (
+                event.pointerType !==
+                "touch"
+            ) {
+
+                pointer.active =
+                    false;
+
+            }
+
+        }
+
+    );
+
+
+    hero.addEventListener(
+
+        "touchstart",
+
+        event => {
+
+            const touch =
+                event.touches[0];
+
+
+            if (!touch) {
+                return;
+            }
+
+
+            const rect =
+                hero
+                .getBoundingClientRect();
+
+
+            const x =
+                touch.clientX
+                -
+                rect.left;
+
+
+            const y =
+                touch.clientY
+                -
+                rect.top;
+
+
+            pointer.active =
+                true;
+
+
+            pointer.x =
+                pointer.px =
+                x;
+
+
+            pointer.y =
+                pointer.py =
+                y;
+
+
+            stamp(
+
+                x,
+                y,
+
+                baseRadius *
+                1.1,
+
+                0,
+                0,
+
+                .95
+
+            );
+
+
+            lastMove =
+                performance.now();
+
+
+            hint
+            .classList
+            .add(
+                "is-gone"
+            );
+
+
+            wake();
+
+        },
+
+        {
+            passive:
+                true
+        }
+
+    );
+
+
+    hero.addEventListener(
+
+        "touchmove",
+
+        event => {
+
+            const touch =
+                event.touches[0];
+
+
+            if (!touch) {
+                return;
+            }
+
+
+            const rect =
+                hero
+                .getBoundingClientRect();
+
+
+            onMove(
+
+                touch.clientX
+                -
+                rect.left,
+
+                touch.clientY
+                -
+                rect.top
+
+            );
+
+        },
+
+        {
+            passive:
+                true
+        }
+
+    );
+
+
+    hero.addEventListener(
+
+        "touchend",
+
+        () => {
+
+            pointer.active =
+                false;
+
+        },
+
+        {
+            passive:
+                true
+        }
+
+    );
+
+
+    /* ==================================================
+       WEBGL
+    ================================================== */
+
+    const gl =
+        canvas.getContext(
+
+            "webgl",
+
+            {
+                premultipliedAlpha:
+                    true,
+
+                alpha:
+                    true,
+
+                antialias:
+                    false,
+
+                depth:
+                    false
+            }
+
+        );
+
+
+    if (!gl) {
+
+        console.warn(
+            "WebGL unavailable"
         );
 
     }
 
-
-    resizeCanvas();
-
-
-    window.addEventListener(
-        "resize",
-        resizeCanvas
-    );
+    else {
 
 
-    if (
-        document.fonts
-        &&
-        document.fonts.load
-    ) {
+        const vertexSource = `
 
-        document.fonts
-            .load(
-                "800 100px Outfit"
-            )
-            .then(
-                () => {
-                    drawPaper();
-                }
+            attribute vec2 aPos;
+
+            varying vec2 vUv;
+
+
+            void main() {
+
+                vUv =
+                    vec2(
+
+                        aPos.x
+                        *
+                        .5
+                        +
+                        .5,
+
+                        .5
+                        -
+                        aPos.y
+                        *
+                        .5
+
+                    );
+
+
+                gl_Position =
+                    vec4(
+                        aPos,
+                        0.0,
+                        1.0
+                    );
+
+            }
+
+        `;
+
+
+        const fragmentSource = `
+
+            precision highp float;
+
+
+            varying vec2 vUv;
+
+
+            uniform sampler2D uText;
+
+            uniform sampler2D uTrail;
+
+            uniform vec2 uRes;
+
+            uniform vec3 uPaper;
+
+            uniform vec3 uInk;
+
+            uniform float uTime;
+
+
+            vec3 mod289(vec3 x) {
+
+                return x
+                -
+                floor(
+                    x *
+                    (
+                        1.0 /
+                        289.0
+                    )
+                )
+                *
+                289.0;
+
+            }
+
+
+            vec4 mod289(vec4 x) {
+
+                return x
+                -
+                floor(
+                    x *
+                    (
+                        1.0 /
+                        289.0
+                    )
+                )
+                *
+                289.0;
+
+            }
+
+
+            vec4 permute(vec4 x) {
+
+                return mod289(
+
+                    (
+                        (
+                            x *
+                            34.0
+                        )
+                        +
+                        1.0
+                    )
+                    *
+                    x
+
+                );
+
+            }
+
+
+            vec4 taylorInvSqrt(vec4 r) {
+
+                return
+
+                    1.79284291400159
+
+                    -
+
+                    0.85373472095314
+                    *
+                    r;
+
+            }
+
+
+            float snoise(vec3 v) {
+
+                const vec2 C =
+                    vec2(
+                        1.0 / 6.0,
+                        1.0 / 3.0
+                    );
+
+
+                const vec4 D =
+                    vec4(
+                        0.0,
+                        0.5,
+                        1.0,
+                        2.0
+                    );
+
+
+                vec3 i =
+
+                    floor(
+
+                        v
+
+                        +
+
+                        dot(
+                            v,
+                            C.yyy
+                        )
+
+                    );
+
+
+                vec3 x0 =
+
+                    v
+
+                    -
+
+                    i
+
+                    +
+
+                    dot(
+                        i,
+                        C.xxx
+                    );
+
+
+                vec3 g =
+
+                    step(
+                        x0.yzx,
+                        x0.xyz
+                    );
+
+
+                vec3 l =
+                    1.0
+                    -
+                    g;
+
+
+                vec3 i1 =
+
+                    min(
+                        g.xyz,
+                        l.zxy
+                    );
+
+
+                vec3 i2 =
+
+                    max(
+                        g.xyz,
+                        l.zxy
+                    );
+
+
+                vec3 x1 =
+
+                    x0
+                    -
+                    i1
+                    +
+                    C.xxx;
+
+
+                vec3 x2 =
+
+                    x0
+                    -
+                    i2
+                    +
+                    C.yyy;
+
+
+                vec3 x3 =
+
+                    x0
+                    -
+                    D.yyy;
+
+
+                i =
+                    mod289(i);
+
+
+                vec4 p =
+
+                    permute(
+
+                        permute(
+
+                            permute(
+
+                                i.z
+
+                                +
+
+                                vec4(
+                                    0.0,
+                                    i1.z,
+                                    i2.z,
+                                    1.0
+                                )
+
+                            )
+
+                            +
+
+                            i.y
+
+                            +
+
+                            vec4(
+                                0.0,
+                                i1.y,
+                                i2.y,
+                                1.0
+                            )
+
+                        )
+
+                        +
+
+                        i.x
+
+                        +
+
+                        vec4(
+                            0.0,
+                            i1.x,
+                            i2.x,
+                            1.0
+                        )
+
+                    );
+
+
+                float n_ =
+                    0.142857142857;
+
+
+                vec3 ns =
+
+                    n_
+                    *
+                    D.wyz
+
+                    -
+
+                    D.xzx;
+
+
+                vec4 j =
+
+                    p
+
+                    -
+
+                    49.0
+
+                    *
+
+                    floor(
+
+                        p
+
+                        *
+
+                        ns.z
+
+                        *
+
+                        ns.z
+
+                    );
+
+
+                vec4 x_ =
+                    floor(
+                        j *
+                        ns.z
+                    );
+
+
+                vec4 y_ =
+                    floor(
+                        j
+                        -
+                        7.0
+                        *
+                        x_
+                    );
+
+
+                vec4 x =
+                    x_
+                    *
+                    ns.x
+                    +
+                    ns.yyyy;
+
+
+                vec4 y =
+                    y_
+                    *
+                    ns.x
+                    +
+                    ns.yyyy;
+
+
+                vec4 h =
+                    1.0
+                    -
+                    abs(x)
+                    -
+                    abs(y);
+
+
+                vec4 b0 =
+                    vec4(
+                        x.xy,
+                        y.xy
+                    );
+
+
+                vec4 b1 =
+                    vec4(
+                        x.zw,
+                        y.zw
+                    );
+
+
+                vec4 s0 =
+                    floor(b0)
+                    *
+                    2.0
+                    +
+                    1.0;
+
+
+                vec4 s1 =
+                    floor(b1)
+                    *
+                    2.0
+                    +
+                    1.0;
+
+
+                vec4 sh =
+                    -step(
+                        h,
+                        vec4(0.0)
+                    );
+
+
+                vec4 a0 =
+
+                    b0.xzyw
+
+                    +
+
+                    s0.xzyw
+
+                    *
+
+                    sh.xxyy;
+
+
+                vec4 a1 =
+
+                    b1.xzyw
+
+                    +
+
+                    s1.xzyw
+
+                    *
+
+                    sh.zzww;
+
+
+                vec3 p0 =
+                    vec3(
+                        a0.xy,
+                        h.x
+                    );
+
+
+                vec3 p1 =
+                    vec3(
+                        a0.zw,
+                        h.y
+                    );
+
+
+                vec3 p2 =
+                    vec3(
+                        a1.xy,
+                        h.z
+                    );
+
+
+                vec3 p3 =
+                    vec3(
+                        a1.zw,
+                        h.w
+                    );
+
+
+                vec4 norm =
+
+                    taylorInvSqrt(
+
+                        vec4(
+
+                            dot(
+                                p0,
+                                p0
+                            ),
+
+                            dot(
+                                p1,
+                                p1
+                            ),
+
+                            dot(
+                                p2,
+                                p2
+                            ),
+
+                            dot(
+                                p3,
+                                p3
+                            )
+
+                        )
+
+                    );
+
+
+                p0 *=
+                    norm.x;
+
+
+                p1 *=
+                    norm.y;
+
+
+                p2 *=
+                    norm.z;
+
+
+                p3 *=
+                    norm.w;
+
+
+                vec4 m =
+
+                    max(
+
+                        0.6
+
+                        -
+
+                        vec4(
+
+                            dot(
+                                x0,
+                                x0
+                            ),
+
+                            dot(
+                                x1,
+                                x1
+                            ),
+
+                            dot(
+                                x2,
+                                x2
+                            ),
+
+                            dot(
+                                x3,
+                                x3
+                            )
+
+                        ),
+
+                        0.0
+
+                    );
+
+
+                m =
+                    m *
+                    m;
+
+
+                return
+
+                    42.0
+
+                    *
+
+                    dot(
+
+                        m *
+                        m,
+
+                        vec4(
+
+                            dot(
+                                p0,
+                                x0
+                            ),
+
+                            dot(
+                                p1,
+                                x1
+                            ),
+
+                            dot(
+                                p2,
+                                x2
+                            ),
+
+                            dot(
+                                p3,
+                                x3
+                            )
+
+                        )
+
+                    );
+
+            }
+
+
+            void main() {
+
+                vec2 uv =
+                    vUv;
+
+
+                vec2 asp =
+                    vec2(
+                        uRes.x /
+                        uRes.y,
+                        1.0
+                    );
+
+
+                float n1 =
+
+                    snoise(
+
+                        vec3(
+
+                            uv *
+                            asp *
+                            2.6,
+
+                            uTime *
+                            .35
+
+                        )
+
+                    );
+
+
+                float n2 =
+
+                    snoise(
+
+                        vec3(
+
+                            uv *
+                            asp *
+                            2.6
+
+                            +
+
+                            17.3,
+
+                            uTime *
+                            .35
+
+                        )
+
+                    );
+
+
+                vec4 trail =
+
+                    texture2D(
+
+                        uTrail,
+
+                        uv
+
+                        +
+
+                        vec2(
+                            n1,
+                            n2
+                        )
+
+                        *
+
+                        .018
+
+                    );
+
+
+                float mask =
+
+                    trail.a
+
+                    +
+
+                    snoise(
+
+                        vec3(
+
+                            uv *
+                            asp *
+                            7.0,
+
+                            uTime *
+                            .6
+
+                        )
+
+                    )
+
+                    *
+
+                    .05;
+
+
+                float hole =
+
+                    smoothstep(
+                        .40,
+                        .47,
+                        mask
+                    );
+
+
+                vec2 velocity =
+
+                    (
+                        trail.rg
+                        -
+                        .5
+                    )
+
+                    *
+
+                    2.0;
+
+
+                float drag =
+
+                    smoothstep(
+                        .03,
+                        .42,
+                        trail.a
+                    );
+
+
+                vec2 smearUV =
+
+                    uv
+
+                    -
+
+                    velocity
+
+                    *
+
+                    drag
+
+                    *
+
+                    vec2(
+
+                        .12 /
+                        asp.x,
+
+                        .12
+
+                    );
+
+
+                float ink =
+
+                    texture2D(
+                        uText,
+                        smearUV
+                    ).a;
+
+
+                vec3 colour =
+
+                    mix(
+                        uPaper,
+                        uInk,
+                        ink
+                    );
+
+
+                float alpha =
+                    1.0
+                    -
+                    hole;
+
+
+                gl_FragColor =
+
+                    vec4(
+
+                        colour
+                        *
+                        alpha,
+
+                        alpha
+
+                    );
+
+            }
+
+        `;
+
+
+        function shader(
+            type,
+            source
+        ) {
+
+            const result =
+                gl.createShader(
+                    type
+                );
+
+
+            gl.shaderSource(
+                result,
+                source
             );
+
+
+            gl.compileShader(
+                result
+            );
+
+
+            if (
+
+                !gl.getShaderParameter(
+
+                    result,
+
+                    gl.COMPILE_STATUS
+
+                )
+
+            ) {
+
+                console.error(
+                    gl.getShaderInfoLog(
+                        result
+                    )
+                );
+
+            }
+
+
+            return result;
+
+        }
+
+
+        const program =
+            gl.createProgram();
+
+
+        gl.attachShader(
+
+            program,
+
+            shader(
+
+                gl.VERTEX_SHADER,
+
+                vertexSource
+
+            )
+
+        );
+
+
+        gl.attachShader(
+
+            program,
+
+            shader(
+
+                gl.FRAGMENT_SHADER,
+
+                fragmentSource
+
+            )
+
+        );
+
+
+        gl.linkProgram(
+            program
+        );
+
+
+        if (
+
+            !gl.getProgramParameter(
+
+                program,
+
+                gl.LINK_STATUS
+
+            )
+
+        ) {
+
+            console.error(
+                gl.getProgramInfoLog(
+                    program
+                )
+            );
+
+        }
+
+        else {
+
+
+            gl.useProgram(
+                program
+            );
+
+
+            const buffer =
+                gl.createBuffer();
+
+
+            gl.bindBuffer(
+                gl.ARRAY_BUFFER,
+                buffer
+            );
+
+
+            gl.bufferData(
+
+                gl.ARRAY_BUFFER,
+
+                new Float32Array([
+
+                    -1,-1,
+
+                     1,-1,
+
+                    -1, 1,
+
+                     1, 1
+
+                ]),
+
+                gl.STATIC_DRAW
+
+            );
+
+
+            const aPos =
+                gl.getAttribLocation(
+                    program,
+                    "aPos"
+                );
+
+
+            gl.enableVertexAttribArray(
+                aPos
+            );
+
+
+            gl.vertexAttribPointer(
+
+                aPos,
+
+                2,
+
+                gl.FLOAT,
+
+                false,
+
+                0,
+
+                0
+
+            );
+
+
+            function makeTexture(
+                unit
+            ) {
+
+                const texture =
+                    gl.createTexture();
+
+
+                gl.activeTexture(
+
+                    gl.TEXTURE0
+                    +
+                    unit
+
+                );
+
+
+                gl.bindTexture(
+                    gl.TEXTURE_2D,
+                    texture
+                );
+
+
+                gl.texParameteri(
+
+                    gl.TEXTURE_2D,
+
+                    gl.TEXTURE_WRAP_S,
+
+                    gl.CLAMP_TO_EDGE
+
+                );
+
+
+                gl.texParameteri(
+
+                    gl.TEXTURE_2D,
+
+                    gl.TEXTURE_WRAP_T,
+
+                    gl.CLAMP_TO_EDGE
+
+                );
+
+
+                gl.texParameteri(
+
+                    gl.TEXTURE_2D,
+
+                    gl.TEXTURE_MIN_FILTER,
+
+                    gl.LINEAR
+
+                );
+
+
+                gl.texParameteri(
+
+                    gl.TEXTURE_2D,
+
+                    gl.TEXTURE_MAG_FILTER,
+
+                    gl.LINEAR
+
+                );
+
+
+                return texture;
+
+            }
+
+
+            const textTexture =
+                makeTexture(0);
+
+
+            const trailTexture =
+                makeTexture(1);
+
+
+            gl.uniform1i(
+
+                gl.getUniformLocation(
+                    program,
+                    "uText"
+                ),
+
+                0
+
+            );
+
+
+            gl.uniform1i(
+
+                gl.getUniformLocation(
+                    program,
+                    "uTrail"
+                ),
+
+                1
+
+            );
+
+
+            gl.uniform3fv(
+
+                gl.getUniformLocation(
+                    program,
+                    "uPaper"
+                ),
+
+                PAPER
+
+            );
+
+
+            gl.uniform3fv(
+
+                gl.getUniformLocation(
+                    program,
+                    "uInk"
+                ),
+
+                INK
+
+            );
+
+
+            const uRes =
+                gl.getUniformLocation(
+                    program,
+                    "uRes"
+                );
+
+
+            const uTime =
+                gl.getUniformLocation(
+                    program,
+                    "uTime"
+                );
+
+
+            gl.pixelStorei(
+
+                gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,
+
+                false
+
+            );
+
+
+            gl.enable(
+                gl.BLEND
+            );
+
+
+            gl.blendFunc(
+
+                gl.ONE,
+
+                gl.ONE_MINUS_SRC_ALPHA
+
+            );
+
+
+            hero
+            .classList
+            .add(
+                "gl-on"
+            );
+
+
+            function drawText() {
+
+                textCtx.clearRect(
+
+                    0,
+                    0,
+
+                    textCanvas.width,
+                    textCanvas.height
+
+                );
+
+
+                textCtx.setTransform(
+
+                    DPR,
+                    0,
+                    0,
+                    DPR,
+                    0,
+                    0
+
+                );
+
+
+                let fontSize =
+
+                    Math.min(
+
+                        W *
+                        .23,
+
+                        H *
+                        .32
+
+                    );
+
+
+                textCtx.font =
+
+                    `800 ${fontSize}px Outfit, "Arial Black", sans-serif`;
+
+
+                let metrics =
+                    textCtx.measureText(
+                        "MARTIN"
+                    );
+
+
+                const maxWidth =
+                    W *
+                    .90;
+
+
+                if (
+                    metrics.width >
+                    maxWidth
+                ) {
+
+                    fontSize *=
+
+                        maxWidth
+                        /
+                        metrics.width;
+
+
+                    textCtx.font =
+
+                        `800 ${fontSize}px Outfit, "Arial Black", sans-serif`;
+
+                }
+
+
+                textCtx.textAlign =
+                    "center";
+
+
+                textCtx.textBaseline =
+                    "middle";
+
+
+                textCtx.fillStyle =
+                    "#ffffff";
+
+
+                textCtx.fillText(
+
+                    "MARTIN",
+
+                    W /
+                    2,
+
+                    H /
+                    2
+
+                );
+
+
+                gl.activeTexture(
+                    gl.TEXTURE0
+                );
+
+
+                gl.bindTexture(
+
+                    gl.TEXTURE_2D,
+
+                    textTexture
+
+                );
+
+
+                gl.texImage2D(
+
+                    gl.TEXTURE_2D,
+
+                    0,
+
+                    gl.RGBA,
+
+                    gl.RGBA,
+
+                    gl.UNSIGNED_BYTE,
+
+                    textCanvas
+
+                );
+
+            }
+
+
+            function resize() {
+
+                W =
+                    hero.clientWidth;
+
+
+                H =
+                    hero.clientHeight;
+
+
+                canvas.width =
+
+                    Math.max(
+
+                        2,
+
+                        Math.round(
+                            W *
+                            DPR
+                        )
+
+                    );
+
+
+                canvas.height =
+
+                    Math.max(
+
+                        2,
+
+                        Math.round(
+                            H *
+                            DPR
+                        )
+
+                    );
+
+
+                textCanvas.width =
+                    canvas.width;
+
+
+                textCanvas.height =
+                    canvas.height;
+
+
+                trailCanvas.width =
+
+                    Math.max(
+
+                        2,
+
+                        Math.round(
+
+                            W *
+                            TRAIL_SCALE
+
+                        )
+
+                    );
+
+
+                trailCanvas.height =
+
+                    Math.max(
+
+                        2,
+
+                        Math.round(
+
+                            H *
+                            TRAIL_SCALE
+
+                        )
+
+                    );
+
+
+                baseRadius =
+
+                    Math.max(
+                        W,
+                        H
+                    )
+
+                    *
+
+                    (
+                        W <
+                        768
+
+                        ?
+
+                        .085
+
+                        :
+
+                        .055
+                    );
+
+
+                gl.viewport(
+
+                    0,
+                    0,
+
+                    canvas.width,
+                    canvas.height
+
+                );
+
+
+                gl.uniform2f(
+
+                    uRes,
+
+                    W,
+
+                    H
+
+                );
+
+
+                drawText();
+
+
+                draw();
+
+            }
+
+
+            function draw() {
+
+                gl.clearColor(
+                    0,
+                    0,
+                    0,
+                    0
+                );
+
+
+                gl.clear(
+                    gl.COLOR_BUFFER_BIT
+                );
+
+
+                gl.activeTexture(
+                    gl.TEXTURE1
+                );
+
+
+                gl.bindTexture(
+
+                    gl.TEXTURE_2D,
+
+                    trailTexture
+
+                );
+
+
+                gl.texImage2D(
+
+                    gl.TEXTURE_2D,
+
+                    0,
+
+                    gl.RGBA,
+
+                    gl.RGBA,
+
+                    gl.UNSIGNED_BYTE,
+
+                    trailCanvas
+
+                );
+
+
+                gl.uniform1f(
+
+                    uTime,
+
+                    performance.now()
+                    /
+                    1000
+
+                );
+
+
+                gl.drawArrays(
+
+                    gl.TRIANGLE_STRIP,
+
+                    0,
+
+                    4
+
+                );
+
+            }
+
+
+            let running =
+                false;
+
+
+            let last =
+                performance.now();
+
+
+            let visible =
+                true;
+
+
+            window.wake =
+                wake;
+
+
+            function wake() {
+
+                if (
+                    running
+                    ||
+                    !visible
+                ) {
+
+                    return;
+
+                }
+
+
+                running =
+                    true;
+
+
+                last =
+                    performance.now();
+
+
+                requestAnimationFrame(
+                    tick
+                );
+
+            }
+
+
+            function tick(
+                now
+            ) {
+
+                if (
+                    !running
+                ) {
+
+                    return;
+
+                }
+
+
+                const dt =
+                    clamp(
+
+                        (
+                            now
+                            -
+                            last
+                        )
+
+                        /
+
+                        1000,
+
+                        .001,
+
+                        .05
+
+                    );
+
+
+                last =
+                    now;
+
+
+                updateTrail(
+                    dt
+                );
+
+
+                draw();
+
+
+                if (
+
+                    now
+                    -
+                    lastMove
+                    >
+                    4500
+
+                    &&
+
+                    droplets.length
+                    ===
+                    0
+
+                    &&
+
+                    !pointer.active
+
+                ) {
+
+                    running =
+                        false;
+
+
+                    trailCtx.clearRect(
+
+                        0,
+                        0,
+
+                        trailCanvas.width,
+                        trailCanvas.height
+
+                    );
+
+
+                    draw();
+
+
+                    return;
+
+                }
+
+
+                requestAnimationFrame(
+                    tick
+                );
+
+            }
+
+
+            const observer =
+
+                new IntersectionObserver(
+
+                    entries => {
+
+                        visible =
+
+                            entries[0]
+                            .isIntersecting;
+
+
+                        if (
+                            visible
+                        ) {
+
+                            wake();
+
+                        }
+
+                    }
+
+                );
+
+
+            observer.observe(
+                hero
+            );
+
+
+            window.addEventListener(
+
+                "resize",
+
+                resize
+
+            );
+
+
+            resize();
+
+
+            if (
+
+                document.fonts
+                &&
+                document.fonts.load
+
+            ) {
+
+                document.fonts
+
+                .load(
+                    "800 100px Outfit"
+                )
+
+                .then(
+                    () => {
+
+                        drawText();
+
+                        draw();
+
+                    }
+                );
+
+            }
+
+
+            wake();
+
+        }
 
     }
 
 
-    requestAnimationFrame(
-        animate
-    );
+    /* ==================================================
+       COMPUTER → PHOTO
+    ================================================== */
 
-
-    /* ========================================
-       RETRO COMPUTER → PHOTO
-    ======================================== */
-
-    const computerButton =
+    const computer =
         document.getElementById(
             "computerButton"
         );
@@ -2328,7 +4521,7 @@
 
     const viewer =
         document.getElementById(
-            "photoViewer"
+            "viewer"
         );
 
 
@@ -2340,32 +4533,37 @@
 
     function openPhoto() {
 
-        computerButton
-            .classList.add(
-                "opening"
-            );
+        computer
+        .classList
+        .add(
+            "opening"
+        );
 
 
         setTimeout(
             () => {
 
                 viewer
-                    .classList.add(
-                        "open"
-                    );
+                .classList
+                .add(
+                    "open"
+                );
 
 
                 document.body.style.overflow =
                     "hidden";
 
 
-                computerButton
-                    .classList.remove(
-                        "opening"
-                    );
+                computer
+                .classList
+                .remove(
+                    "opening"
+                );
 
             },
-            420
+
+            430
+
         );
 
     }
@@ -2374,9 +4572,10 @@
     function closePhoto() {
 
         viewer
-            .classList.remove(
-                "open"
-            );
+        .classList
+        .remove(
+            "open"
+        );
 
 
         document.body.style.overflow =
@@ -2385,7 +4584,7 @@
     }
 
 
-    computerButton.addEventListener(
+    computer.addEventListener(
         "click",
         openPhoto
     );
@@ -2398,7 +4597,9 @@
 
 
     viewer.addEventListener(
+
         "click",
+
         event => {
 
             if (
@@ -2411,11 +4612,14 @@
             }
 
         }
+
     );
 
 
     document.addEventListener(
+
         "keydown",
+
         event => {
 
             if (
@@ -2428,6 +4632,7 @@
             }
 
         }
+
     );
 
 })();
