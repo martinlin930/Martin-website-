@@ -16,10 +16,7 @@
         content="Martin Photography — Moments through my perspective."
     >
 
-    <link
-        rel="preconnect"
-        href="https://fonts.googleapis.com"
-    >
+    <link rel="preconnect" href="https://fonts.googleapis.com">
 
     <link
         rel="preconnect"
@@ -37,18 +34,15 @@
         :root {
             --paper: #f3f3ee;
             --ink: #0b0b0b;
-            --gutter: clamp(22px, 3vw, 44px);
+
+            --body:
+                "Inter Tight",
+                Arial,
+                sans-serif;
 
             --display:
                 "Outfit",
                 "Arial Black",
-                system-ui,
-                sans-serif;
-
-            --body:
-                "Inter Tight",
-                "Helvetica Neue",
-                Arial,
                 sans-serif;
         }
 
@@ -58,28 +52,49 @@
         }
 
 
-        html,
-        body {
+        html {
             margin: 0;
             padding: 0;
 
-            width: 100%;
-            min-height: 100%;
+            scroll-behavior: smooth;
 
             background: var(--paper);
         }
 
 
         body {
-            font-family: var(--body);
+            margin: 0;
+            padding: 0;
+
+            width: 100%;
+
+            background: var(--paper);
 
             color: var(--ink);
 
-            -webkit-font-smoothing: antialiased;
+            font-family: var(--body);
 
             overflow-x: hidden;
+
+            -webkit-font-smoothing: antialiased;
         }
 
+
+        a {
+            color: inherit;
+
+            text-decoration: none;
+        }
+
+
+        button {
+            font-family: inherit;
+        }
+
+
+        /* ==========================================
+           HOME
+        ========================================== */
 
         .hero {
             position: relative;
@@ -89,7 +104,7 @@
             height: 100vh;
             height: 100svh;
 
-            min-height: 540px;
+            min-height: 620px;
 
             overflow: hidden;
 
@@ -101,11 +116,9 @@
         }
 
 
-        /* =========================
-           PHOTO UNDER THE PAPER
-        ========================= */
+        /* PHOTO UNDER MARTIN */
 
-        .hero__photo {
+        .hero-photo {
             position: absolute;
 
             inset: 0;
@@ -120,66 +133,12 @@
             z-index: 0;
 
             pointer-events: none;
-
-            background: var(--paper);
         }
 
 
-        /* =========================
-           FALLBACK PAPER
-        ========================= */
+        /* CANVAS PAPER */
 
-        .hero__paper {
-            position: absolute;
-
-            inset: 0;
-
-            z-index: 1;
-
-            background: var(--paper);
-
-            display: grid;
-
-            place-items: center;
-        }
-
-
-        .hero__title {
-            margin: 0;
-
-            font-family: var(--display);
-
-            font-weight: 800;
-
-            font-size: 18vw;
-
-            line-height: 1;
-
-            letter-spacing: -0.055em;
-
-            color: var(--ink);
-
-            white-space: nowrap;
-
-            user-select: none;
-        }
-
-
-        .hero.gl-on .hero__paper {
-            background: transparent;
-        }
-
-
-        .hero.gl-on .hero__title {
-            color: transparent;
-        }
-
-
-        /* =========================
-           WEBGL CANVAS
-        ========================= */
-
-        .hero__reveal {
+        #revealCanvas {
             position: absolute;
 
             inset: 0;
@@ -187,26 +146,27 @@
             width: 100%;
             height: 100%;
 
-            z-index: 2;
+            display: block;
+
+            z-index: 1;
 
             pointer-events: none;
-
-            display: block;
         }
 
 
-        /* =========================
-           UI
-        ========================= */
+        /* HOME UI */
 
-        .chrome {
+        .home-ui {
             position: absolute;
 
             inset: 0;
 
             z-index: 3;
 
-            padding: var(--gutter);
+            padding:
+                max(28px, env(safe-area-inset-top))
+                30px
+                max(28px, env(safe-area-inset-bottom));
 
             display: flex;
 
@@ -218,77 +178,63 @@
 
             mix-blend-mode: difference;
 
-            color: #ffffff;
+            color: white;
         }
 
 
-        .chrome a {
+        .home-ui a {
             pointer-events: auto;
         }
 
 
-        .intro__lede {
-            margin: 0;
-
-            font-size: clamp(18px, 1.6vw, 26px);
-
-            line-height: 1.03;
-
-            letter-spacing: -0.025em;
-
-            font-weight: 400;
+        .intro {
+            max-width: 500px;
         }
 
 
-        /* =========================
-           CTA
-        ========================= */
+        .intro p {
+            margin: 0;
+
+            font-size: clamp(20px, 2vw, 30px);
+
+            line-height: 1.02;
+
+            letter-spacing: -0.03em;
+        }
+
 
         .cta {
             display: inline-flex;
 
             align-items: center;
 
-            gap: 13px;
+            gap: 14px;
 
-            margin-top: 28px;
+            margin-top: 30px;
 
-            padding: 14px 21px 14px 23px;
+            padding: 16px 26px;
 
             border-radius: 999px;
 
-            background: #ffffff;
+            background: white;
 
-            color: #000000;
+            color: black;
 
-            font:
-                500 12px/1
-                var(--body);
+            font-size: 13px;
 
-            letter-spacing: 0.07em;
+            font-weight: 500;
+
+            letter-spacing: 0.08em;
 
             text-transform: uppercase;
 
-            text-decoration: none;
-
             transition:
-                transform .35s
-                cubic-bezier(.2,.8,.2,1);
+                transform .3s ease;
         }
 
 
-        .cta svg {
-            width: 15px;
-            height: 15px;
-
-            transition:
-                transform .35s
-                cubic-bezier(.2,.8,.2,1);
-        }
-
-
-        .cta:hover svg {
-            transform: translateX(3px);
+        .cta:hover {
+            transform: translateY(-3px);
         }
 
 
@@ -297,11 +243,13 @@
         }
 
 
-        /* =========================
-           BOTTOM
-        ========================= */
+        .cta svg {
+            width: 16px;
+            height: 16px;
+        }
 
-        .foot {
+
+        .home-footer {
             display: flex;
 
             justify-content: space-between;
@@ -316,45 +264,32 @@
         }
 
 
-        .links {
+        .socials {
             display: flex;
-
-            align-items: center;
 
             gap: 10px;
 
-            font-weight: 500;
-
-            letter-spacing: 0.06em;
+            align-items: center;
 
             text-transform: uppercase;
+
+            letter-spacing: .06em;
         }
 
 
-        .links a {
-            color: inherit;
-
-            text-decoration: none;
-        }
-
-
-        .links a:hover {
+        .socials a:hover {
             text-decoration: underline;
 
             text-underline-offset: 4px;
         }
 
 
-        /* =========================
-           HINT
-        ========================= */
-
-        .hint {
+        .reveal-hint {
             position: absolute;
 
             left: 50%;
 
-            bottom: calc(var(--gutter) + 2px);
+            bottom: 30px;
 
             transform: translateX(-50%);
 
@@ -362,119 +297,803 @@
 
             font-size: 11px;
 
-            letter-spacing: 0.08em;
+            letter-spacing: .08em;
 
             text-transform: uppercase;
 
             opacity: .45;
 
-            transition: opacity .6s ease;
-
-            white-space: nowrap;
+            transition: opacity .5s ease;
         }
 
 
-        .hint.is-gone {
+        .reveal-hint.hidden {
             opacity: 0;
         }
 
 
-        .hint .touch {
+        .touch-hint {
             display: none;
         }
 
 
         @media (hover: none) {
 
-            .hint .mouse {
+            .mouse-hint {
                 display: none;
             }
 
 
-            .hint .touch {
+            .touch-hint {
                 display: inline;
             }
 
         }
 
 
-        /* =========================
+        /* ==========================================
+           WHITE VOID / WORK AREA
+        ========================================== */
+
+        .work-stage {
+            position: relative;
+
+            min-height: 100vh;
+            min-height: 100svh;
+
+            background: #ffffff;
+
+            display: flex;
+
+            flex-direction: column;
+
+            align-items: center;
+
+            justify-content: center;
+
+            padding: 90px 20px;
+
+            overflow: hidden;
+        }
+
+
+        .work-label {
+            position: absolute;
+
+            top: 35px;
+
+            left: 35px;
+
+            margin: 0;
+
+            font-size: 11px;
+
+            letter-spacing: .16em;
+
+            text-transform: uppercase;
+
+            color: #777;
+        }
+
+
+        .work-home-link {
+            position: absolute;
+
+            top: 35px;
+
+            right: 35px;
+
+            font-size: 11px;
+
+            letter-spacing: .12em;
+
+            text-transform: uppercase;
+
+            color: #555;
+        }
+
+
+        .work-home-link:hover {
+            color: #000;
+        }
+
+
+        /* ==========================================
+           RETRO COMPUTER
+        ========================================== */
+
+        .computer-button {
+            border: 0;
+
+            background: transparent;
+
+            padding: 0;
+
+            cursor: pointer;
+
+            transition:
+                transform .55s
+                cubic-bezier(.2,.8,.2,1);
+
+            outline: none;
+        }
+
+
+        .computer-button:hover {
+            transform:
+                translateY(-10px)
+                scale(1.025);
+        }
+
+
+        .computer-button:active {
+            transform:
+                scale(.98);
+        }
+
+
+        .computer {
+            position: relative;
+
+            width: min(72vw, 430px);
+
+            filter:
+                drop-shadow(
+                    0 30px 28px
+                    rgba(0,0,0,.10)
+                );
+        }
+
+
+        .monitor {
+            position: relative;
+
+            width: 78%;
+
+            height: 355px;
+
+            margin: 0 auto;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    #eee4ce,
+                    #d8c8ab
+                );
+
+            border:
+                2px solid
+                #bcaa8e;
+
+            border-radius:
+                18px 18px 11px 11px;
+        }
+
+
+        .monitor::after {
+            content: "";
+
+            position: absolute;
+
+            inset: 7px;
+
+            border-radius: 12px;
+
+            border:
+                1px solid
+                rgba(255,255,255,.5);
+
+            pointer-events: none;
+        }
+
+
+        .screen-frame {
+            position: absolute;
+
+            top: 35px;
+
+            left: 50%;
+
+            transform: translateX(-50%);
+
+            width: 72%;
+            height: 175px;
+
+            padding: 11px;
+
+            border-radius: 13px;
+
+            background: #313033;
+        }
+
+
+        .screen {
+            position: relative;
+
+            width: 100%;
+            height: 100%;
+
+            overflow: hidden;
+
+            border-radius: 7px;
+
+            background:
+                linear-gradient(
+                    #cad5cf,
+                    #9facaa
+                );
+
+            border:
+                2px solid
+                #121212;
+        }
+
+
+        .screen-bar {
+            height: 18px;
+
+            border-bottom:
+                1px solid
+                rgba(0,0,0,.2);
+
+            background:
+                #dbe1dd;
+        }
+
+
+        .screen-content {
+            height:
+                calc(100% - 18px);
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            font-family:
+                var(--display);
+
+            font-size:
+                clamp(
+                    24px,
+                    5vw,
+                    38px
+                );
+
+            letter-spacing:
+                -0.05em;
+
+            color: #171717;
+        }
+
+
+        .disk-slot {
+            position: absolute;
+
+            right: 32px;
+
+            top: 245px;
+
+            width: 78px;
+            height: 11px;
+
+            border-radius: 2px;
+
+            background:
+                #796d5b;
+        }
+
+
+        .computer-logo {
+            position: absolute;
+
+            left: 24px;
+
+            bottom: 27px;
+
+            width: 13px;
+            height: 13px;
+
+            background:
+                #cdbb9f;
+
+            border:
+                1px solid
+                #ad9a7d;
+        }
+
+
+        .computer-neck {
+            width: 69%;
+            height: 16px;
+
+            margin: 0 auto;
+
+            background:
+                #d2c0a2;
+
+            border-left:
+                2px solid
+                #b6a386;
+
+            border-right:
+                2px solid
+                #b6a386;
+        }
+
+
+        .keyboard {
+            position: relative;
+
+            width: 100%;
+
+            height: 105px;
+
+            padding: 18px 22px;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    #e8ddc6,
+                    #d4c2a4
+                );
+
+            border:
+                2px solid
+                #baa788;
+
+            border-radius: 10px;
+
+            transform:
+                perspective(500px)
+                rotateX(4deg);
+
+            transform-origin: top;
+        }
+
+
+        .keys {
+            display: grid;
+
+            grid-template-columns:
+                repeat(12,1fr);
+
+            gap: 5px;
+        }
+
+
+        .key {
+            height: 18px;
+
+            border-radius: 2px;
+
+            background:
+                linear-gradient(
+                    #8b7c65,
+                    #645744
+                );
+
+            border:
+                1px solid
+                #4e4438;
+        }
+
+
+        .spacebar {
+            grid-column:
+                span 5;
+        }
+
+
+        .computer-mouse {
+            position: absolute;
+
+            right: -85px;
+
+            bottom: 5px;
+
+            width: 60px;
+            height: 72px;
+
+            background:
+                #ddceb5;
+
+            border:
+                2px solid
+                #baa88a;
+
+            border-radius: 10px;
+        }
+
+
+        .computer-mouse::before {
+            content: "";
+
+            position: absolute;
+
+            top: 10px;
+
+            left: 50%;
+
+            transform:
+                translateX(-50%);
+
+            width: 26px;
+
+            border-top:
+                2px solid
+                #b5a184;
+        }
+
+
+        .computer-cable {
+            position: absolute;
+
+            left: -70px;
+
+            bottom: 80px;
+
+            width: 100px;
+            height: 70px;
+
+            border-left:
+                7px solid
+                #a99066;
+
+            border-bottom:
+                7px solid
+                #a99066;
+
+            border-radius:
+                0 0 0 70px;
+
+            transform:
+                rotate(-10deg);
+        }
+
+
+        .computer-caption {
+            margin-top: 32px;
+
+            font-size: 11px;
+
+            letter-spacing: .14em;
+
+            text-transform: uppercase;
+
+            color: #777;
+        }
+
+
+        /* ==========================================
+           COMPUTER OPEN ANIMATION
+        ========================================== */
+
+        .computer-button.opening {
+            transform:
+                scale(1.18)
+                translateY(-5px);
+
+            pointer-events: none;
+        }
+
+
+        /* ==========================================
+           PHOTO VIEWER
+        ========================================== */
+
+        .photo-viewer {
+            position: fixed;
+
+            inset: 0;
+
+            z-index: 1000;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            padding: 30px;
+
+            background:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    .98
+                );
+
+            opacity: 0;
+
+            visibility: hidden;
+
+            pointer-events: none;
+
+            transition:
+                opacity .55s ease,
+                visibility .55s ease;
+        }
+
+
+        .photo-viewer.open {
+            opacity: 1;
+
+            visibility: visible;
+
+            pointer-events: auto;
+        }
+
+
+        .photo-panel {
+            position: relative;
+
+            width:
+                min(
+                    1100px,
+                    94vw
+                );
+
+            max-height: 90vh;
+
+            display: flex;
+
+            flex-direction: column;
+
+            align-items: center;
+
+            justify-content: center;
+
+            transform:
+                scale(.83);
+
+            opacity: 0;
+
+            transition:
+                transform .7s
+                cubic-bezier(.2,.8,.2,1),
+
+                opacity .5s ease;
+        }
+
+
+        .photo-viewer.open
+        .photo-panel {
+            transform:
+                scale(1);
+
+            opacity: 1;
+        }
+
+
+        .photo-panel img {
+            display: block;
+
+            max-width: 100%;
+
+            max-height: 78vh;
+
+            width: auto;
+            height: auto;
+
+            object-fit: contain;
+
+            box-shadow:
+                0 30px 80px
+                rgba(0,0,0,.13);
+        }
+
+
+        .photo-meta {
+            width: 100%;
+
+            display: flex;
+
+            justify-content:
+                space-between;
+
+            gap: 20px;
+
+            padding-top: 15px;
+
+            font-size: 11px;
+
+            letter-spacing: .1em;
+
+            text-transform: uppercase;
+
+            color: #666;
+        }
+
+
+        .close-viewer {
+            position: fixed;
+
+            top:
+                max(
+                    24px,
+                    env(
+                        safe-area-inset-top
+                    )
+                );
+
+            right: 25px;
+
+            z-index: 1002;
+
+            width: 48px;
+            height: 48px;
+
+            border-radius: 50%;
+
+            border:
+                1px solid
+                #222;
+
+            background: white;
+
+            color: #111;
+
+            font-size: 24px;
+
+            cursor: pointer;
+
+            opacity: 0;
+
+            visibility: hidden;
+
+            transition:
+                opacity .3s ease;
+        }
+
+
+        .photo-viewer.open
+        .close-viewer {
+            opacity: 1;
+
+            visibility: visible;
+        }
+
+
+        /* ==========================================
            MOBILE
-        ========================= */
+        ========================================== */
 
-        @media (max-width: 767px) {
-
-            :root {
-                --gutter: 30px;
-            }
-
-
-            html,
-            body {
-                background: var(--paper);
-            }
-
+        @media (
+            max-width: 767px
+        ) {
 
             .hero {
-                height: 100svh;
-
-                min-height: 620px;
-
-                background: var(--paper);
+                min-height:
+                    100svh;
             }
 
 
-            .hero__photo {
-                object-fit: cover;
-
-                object-position: center;
+            .hero-photo {
+                object-position:
+                    center;
             }
 
 
-            .intro__lede {
+            .home-ui {
+                padding:
+                    max(
+                        30px,
+                        env(
+                            safe-area-inset-top
+                        )
+                    )
+                    30px
+                    max(
+                        30px,
+                        env(
+                            safe-area-inset-bottom
+                        )
+                    );
+            }
+
+
+            .intro p {
                 font-size: 27px;
 
-                line-height: 1.02;
+                max-width: 340px;
             }
 
 
             .cta {
-                margin-top: 30px;
-
-                padding: 17px 28px;
+                padding:
+                    17px 27px;
 
                 font-size: 13px;
             }
 
 
-            .foot {
+            .home-footer {
                 font-size: 11px;
             }
 
 
-            .links {
-                font-size: 11px;
+            .reveal-hint {
+                bottom: 52px;
             }
 
 
-            .hint {
-                bottom: calc(
-                    var(--gutter) + 28px
-                );
-            }
-
-        }
-
-
-        @media (max-width: 520px) {
-
-            .foot {
-                gap: 12px;
+            .work-label {
+                top: 24px;
+                left: 20px;
             }
 
 
-            .links {
-                gap: 8px;
+            .work-home-link {
+                top: 24px;
+                right: 20px;
+            }
+
+
+            .computer {
+                width:
+                    min(
+                        75vw,
+                        330px
+                    );
+            }
+
+
+            .monitor {
+                height: 285px;
+            }
+
+
+            .screen-frame {
+                top: 28px;
+
+                height: 140px;
+            }
+
+
+            .disk-slot {
+                top: 195px;
+
+                width: 58px;
+            }
+
+
+            .keyboard {
+                height: 85px;
+
+                padding:
+                    13px 14px;
+            }
+
+
+            .key {
+                height: 14px;
+            }
+
+
+            .computer-mouse {
+                right: -55px;
+
+                width: 44px;
+                height: 55px;
+            }
+
+
+            .computer-cable {
+                display: none;
+            }
+
+
+            .photo-viewer {
+                padding: 20px;
+            }
+
+
+            .photo-panel img {
+                max-height:
+                    73vh;
             }
 
         }
@@ -486,63 +1105,42 @@
 <body>
 
 
+<!-- ==========================================
+     HOME
+========================================== -->
+
 <section
     class="hero"
-    id="hero"
-    aria-label="Martin Photography"
+    id="home"
 >
 
-
-    <!-- YOUR PHOTO UNDER THE PAPER -->
-
     <img
-        class="hero__photo"
-        id="heroPhoto"
+        class="hero-photo"
         src="/static/images/DSC00686-2.JPG"
         alt=""
         aria-hidden="true"
     >
 
 
-    <!-- FALLBACK PAPER -->
-
-    <div class="hero__paper">
-
-        <h1
-            class="hero__title"
-            id="heroTitle"
-        >
-            MARTIN
-        </h1>
-
-    </div>
-
-
-    <!-- LIQUID REVEAL -->
-
     <canvas
-        class="hero__reveal"
-        id="heroReveal"
+        id="revealCanvas"
         aria-hidden="true"
     ></canvas>
 
 
-    <!-- UI -->
-
-    <div class="chrome">
-
+    <div class="home-ui">
 
         <div class="intro">
 
-            <p class="intro__lede">
+            <p>
                 Martin Photography.<br>
                 Moments through my perspective.
             </p>
 
 
             <a
+                href="#work"
                 class="cta"
-                href="/work"
             >
 
                 View my work
@@ -566,25 +1164,20 @@
         </div>
 
 
-        <div class="foot">
+        <div class="home-footer">
 
             <span>
                 Photographer — Martin
             </span>
 
 
-            <nav
-                class="links"
-                aria-label="Social"
-            >
+            <nav class="socials">
 
                 <a href="#">
                     Instagram
                 </a>
 
-                <span aria-hidden="true">
-                    /
-                </span>
+                <span>/</span>
 
                 <a href="#">
                     Contact
@@ -596,649 +1189,1018 @@
 
 
         <p
-            class="hint"
-            id="hint"
-            aria-hidden="true"
+            class="reveal-hint"
+            id="revealHint"
         >
 
-            <span class="mouse">
+            <span
+                class="mouse-hint"
+            >
                 Move to reveal
             </span>
 
-            <span class="touch">
+            <span
+                class="touch-hint"
+            >
                 Touch to reveal
             </span>
 
         </p>
 
+    </div>
+
+</section>
+
+
+<!-- ==========================================
+     WHITE VOID
+========================================== -->
+
+<section
+    class="work-stage"
+    id="work"
+>
+
+    <p class="work-label">
+        Martin / Selected Work
+    </p>
+
+
+    <a
+        class="work-home-link"
+        href="#home"
+    >
+        Back home
+    </a>
+
+
+    <button
+        class="computer-button"
+        id="computerButton"
+        aria-label="Open Martin's photography"
+    >
+
+        <div class="computer">
+
+            <div
+                class="computer-cable"
+            ></div>
+
+
+            <div class="monitor">
+
+                <div
+                    class="screen-frame"
+                >
+
+                    <div
+                        class="screen"
+                    >
+
+                        <div
+                            class="screen-bar"
+                        ></div>
+
+
+                        <div
+                            class="screen-content"
+                        >
+                            MARTIN
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div
+                    class="disk-slot"
+                ></div>
+
+
+                <div
+                    class="computer-logo"
+                ></div>
+
+            </div>
+
+
+            <div
+                class="computer-neck"
+            ></div>
+
+
+            <div class="keyboard">
+
+                <div class="keys">
+
+                    <div class="key"></div>
+                    <div class="key"></div>
+                    <div class="key"></div>
+                    <div class="key"></div>
+                    <div class="key"></div>
+                    <div class="key"></div>
+                    <div class="key"></div>
+                    <div class="key"></div>
+                    <div class="key"></div>
+                    <div class="key"></div>
+                    <div class="key"></div>
+                    <div class="key"></div>
+
+                    <div class="key"></div>
+                    <div class="key"></div>
+                    <div class="key"></div>
+                    <div class="key"></div>
+                    <div class="key"></div>
+                    <div class="key"></div>
+                    <div class="key"></div>
+                    <div class="key"></div>
+                    <div class="key"></div>
+                    <div class="key"></div>
+                    <div class="key"></div>
+                    <div class="key"></div>
+
+                    <div class="key"></div>
+                    <div class="key"></div>
+                    <div class="key"></div>
+                    <div class="key"></div>
+
+                    <div
+                        class="
+                            key
+                            spacebar
+                        "
+                    ></div>
+
+                    <div class="key"></div>
+                    <div class="key"></div>
+                    <div class="key"></div>
+
+                </div>
+
+            </div>
+
+
+            <div
+                class="computer-mouse"
+            ></div>
+
+        </div>
+
+    </button>
+
+
+    <div
+        class="computer-caption"
+    >
+        Click the computer
+    </div>
+
+</section>
+
+
+<!-- ==========================================
+     PHOTO VIEWER
+========================================== -->
+
+<div
+    class="photo-viewer"
+    id="photoViewer"
+>
+
+    <button
+        class="close-viewer"
+        id="closeViewer"
+        aria-label="Close photograph"
+    >
+        ×
+    </button>
+
+
+    <div
+        class="photo-panel"
+    >
+
+        <img
+            src="/static/images/DSC00686-2.JPG"
+            alt="Martin Photography"
+        >
+
+
+        <div
+            class="photo-meta"
+        >
+
+            <span>
+                01
+            </span>
+
+
+            <span>
+                Martin Photography
+            </span>
+
+        </div>
 
     </div>
 
-
-</section>
+</div>
 
 
 <script>
 
 (() => {
 
-    /* =========================
-       ELEMENTS
-    ========================= */
+    /* ========================================
+       HOME LIQUID REVEAL
+    ======================================== */
 
     const hero =
-        document.getElementById("hero");
-
-    const canvas =
-        document.getElementById("heroReveal");
-
-    const hint =
-        document.getElementById("hint");
-
-
-    /* =========================
-       CONSTANTS
-    ========================= */
-
-    const PAPER = [
-        0xf3 / 255,
-        0xf3 / 255,
-        0xee / 255
-    ];
-
-
-    const INK = [
-        0x0b / 255,
-        0x0b / 255,
-        0x0b / 255
-    ];
-
-
-    const TRAIL_SCALE =
-        0.35;
-
-
-    const DPR =
-        Math.min(
-            window.devicePixelRatio || 1,
-            2
+        document.querySelector(
+            ".hero"
         );
 
 
-    const reduceMotion =
-        window.matchMedia(
-            "(prefers-reduced-motion: reduce)"
-        ).matches;
+    const canvas =
+        document.getElementById(
+            "revealCanvas"
+        );
 
 
-    /* =========================
-       SIZE
-    ========================= */
-
-    let W = 1;
-
-    let H = 1;
+    const ctx =
+        canvas.getContext(
+            "2d"
+        );
 
 
-    let baseRadius = 60;
+    const hint =
+        document.getElementById(
+            "revealHint"
+        );
 
 
-    /* =========================
-       OFFSCREEN CANVASES
-    ========================= */
-
-    const textCanvas =
-        document.createElement("canvas");
+    let width =
+        0;
 
 
-    const textCtx =
-        textCanvas.getContext("2d");
+    let height =
+        0;
 
 
-    const trailCanvas =
-        document.createElement("canvas");
+    let dpr =
+        1;
 
 
-    const trailCtx =
-        trailCanvas.getContext("2d");
+    let pointerActive =
+        false;
 
 
-    /* =========================
-       POINTER
-    ========================= */
-
-    const pointer = {
-
-        active: false,
-
-        x: 0,
-        y: 0,
-
-        px: 0,
-        py: 0,
-
-        vx: 0,
-        vy: 0
-
-    };
+    let pointerX =
+        0;
 
 
-    let droplets = [];
+    let pointerY =
+        0;
 
 
-    let lastMove =
+    let previousX =
+        0;
+
+
+    let previousY =
+        0;
+
+
+    let firstMove =
+        true;
+
+
+    let lastTime =
         performance.now();
 
 
-    /* =========================
-       HELPERS
-    ========================= */
+    const trails =
+        [];
 
-    function clamp(
-        value,
-        min,
-        max
-    ) {
 
-        return Math.max(
-            min,
+    const droplets =
+        [];
+
+
+    function resizeCanvas() {
+
+        const rect =
+            hero.getBoundingClientRect();
+
+
+        width =
+            rect.width;
+
+
+        height =
+            rect.height;
+
+
+        dpr =
             Math.min(
-                max,
-                value
-            )
+                window.devicePixelRatio || 1,
+                2
+            );
+
+
+        canvas.width =
+            Math.round(
+                width * dpr
+            );
+
+
+        canvas.height =
+            Math.round(
+                height * dpr
+            );
+
+
+        canvas.style.width =
+            width + "px";
+
+
+        canvas.style.height =
+            height + "px";
+
+
+        ctx.setTransform(
+            dpr,
+            0,
+            0,
+            dpr,
+            0,
+            0
         );
 
     }
 
 
-    /* =========================
-       TRAIL STAMP
-    ========================= */
+    function drawPaper() {
 
-    function stamp(
+        ctx.globalCompositeOperation =
+            "source-over";
+
+
+        ctx.clearRect(
+            0,
+            0,
+            width,
+            height
+        );
+
+
+        ctx.fillStyle =
+            "#f3f3ee";
+
+
+        ctx.fillRect(
+            0,
+            0,
+            width,
+            height
+        );
+
+
+        let fontSize =
+            Math.min(
+                width * .23,
+                height * .31
+            );
+
+
+        ctx.font =
+            `800 ${fontSize}px Outfit, Arial Black, sans-serif`;
+
+
+        const measurement =
+            ctx.measureText(
+                "MARTIN"
+            );
+
+
+        const maximum =
+            width * .90;
+
+
+        if (
+            measurement.width >
+            maximum
+        ) {
+
+            fontSize *=
+                maximum /
+                measurement.width;
+
+
+            ctx.font =
+                `800 ${fontSize}px Outfit, Arial Black, sans-serif`;
+
+        }
+
+
+        ctx.textAlign =
+            "center";
+
+
+        ctx.textBaseline =
+            "middle";
+
+
+        ctx.fillStyle =
+            "#0b0b0b";
+
+
+        ctx.fillText(
+            "MARTIN",
+            width / 2,
+            height / 2
+        );
+
+    }
+
+
+    function hole(
         x,
         y,
         radius,
-        vx,
-        vy,
-        alpha
+        life
     ) {
 
-        const sx =
-            x * TRAIL_SCALE;
+        const wobble =
+
+            1 +
+
+            Math.sin(
+
+                performance.now()
+                * .004
+
+                +
+
+                x * .015
+
+                +
+
+                y * .007
+
+            ) *
+
+            .06;
 
 
-        const sy =
-            y * TRAIL_SCALE;
-
-
-        const sr =
-            Math.max(
-                1,
-                radius *
-                TRAIL_SCALE
-            );
-
-
-        const k =
-            0.012;
-
-
-        const red =
-            Math.round(
-
-                128 +
-
-                clamp(
-                    vx * k,
-                    -1,
-                    1
-                ) *
-
-                127
-
-            );
-
-
-        const green =
-            Math.round(
-
-                128 +
-
-                clamp(
-                    vy * k,
-                    -1,
-                    1
-                ) *
-
-                127
-
-            );
+        const r =
+            radius *
+            wobble;
 
 
         const gradient =
-            trailCtx.createRadialGradient(
+            ctx.createRadialGradient(
 
-                sx,
-                sy,
+                x,
+                y,
                 0,
 
-                sx,
-                sy,
-                sr
+                x,
+                y,
+                r
 
             );
 
 
         gradient.addColorStop(
-
             0,
-
-            `rgba(
-                ${red},
-                ${green},
-                0,
-                ${alpha}
-            )`
-
+            `rgba(0,0,0,${Math.min(1,life * 1.5)})`
         );
 
 
         gradient.addColorStop(
-
-            0.5,
-
-            `rgba(
-                ${red},
-                ${green},
-                0,
-                ${alpha * .85}
-            )`
-
+            .65,
+            `rgba(0,0,0,${life})`
         );
 
 
         gradient.addColorStop(
-
             1,
-
-            `rgba(
-                ${red},
-                ${green},
-                0,
-                0
-            )`
-
+            "rgba(0,0,0,0)"
         );
 
 
-        trailCtx.fillStyle =
+        ctx.fillStyle =
             gradient;
 
 
-        trailCtx.beginPath();
+        ctx.beginPath();
 
 
-        trailCtx.arc(
-            sx,
-            sy,
-            sr,
+        ctx.arc(
+            x,
+            y,
+            r,
             0,
             Math.PI * 2
         );
 
 
-        trailCtx.fill();
+        ctx.fill();
 
     }
 
 
-    /* =========================
-       UPDATE TRAIL
-    ========================= */
+    function localPosition(
+        clientX,
+        clientY
+    ) {
 
-    function updateTrail(dt) {
-
-        const frame =
-            dt * 60;
-
-
-        /*
-        fade old trail
-        */
-
-        trailCtx.globalCompositeOperation =
-            "destination-out";
+        const rect =
+            hero.getBoundingClientRect();
 
 
-        trailCtx.fillStyle =
-            `rgba(
-                0,
-                0,
-                0,
-                ${
-                    1 -
-                    Math.pow(
-                        1 - 0.03,
-                        frame
-                    )
-                }
-            )`;
+        return {
+
+            x:
+                clientX -
+                rect.left,
+
+            y:
+                clientY -
+                rect.top
+
+        };
+
+    }
 
 
-        trailCtx.fillRect(
+    function pointerMove(
+        x,
+        y
+    ) {
 
-            0,
-            0,
+        if (
+            firstMove
+        ) {
 
-            trailCanvas.width,
-            trailCanvas.height
+            previousX =
+                x;
 
+
+            previousY =
+                y;
+
+
+            firstMove =
+                false;
+
+        }
+
+
+        pointerX =
+            x;
+
+
+        pointerY =
+            y;
+
+
+        pointerActive =
+            true;
+
+
+        hint.classList.add(
+            "hidden"
         );
 
 
-        trailCtx.globalCompositeOperation =
-            "source-over";
+        const dx =
+            pointerX -
+            previousX;
 
 
-        /*
-        pointer stroke
-        */
+        const dy =
+            pointerY -
+            previousY;
 
-        if (
-            pointer.active
+
+        const distance =
+            Math.hypot(
+                dx,
+                dy
+            );
+
+
+        const baseRadius =
+            Math.max(
+                width,
+                height
+            ) *
+            (
+                width < 768
+                ? .085
+                : .055
+            );
+
+
+        const radius =
+
+            baseRadius *
+
+            (
+                .9 +
+
+                Math.min(
+                    distance / 50,
+                    .6
+                )
+            );
+
+
+        const steps =
+            Math.max(
+
+                1,
+
+                Math.ceil(
+
+                    distance /
+
+                    Math.max(
+                        10,
+                        radius * .22
+                    )
+
+                )
+
+            );
+
+
+        for (
+            let i = 0;
+            i <= steps;
+            i++
         ) {
 
-            const dx =
-                pointer.x -
-                pointer.px;
+            const t =
+                i / steps;
 
 
-            const dy =
-                pointer.y -
-                pointer.py;
+            trails.push({
+
+                x:
+                    previousX +
+                    dx * t,
+
+                y:
+                    previousY +
+                    dy * t,
+
+                r:
+                    radius *
+                    (
+                        .9 +
+                        Math.random() *
+                        .18
+                    ),
+
+                life: 1
+
+            });
+
+        }
 
 
-            const distance =
-                Math.hypot(
-                    dx,
-                    dy
+        if (
+            distance > 9
+        ) {
+
+            const count =
+                Math.min(
+                    3,
+                    Math.floor(
+                        distance / 15
+                    )
                 );
 
 
-            if (
-                distance >
-                0.5
+            for (
+                let i = 0;
+                i < count;
+                i++
             ) {
 
-                pointer.vx +=
+                droplets.push({
 
-                    (
-                        dx /
-                        Math.max(
-                            frame,
-                            0.001
-                        ) -
-
-                        pointer.vx
-                    ) *
-
-                    0.5;
-
-
-                pointer.vy +=
-
-                    (
-                        dy /
-                        Math.max(
-                            frame,
-                            0.001
-                        ) -
-
-                        pointer.vy
-                    ) *
-
-                    0.5;
-
-
-                const speed =
-                    Math.hypot(
-
-                        pointer.vx,
-
-                        pointer.vy
-
-                    );
-
-
-                const radius =
-
-                    baseRadius *
-
-                    (
-                        0.75 +
-
-                        Math.min(
-                            speed / 45,
-                            1
+                    x:
+                        x +
+                        (
+                            Math.random() -
+                            .5
                         ) *
-
-                        0.75
-                    );
-
-
-                const steps =
-                    Math.max(
-
-                        1,
-
-                        Math.ceil(
-
-                            distance /
-
-                            (
-                                radius *
-                                0.22
-                            )
-
-                        )
-
-                    );
-
-
-                for (
-                    let i = 1;
-                    i <= steps;
-                    i++
-                ) {
-
-                    const t =
-                        i / steps;
-
-
-                    stamp(
-
-                        pointer.px +
-                        dx * t,
-
-                        pointer.py +
-                        dy * t,
-
                         radius,
 
-                        pointer.vx * 6,
-
-                        pointer.vy * 6,
-
-                        0.92
-
-                    );
-
-                }
-
-
-                /*
-                droplets
-                */
-
-                if (
-                    !reduceMotion
-                ) {
-
-                    const count =
-                        Math.min(
-
-                            3,
-
-                            Math.floor(
-                                speed / 14
-                            )
-
-                        );
-
-
-                    for (
-                        let i = 0;
-                        i < count;
-                        i++
-                    ) {
-
-                        const angle =
-
-                            Math.atan2(
-
-                                pointer.vy,
-
-                                pointer.vx
-
-                            ) +
-
-                            (
-                                Math.random() -
-                                0.5
-                            ) *
-
-                            1.4;
-
-
-                        const dropSpeed =
-
-                            speed *
-
-                            (
-                                0.35 +
-                                Math.random() *
-                                0.45
-                            );
-
-
-                        droplets.push({
-
-                            x:
-
-                                pointer.x +
-
-                                (
-                                    Math.random() -
-                                    0.5
-                                ) *
-
-                                radius,
-
-
-                            y:
-
-                                pointer.y +
-
-                                (
-                                    Math.random() -
-                                    0.5
-                                ) *
-
-                                radius,
-
-
-                            vx:
-
-                                Math.cos(
-                                    angle
-                                ) *
-
-                                dropSpeed,
-
-
-                            vy:
-
-                                Math.sin(
-                                    angle
-                                ) *
-
-                                dropSpeed,
-
-
-                            radius:
-
-                                radius *
-
-                                (
-                                    0.20 +
-                                    Math.random() *
-                                    0.35
-                                ),
-
-
-                            life: 1
-
-                        });
-
-                    }
-
-
-                    if (
-                        droplets.length >
-                        90
-                    ) {
-
-                        droplets.splice(
-
-                            0,
-
-                            droplets.length -
-                            90
-
-                        );
-
-                    }
-
-                }
-
-
-                pointer.px =
-                    pointer.x;
-
-
-                pointer.py =
-                    pointer.y;
-
-            }
-
-            else {
-
-                pointer.vx *=
-                    0.8;
-
-
-                pointer.vy *=
-                    0.8;
+                    y:
+                        y +
+                        (
+                            Math.random() -
+                            .5
+                        ) *
+                        radius,
+
+                    vx:
+                        dx *
+                        (
+                            .04 +
+                            Math.random() *
+                            .08
+                        ),
+
+                    vy:
+                        dy *
+                        (
+                            .04 +
+                            Math.random() *
+                            .08
+                        ),
+
+                    r:
+                        radius *
+                        (
+                            .08 +
+                            Math.random() *
+                            .15
+                        ),
+
+                    life: 1
+
+                });
 
             }
 
         }
 
 
-        /*
-        update droplets
-        */
+        if (
+            trails.length >
+            220
+        ) {
+
+            trails.splice(
+                0,
+                trails.length - 220
+            );
+
+        }
+
+
+        if (
+            droplets.length >
+            70
+        ) {
+
+            droplets.splice(
+                0,
+                droplets.length - 70
+            );
+
+        }
+
+
+        previousX =
+            pointerX;
+
+
+        previousY =
+            pointerY;
+
+    }
+
+
+    hero.addEventListener(
+        "pointermove",
+        event => {
+
+            if (
+                event.pointerType ===
+                "touch"
+            ) {
+
+                return;
+
+            }
+
+
+            const position =
+                localPosition(
+                    event.clientX,
+                    event.clientY
+                );
+
+
+            pointerMove(
+                position.x,
+                position.y
+            );
+
+        }
+    );
+
+
+    hero.addEventListener(
+        "pointerleave",
+        () => {
+
+            pointerActive =
+                false;
+
+
+            firstMove =
+                true;
+
+        }
+    );
+
+
+    hero.addEventListener(
+        "touchstart",
+        event => {
+
+            const touch =
+                event.touches[0];
+
+
+            if (!touch) {
+                return;
+            }
+
+
+            const position =
+                localPosition(
+                    touch.clientX,
+                    touch.clientY
+                );
+
+
+            firstMove =
+                true;
+
+
+            pointerMove(
+                position.x,
+                position.y
+            );
+
+
+            trails.push({
+
+                x:
+                    position.x,
+
+                y:
+                    position.y,
+
+                r:
+                    Math.max(
+                        width,
+                        height
+                    ) *
+                    .09,
+
+                life: 1
+
+            });
+
+        },
+
+        {
+            passive: true
+        }
+    );
+
+
+    hero.addEventListener(
+        "touchmove",
+        event => {
+
+            const touch =
+                event.touches[0];
+
+
+            if (!touch) {
+                return;
+            }
+
+
+            const position =
+                localPosition(
+                    touch.clientX,
+                    touch.clientY
+                );
+
+
+            pointerMove(
+                position.x,
+                position.y
+            );
+
+        },
+
+        {
+            passive: true
+        }
+    );
+
+
+    hero.addEventListener(
+        "touchend",
+        () => {
+
+            pointerActive =
+                false;
+
+
+            firstMove =
+                true;
+
+        },
+
+        {
+            passive: true
+        }
+    );
+
+
+    function animate(
+        now
+    ) {
+
+        const dt =
+            Math.min(
+                50,
+                now -
+                lastTime
+            );
+
+
+        lastTime =
+            now;
+
+
+        drawPaper();
+
+
+        ctx.globalCompositeOperation =
+            "destination-out";
+
+
+        for (
+            let i =
+                trails.length - 1;
+
+            i >= 0;
+
+            i--
+        ) {
+
+            const trail =
+                trails[i];
+
+
+            trail.life -=
+                dt / 1500;
+
+
+            if (
+                trail.life <= 0
+            ) {
+
+                trails.splice(
+                    i,
+                    1
+                );
+
+
+                continue;
+
+            }
+
+
+            hole(
+
+                trail.x,
+
+                trail.y,
+
+                trail.r,
+
+                trail.life
+
+            );
+
+        }
+
 
         for (
             let i =
@@ -1255,56 +2217,37 @@
 
             drop.x +=
                 drop.vx *
-                frame;
+                dt *
+                .08;
 
 
             drop.y +=
                 drop.vy *
-                frame;
+                dt *
+                .08;
+
+
+            drop.vy +=
+                .012 *
+                dt;
 
 
             drop.vx *=
-                Math.pow(
-                    0.90,
-                    frame
-                );
+                .985;
 
 
-            drop.vy =
-
-                drop.vy *
-
-                Math.pow(
-                    0.90,
-                    frame
-                ) +
-
-                0.25 *
-                frame;
+            drop.r *=
+                .997;
 
 
             drop.life -=
-                0.022 *
-                frame;
-
-
-            drop.radius *=
-                Math.pow(
-                    0.985,
-                    frame
-                );
+                dt / 1200;
 
 
             if (
-
-                drop.life <=
-                0
-
+                drop.life <= 0
                 ||
-
-                drop.radius <
-                2
-
+                drop.r < 1
             ) {
 
                 droplets.splice(
@@ -1318,1609 +2261,174 @@
             }
 
 
-            stamp(
+            hole(
 
                 drop.x,
 
                 drop.y,
 
-                drop.radius,
+                drop.r,
 
-                drop.vx * 6,
-
-                drop.vy * 6,
-
-                0.85 *
                 drop.life
 
             );
 
         }
 
-    }
-
-
-    /* =========================
-       POINTER INPUT
-    ========================= */
-
-    function onMove(
-        x,
-        y
-    ) {
-
-        if (
-            !pointer.active
-        ) {
-
-            pointer.active =
-                true;
-
-
-            pointer.x =
-                x;
-
-
-            pointer.y =
-                y;
-
-
-            pointer.px =
-                x;
-
-
-            pointer.py =
-                y;
-
-        }
-
-        else {
-
-            pointer.x =
-                x;
-
-
-            pointer.y =
-                y;
-
-        }
-
-
-        lastMove =
-            performance.now();
-
-
-        hint.classList.add(
-            "is-gone"
-        );
-
-
-        wake();
-
-    }
-
-
-    hero.addEventListener(
-
-        "pointermove",
-
-        event => {
-
-            if (
-                event.pointerType ===
-                "touch"
-            ) {
-
-                return;
-
-            }
-
-
-            const rect =
-                hero.getBoundingClientRect();
-
-
-            onMove(
-
-                event.clientX -
-                rect.left,
-
-                event.clientY -
-                rect.top
-
-            );
-
-        }
-
-    );
-
-
-    hero.addEventListener(
-
-        "pointerleave",
-
-        event => {
-
-            if (
-                event.pointerType !==
-                "touch"
-            ) {
-
-                pointer.active =
-                    false;
-
-            }
-
-        }
-
-    );
-
-
-    /* =========================
-       TOUCH
-    ========================= */
-
-    hero.addEventListener(
-
-        "touchstart",
-
-        event => {
-
-            const touch =
-                event.touches[0];
-
-
-            if (
-                !touch
-            ) {
-
-                return;
-
-            }
-
-
-            const rect =
-                hero.getBoundingClientRect();
-
-
-            const x =
-
-                touch.clientX -
-                rect.left;
-
-
-            const y =
-
-                touch.clientY -
-                rect.top;
-
-
-            pointer.active =
-                true;
-
-
-            pointer.x =
-                pointer.px =
-                x;
-
-
-            pointer.y =
-                pointer.py =
-                y;
-
-
-            stamp(
-
-                x,
-
-                y,
-
-                baseRadius *
-                1.1,
-
-                0,
-
-                0,
-
-                0.95
-
-            );
-
-
-            lastMove =
-                performance.now();
-
-
-            hint.classList.add(
-                "is-gone"
-            );
-
-
-            wake();
-
-        },
-
-        {
-            passive: true
-        }
-
-    );
-
-
-    hero.addEventListener(
-
-        "touchmove",
-
-        event => {
-
-            const touch =
-                event.touches[0];
-
-
-            if (
-                !touch
-            ) {
-
-                return;
-
-            }
-
-
-            const rect =
-                hero.getBoundingClientRect();
-
-
-            onMove(
-
-                touch.clientX -
-                rect.left,
-
-                touch.clientY -
-                rect.top
-
-            );
-
-        },
-
-        {
-            passive: true
-        }
-
-    );
-
-
-    hero.addEventListener(
-
-        "touchend",
-
-        () => {
-
-            pointer.active =
-                false;
-
-        },
-
-        {
-            passive: true
-        }
-
-    );
-
-
-    /* =========================
-       WEBGL
-    ========================= */
-
-    const gl =
-        canvas.getContext(
-
-            "webgl",
-
-            {
-                premultipliedAlpha: true,
-
-                alpha: true,
-
-                antialias: false,
-
-                depth: false
-            }
-
-        );
-
-
-    if (
-        !gl
-    ) {
-
-        console.warn(
-            "WebGL not available"
-        );
-
-
-        return;
-
-    }
-
-
-    /* =========================
-       VERTEX SHADER
-    ========================= */
-
-    const vertexSource = `
-
-        attribute vec2 aPos;
-
-        varying vec2 vUv;
-
-
-        void main() {
-
-            vUv = vec2(
-
-                aPos.x * .5 + .5,
-
-                .5 - aPos.y * .5
-
-            );
-
-
-            gl_Position =
-                vec4(
-                    aPos,
-                    0.0,
-                    1.0
-                );
-
-        }
-
-    `;
-
-
-    /* =========================
-       FRAGMENT SHADER
-    ========================= */
-
-    const fragmentSource = `
-
-        precision highp float;
-
-
-        varying vec2 vUv;
-
-
-        uniform sampler2D uText;
-
-        uniform sampler2D uTrail;
-
-        uniform vec2 uRes;
-
-        uniform vec3 uPaper;
-
-        uniform vec3 uInk;
-
-        uniform float uTime;
-
-
-        float hash(vec2 p) {
-
-            return fract(
-
-                sin(
-
-                    dot(
-
-                        p,
-
-                        vec2(
-                            127.1,
-                            311.7
-                        )
-
-                    )
-
-                ) *
-
-                43758.5453123
-
-            );
-
-        }
-
-
-        float noise(vec2 p) {
-
-            vec2 i =
-                floor(p);
-
-
-            vec2 f =
-                fract(p);
-
-
-            f =
-                f *
-                f *
-                (
-                    3.0 -
-                    2.0 *
-                    f
-                );
-
-
-            float a =
-                hash(i);
-
-
-            float b =
-                hash(
-                    i +
-                    vec2(
-                        1.0,
-                        0.0
-                    )
-                );
-
-
-            float c =
-                hash(
-                    i +
-                    vec2(
-                        0.0,
-                        1.0
-                    )
-                );
-
-
-            float d =
-                hash(
-                    i +
-                    vec2(
-                        1.0,
-                        1.0
-                    )
-                );
-
-
-            return mix(
-
-                mix(
-                    a,
-                    b,
-                    f.x
-                ),
-
-                mix(
-                    c,
-                    d,
-                    f.x
-                ),
-
-                f.y
-
-            );
-
-        }
-
-
-        void main() {
-
-            vec2 uv =
-                vUv;
-
-
-            vec2 aspect =
-                vec2(
-                    uRes.x /
-                    uRes.y,
-                    1.0
-                );
-
-
-            float n1 =
-
-                noise(
-
-                    uv *
-                    aspect *
-                    4.0 +
-
-                    vec2(
-                        uTime *
-                        .18,
-                        0.0
-                    )
-
-                ) -
-
-                .5;
-
-
-            float n2 =
-
-                noise(
-
-                    uv *
-                    aspect *
-                    4.0 +
-
-                    vec2(
-                        12.7,
-                        uTime *
-                        .20
-                    )
-
-                ) -
-
-                .5;
-
-
-            vec2 wobble =
-
-                vec2(
-                    n1,
-                    n2
-                ) *
-
-                .022;
-
-
-            vec4 trail =
-
-                texture2D(
-
-                    uTrail,
-
-                    uv +
-                    wobble
-
-                );
-
-
-            float edgeNoise =
-
-                (
-
-                    noise(
-
-                        uv *
-                        aspect *
-                        13.0 +
-
-                        uTime *
-                        .15
-
-                    ) -
-
-                    .5
-
-                ) *
-
-                .10;
-
-
-            float mask =
-
-                trail.a +
-                edgeNoise;
-
-
-            float hole =
-
-                smoothstep(
-
-                    .38,
-
-                    .48,
-
-                    mask
-
-                );
-
-
-            /*
-            velocity encoded in red / green
-            */
-
-            vec2 velocity =
-
-                (
-                    trail.rg -
-                    .5
-                ) *
-
-                2.0;
-
-
-            float drag =
-
-                smoothstep(
-
-                    .03,
-
-                    .42,
-
-                    trail.a
-
-                );
-
-
-            vec2 smearUv =
-
-                uv -
-
-                velocity *
-
-                drag *
-
-                vec2(
-
-                    .11 /
-
-                    aspect.x,
-
-                    .11
-
-                );
-
-
-            float textAlpha =
-
-                texture2D(
-
-                    uText,
-
-                    smearUv
-
-                ).a;
-
-
-            vec3 colour =
-
-                mix(
-
-                    uPaper,
-
-                    uInk,
-
-                    textAlpha
-
-                );
-
-
-            float alpha =
-
-                1.0 -
-                hole;
-
-
-            gl_FragColor =
-
-                vec4(
-
-                    colour *
-                    alpha,
-
-                    alpha
-
-                );
-
-        }
-
-    `;
-
-
-    /* =========================
-       SHADER COMPILE
-    ========================= */
-
-    function createShader(
-        type,
-        source
-    ) {
-
-        const shader =
-            gl.createShader(
-                type
-            );
-
-
-        gl.shaderSource(
-            shader,
-            source
-        );
-
-
-        gl.compileShader(
-            shader
-        );
-
-
-        if (
-
-            !gl.getShaderParameter(
-
-                shader,
-
-                gl.COMPILE_STATUS
-
-            )
-
-        ) {
-
-            console.error(
-
-                gl.getShaderInfoLog(
-                    shader
-                )
-
-            );
-
-        }
-
-
-        return shader;
-
-    }
-
-
-    const program =
-        gl.createProgram();
-
-
-    gl.attachShader(
-
-        program,
-
-        createShader(
-
-            gl.VERTEX_SHADER,
-
-            vertexSource
-
-        )
-
-    );
-
-
-    gl.attachShader(
-
-        program,
-
-        createShader(
-
-            gl.FRAGMENT_SHADER,
-
-            fragmentSource
-
-        )
-
-    );
-
-
-    gl.linkProgram(
-        program
-    );
-
-
-    if (
-
-        !gl.getProgramParameter(
-
-            program,
-
-            gl.LINK_STATUS
-
-        )
-
-    ) {
-
-        console.error(
-
-            gl.getProgramInfoLog(
-                program
-            )
-
-        );
-
-
-        return;
-
-    }
-
-
-    gl.useProgram(
-        program
-    );
-
-
-    /* =========================
-       FULLSCREEN QUAD
-    ========================= */
-
-    const buffer =
-        gl.createBuffer();
-
-
-    gl.bindBuffer(
-
-        gl.ARRAY_BUFFER,
-
-        buffer
-
-    );
-
-
-    gl.bufferData(
-
-        gl.ARRAY_BUFFER,
-
-        new Float32Array([
-
-            -1, -1,
-
-             1, -1,
-
-            -1,  1,
-
-             1,  1
-
-        ]),
-
-        gl.STATIC_DRAW
-
-    );
-
-
-    const position =
-        gl.getAttribLocation(
-
-            program,
-
-            "aPos"
-
-        );
-
-
-    gl.enableVertexAttribArray(
-        position
-    );
-
-
-    gl.vertexAttribPointer(
-
-        position,
-
-        2,
-
-        gl.FLOAT,
-
-        false,
-
-        0,
-
-        0
-
-    );
-
-
-    /* =========================
-       TEXTURES
-    ========================= */
-
-    function createTexture(unit) {
-
-        const texture =
-            gl.createTexture();
-
-
-        gl.activeTexture(
-
-            gl.TEXTURE0 +
-            unit
-
-        );
-
-
-        gl.bindTexture(
-
-            gl.TEXTURE_2D,
-
-            texture
-
-        );
-
-
-        gl.texParameteri(
-
-            gl.TEXTURE_2D,
-
-            gl.TEXTURE_WRAP_S,
-
-            gl.CLAMP_TO_EDGE
-
-        );
-
-
-        gl.texParameteri(
-
-            gl.TEXTURE_2D,
-
-            gl.TEXTURE_WRAP_T,
-
-            gl.CLAMP_TO_EDGE
-
-        );
-
-
-        gl.texParameteri(
-
-            gl.TEXTURE_2D,
-
-            gl.TEXTURE_MIN_FILTER,
-
-            gl.LINEAR
-
-        );
-
-
-        gl.texParameteri(
-
-            gl.TEXTURE_2D,
-
-            gl.TEXTURE_MAG_FILTER,
-
-            gl.LINEAR
-
-        );
-
-
-        return texture;
-
-    }
-
-
-    const textTexture =
-        createTexture(0);
-
-
-    const trailTexture =
-        createTexture(1);
-
-
-    gl.uniform1i(
-
-        gl.getUniformLocation(
-
-            program,
-
-            "uText"
-
-        ),
-
-        0
-
-    );
-
-
-    gl.uniform1i(
-
-        gl.getUniformLocation(
-
-            program,
-
-            "uTrail"
-
-        ),
-
-        1
-
-    );
-
-
-    gl.uniform3fv(
-
-        gl.getUniformLocation(
-
-            program,
-
-            "uPaper"
-
-        ),
-
-        PAPER
-
-    );
-
-
-    gl.uniform3fv(
-
-        gl.getUniformLocation(
-
-            program,
-
-            "uInk"
-
-        ),
-
-        INK
-
-    );
-
-
-    const resolutionUniform =
-        gl.getUniformLocation(
-
-            program,
-
-            "uRes"
-
-        );
-
-
-    const timeUniform =
-        gl.getUniformLocation(
-
-            program,
-
-            "uTime"
-
-        );
-
-
-    gl.enable(
-        gl.BLEND
-    );
-
-
-    gl.blendFunc(
-
-        gl.ONE,
-
-        gl.ONE_MINUS_SRC_ALPHA
-
-    );
-
-
-    hero.classList.add(
-        "gl-on"
-    );
-
-
-    /* =========================
-       DRAW MARTIN TEXT
-    ========================= */
-
-    function drawTextTexture() {
-
-        textCtx.clearRect(
-
-            0,
-            0,
-
-            textCanvas.width,
-            textCanvas.height
-
-        );
-
-
-        textCtx.setTransform(
-
-            DPR,
-            0,
-            0,
-            DPR,
-            0,
-            0
-
-        );
-
-
-        const maxWidth =
-            W * .90;
-
-
-        let fontSize =
-            Math.min(
-
-                W * .23,
-
-                H * .32
-
-            );
-
-
-        textCtx.font =
-            `800 ${fontSize}px Outfit, "Arial Black", sans-serif`;
-
-
-        let measured =
-            textCtx.measureText(
-                "MARTIN"
-            );
-
-
-        if (
-            measured.width >
-            maxWidth
-        ) {
-
-            fontSize *=
-
-                maxWidth /
-
-                measured.width;
-
-
-            textCtx.font =
-                `800 ${fontSize}px Outfit, "Arial Black", sans-serif`;
-
-        }
-
-
-        textCtx.textAlign =
-            "center";
-
-
-        textCtx.textBaseline =
-            "middle";
-
-
-        textCtx.fillStyle =
-            "#ffffff";
-
-
-        textCtx.fillText(
-
-            "MARTIN",
-
-            W / 2,
-
-            H / 2
-
-        );
-
-
-        gl.activeTexture(
-            gl.TEXTURE0
-        );
-
-
-        gl.bindTexture(
-
-            gl.TEXTURE_2D,
-
-            textTexture
-
-        );
-
-
-        gl.texImage2D(
-
-            gl.TEXTURE_2D,
-
-            0,
-
-            gl.RGBA,
-
-            gl.RGBA,
-
-            gl.UNSIGNED_BYTE,
-
-            textCanvas
-
-        );
-
-    }
-
-
-    /* =========================
-       RESIZE
-    ========================= */
-
-    function resize() {
-
-        W =
-            hero.clientWidth;
-
-
-        H =
-            hero.clientHeight;
-
-
-        canvas.width =
-            Math.max(
-
-                2,
-
-                Math.round(
-                    W *
-                    DPR
-                )
-
-            );
-
-
-        canvas.height =
-            Math.max(
-
-                2,
-
-                Math.round(
-                    H *
-                    DPR
-                )
-
-            );
-
-
-        textCanvas.width =
-            canvas.width;
-
-
-        textCanvas.height =
-            canvas.height;
-
-
-        trailCanvas.width =
-            Math.max(
-
-                2,
-
-                Math.round(
-
-                    W *
-                    TRAIL_SCALE
-
-                )
-
-            );
-
-
-        trailCanvas.height =
-            Math.max(
-
-                2,
-
-                Math.round(
-
-                    H *
-                    TRAIL_SCALE
-
-                )
-
-            );
-
-
-        baseRadius =
-
-            Math.max(
-                W,
-                H
-            ) *
-
-            (
-                W < 768
-                ?
-                0.085
-                :
-                0.055
-            );
-
-
-        gl.viewport(
-
-            0,
-            0,
-
-            canvas.width,
-            canvas.height
-
-        );
-
-
-        gl.uniform2f(
-
-            resolutionUniform,
-
-            W,
-
-            H
-
-        );
-
-
-        drawTextTexture();
-
-
-        draw();
-
-    }
-
-
-    /* =========================
-       DRAW
-    ========================= */
-
-    function draw() {
-
-        gl.clearColor(
-            0,
-            0,
-            0,
-            0
-        );
-
-
-        gl.clear(
-            gl.COLOR_BUFFER_BIT
-        );
-
-
-        gl.activeTexture(
-            gl.TEXTURE1
-        );
-
-
-        gl.bindTexture(
-
-            gl.TEXTURE_2D,
-
-            trailTexture
-
-        );
-
-
-        gl.texImage2D(
-
-            gl.TEXTURE_2D,
-
-            0,
-
-            gl.RGBA,
-
-            gl.RGBA,
-
-            gl.UNSIGNED_BYTE,
-
-            trailCanvas
-
-        );
-
-
-        gl.uniform1f(
-
-            timeUniform,
-
-            performance.now() /
-            1000
-
-        );
-
-
-        gl.drawArrays(
-
-            gl.TRIANGLE_STRIP,
-
-            0,
-
-            4
-
-        );
-
-    }
-
-
-    /* =========================
-       ANIMATION LOOP
-    ========================= */
-
-    let running =
-        false;
-
-
-    let lastFrame =
-        performance.now();
-
-
-    let visible =
-        true;
-
-
-    function wake() {
-
-        if (
-            running ||
-            !visible
-        ) {
-
-            return;
-
-        }
-
-
-        running =
-            true;
-
-
-        lastFrame =
-            performance.now();
-
 
         requestAnimationFrame(
-            tick
+            animate
         );
 
     }
 
 
-    function tick(now) {
+    resizeCanvas();
 
-        if (
-            !running
-        ) {
-
-            return;
-
-        }
-
-
-        const dt =
-            clamp(
-
-                (
-                    now -
-                    lastFrame
-                ) /
-
-                1000,
-
-                0.001,
-
-                0.05
-
-            );
-
-
-        lastFrame =
-            now;
-
-
-        updateTrail(
-            dt
-        );
-
-
-        draw();
-
-
-        if (
-
-            now -
-            lastMove >
-
-            4500
-
-            &&
-
-            droplets.length ===
-            0
-
-            &&
-
-            !pointer.active
-
-        ) {
-
-            running =
-                false;
-
-
-            trailCtx.clearRect(
-
-                0,
-                0,
-
-                trailCanvas.width,
-
-                trailCanvas.height
-
-            );
-
-
-            draw();
-
-
-            return;
-
-        }
-
-
-        requestAnimationFrame(
-            tick
-        );
-
-    }
-
-
-    /* =========================
-       OBSERVER
-    ========================= */
-
-    const observer =
-        new IntersectionObserver(
-
-            entries => {
-
-                visible =
-                    entries[0]
-                    .isIntersecting;
-
-
-                if (
-                    visible
-                ) {
-
-                    wake();
-
-                }
-
-            }
-
-        );
-
-
-    observer.observe(
-        hero
-    );
-
-
-    /* =========================
-       INIT
-    ========================= */
 
     window.addEventListener(
-
         "resize",
-
-        resize
-
+        resizeCanvas
     );
 
 
-    resize();
-
-
     if (
-
         document.fonts
-
         &&
-
         document.fonts.load
-
     ) {
 
         document.fonts
-
             .load(
                 "800 100px Outfit"
             )
-
             .then(
                 () => {
-
-                    drawTextTexture();
-
-                    draw();
-
+                    drawPaper();
                 }
             );
 
     }
 
 
-    wake();
+    requestAnimationFrame(
+        animate
+    );
+
+
+    /* ========================================
+       RETRO COMPUTER → PHOTO
+    ======================================== */
+
+    const computerButton =
+        document.getElementById(
+            "computerButton"
+        );
+
+
+    const viewer =
+        document.getElementById(
+            "photoViewer"
+        );
+
+
+    const closeViewer =
+        document.getElementById(
+            "closeViewer"
+        );
+
+
+    function openPhoto() {
+
+        computerButton
+            .classList.add(
+                "opening"
+            );
+
+
+        setTimeout(
+            () => {
+
+                viewer
+                    .classList.add(
+                        "open"
+                    );
+
+
+                document.body.style.overflow =
+                    "hidden";
+
+
+                computerButton
+                    .classList.remove(
+                        "opening"
+                    );
+
+            },
+            420
+        );
+
+    }
+
+
+    function closePhoto() {
+
+        viewer
+            .classList.remove(
+                "open"
+            );
+
+
+        document.body.style.overflow =
+            "";
+
+    }
+
+
+    computerButton.addEventListener(
+        "click",
+        openPhoto
+    );
+
+
+    closeViewer.addEventListener(
+        "click",
+        closePhoto
+    );
+
+
+    viewer.addEventListener(
+        "click",
+        event => {
+
+            if (
+                event.target ===
+                viewer
+            ) {
+
+                closePhoto();
+
+            }
+
+        }
+    );
+
+
+    document.addEventListener(
+        "keydown",
+        event => {
+
+            if (
+                event.key ===
+                "Escape"
+            ) {
+
+                closePhoto();
+
+            }
+
+        }
+    );
 
 })();
 
