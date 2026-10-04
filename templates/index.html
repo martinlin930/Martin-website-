@@ -139,8 +139,6 @@
         }
 
 
-        /* PHOTO UNDER PAPER */
-
         .hero__photo {
             position:
                 absolute;
@@ -167,8 +165,6 @@
                 none;
         }
 
-
-        /* FALLBACK PAPER */
 
         .hero__paper {
             position:
@@ -235,8 +231,6 @@
         }
 
 
-        /* WEBGL */
-
         .hero__reveal {
             position:
                 absolute;
@@ -260,8 +254,6 @@
                 none;
         }
 
-
-        /* UI */
 
         .chrome {
             position:
@@ -1338,10 +1330,6 @@
         }
 
 
-        /* ==================================================
-           MOBILE
-        ================================================== */
-
         @media
         (max-width: 767px) {
 
@@ -1511,10 +1499,6 @@
 <body>
 
 
-<!-- ==================================================
-     WEBGL MARTIN HOME
-================================================== -->
-
 <section
     class="hero"
     id="home"
@@ -1631,10 +1615,6 @@
 
 </section>
 
-
-<!-- ==================================================
-     WHITE VOID
-================================================== -->
 
 <section
     class="work"
@@ -1767,10 +1747,6 @@
 </section>
 
 
-<!-- ==================================================
-     ONE PHOTO ONLY
-================================================== -->
-
 <div
     class="viewer"
     id="viewer"
@@ -1811,13 +1787,22 @@
 </div>
 
 
+<!-- 只新增的电脑点击音效 -->
+<audio
+    id="computerSound"
+    preload="auto"
+>
+    <source
+        src="/static/audio/375A0D96-73DA-47B7-842B-658940D352BF.mp3"
+        type="audio/mpeg"
+    >
+</audio>
+
+
 <script>
 
 (() => {
 
-    /* ==================================================
-       WEBGL LIQUID REVEAL
-    ================================================== */
 
     const hero =
         document.querySelector(
@@ -2789,10 +2774,6 @@
 
     );
 
-
-    /* ==================================================
-       WEBGL
-    ================================================== */
 
     const gl =
         canvas.getContext(
@@ -4519,6 +4500,13 @@
         );
 
 
+    /* 新增：电脑点击音效 */
+    const computerSound =
+        document.getElementById(
+            "computerSound"
+        );
+
+
     const viewer =
         document.getElementById(
             "viewer"
@@ -4532,6 +4520,20 @@
 
 
     function openPhoto() {
+
+
+        /* 新增：点击电脑立刻播放一次音效 */
+
+        computerSound.currentTime =
+            0;
+
+
+        computerSound
+            .play()
+            .catch(
+                () => {}
+            );
+
 
         computer
         .classList
