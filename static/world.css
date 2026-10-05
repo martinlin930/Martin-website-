@@ -13,3 +13,5 @@
 
 #jump{position:fixed;right:20px;bottom:300px;width:64px;height:64px;border-radius:50%;background:#ffffffc0;touch-action:none;user-select:none}#music{margin-left:auto}.top #leave{margin-left:0}.top{gap:12px}#joystick::before{content:'推满跑步';position:absolute;top:-25px;left:0;width:100%;text-align:center;color:white;font-size:12px;text-shadow:0 1px 3px #000}
 @media(max-width:600px){#jump{right:18px;bottom:205px}.top{left:12px;right:12px;gap:8px;font-size:12px}.top button{padding:10px 8px}#status{display:none}}
+
+#saveStatus{font-size:12px}.top{flex-wrap:wrap}@media(max-width:600px){#saveStatus{order:5;flex-basis:100%;font-size:11px}}

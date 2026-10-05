@@ -22,7 +22,7 @@ app.config.update(
 # Persist the local secret so sessions survive restarts. Set SECRET_KEY in production.
 secret = os.environ.get('SECRET_KEY')
 if not secret:
-    secret_path = BASE_DIR / 'instance' / 'secret.key'
+    secret_path = Path(app.config['DATABASE']).parent / 'secret.key'
     secret_path.parent.mkdir(parents=True, exist_ok=True)
     try:
         with secret_path.open('x') as file:
@@ -52,6 +52,13 @@ def database():
         connection.execute('ALTER TABLE players ADD COLUMN running INTEGER NOT NULL DEFAULT 0')
     if 'avatar' not in columns:
         connection.execute("ALTER TABLE players ADD COLUMN avatar TEXT NOT NULL DEFAULT '01m'")
+    if 'user_id' not in columns:
+        connection.execute('ALTER TABLE players ADD COLUMN user_id INTEGER REFERENCES users(id)')
+    connection.execute('''CREATE TABLE IF NOT EXISTS game_saves (
+        user_id INTEGER PRIMARY KEY REFERENCES users(id), nickname TEXT NOT NULL,
+        avatar TEXT NOT NULL, x REAL NOT NULL, z REAL NOT NULL, yaw REAL NOT NULL,
+        pitch REAL NOT NULL DEFAULT 0, music_muted INTEGER NOT NULL DEFAULT 0,
+        updated REAL NOT NULL, save_version INTEGER NOT NULL DEFAULT 1)''')
     connection.execute('CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY, nickname TEXT NOT NULL, body TEXT NOT NULL, created REAL NOT NULL)')
     connection.commit()
     try:
@@ -154,7 +161,12 @@ def logout():
 
 @app.get('/world')
 def world():
-    return render_template('world.html')
+    saved = None
+    if session.get('user_id'):
+        with database() as db:
+            row = db.execute('SELECT * FROM game_saves WHERE user_id = ?', (session['user_id'],)).fetchone()
+            saved = dict(row) if row else None
+    return render_template('world.html', saved_game=saved)
 
 
 @app.post('/api/world/join')
@@ -168,9 +180,16 @@ def join_world():
     session['world_players'] = (session.get('world_players', []) + [player_id])[-12:]
     session['world_player'] = player_id
     with database() as db:
-        db.execute('INSERT OR REPLACE INTO players (id, nickname, x, z, updated, avatar) VALUES (?, ?, 0, 0, ?, ?)', (session['world_player'], nickname, time.time(), secrets.choice(['01m', '02m', '01f', '02f'])))
+        user_id = session.get('user_id')
+        saved = db.execute('SELECT * FROM game_saves WHERE user_id = ?', (user_id,)).fetchone() if user_id else None
+        state = dict(saved) if saved else {'x': 70.4, 'z': -132.8, 'yaw': .7853981634, 'pitch': 0, 'music_muted': 0, 'avatar': secrets.choice(['01m', '02m', '01f', '02f'])}
+        db.execute('INSERT INTO players (id, nickname, x, z, yaw, updated, avatar, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', (player_id, nickname, state['x'], state['z'], state['yaw'], time.time(), state['avatar'], user_id))
+        if user_id:
+            db.execute("""INSERT INTO game_saves (user_id, nickname, avatar, x, z, yaw, pitch, music_muted, updated)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET nickname = excluded.nickname""",
+                (user_id, nickname, state['avatar'], state['x'], state['z'], state['yaw'], state['pitch'], state['music_muted'], time.time()))
     session['world_message_at'] = 0
-    return {'id': session['world_player'], 'nickname': nickname}
+    return {'id': player_id, 'nickname': nickname, 'persistent': bool(user_id), 'state': {k: state[k] for k in ('x', 'z', 'yaw', 'pitch', 'avatar', 'music_muted')}}
 
 
 def world_player_id(data):
@@ -188,6 +207,10 @@ def world_state():
     yaw = data.get('yaw', 0)
     jump = data.get('jump', 0)
     running = data.get('running', False)
+    pitch = data.get('pitch', 0)
+    music_muted = data.get('music_muted', False)
+    if isinstance(pitch, bool) or not isinstance(pitch, (int, float)) or not math.isfinite(pitch) or not -.7 <= pitch <= .7 or not isinstance(music_muted, bool):
+        return {'error': 'Invalid settings.'}, 400
     if isinstance(jump, bool) or not isinstance(jump, (int, float)) or not math.isfinite(jump) or not 0 <= jump <= 3 or not isinstance(running, bool):
         return {'error': 'Invalid movement.'}, 400
     if isinstance(yaw, bool) or not isinstance(yaw, (int, float)) or not math.isfinite(yaw):
@@ -196,9 +219,12 @@ def world_state():
         return {'error': 'Invalid position.'}, 400
     with database() as db:
         player = db.execute('SELECT * FROM players WHERE id = ?', (player_id,)).fetchone()
-        if not player:
+        if not player or player['user_id'] != session.get('user_id'):
             return {'error': 'Join the world first.'}, 401
         db.execute('UPDATE players SET x = ?, z = ?, yaw = ?, jump = ?, running = ?, updated = ? WHERE id = ?', (*coordinates, yaw, jump, int(running), time.time(), player['id']))
+        if player['user_id']:
+            db.execute('UPDATE game_saves SET x = ?, z = ?, yaw = ?, pitch = ?, music_muted = ?, updated = ? WHERE user_id = ?',
+                       (*coordinates, yaw, pitch, int(music_muted), time.time(), player['user_id']))
         db.execute('DELETE FROM players WHERE updated < ?', (time.time() - 30,))
         players = [dict(row) for row in db.execute('SELECT id, nickname, x, z, yaw, avatar, jump, running FROM players WHERE id != ?', (player['id'],))]
         messages = [dict(row) for row in db.execute('SELECT id, nickname, body FROM messages ORDER BY id DESC LIMIT 40')][::-1]
@@ -230,6 +256,29 @@ def leave_world():
     with database() as db:
         db.execute('DELETE FROM players WHERE id = ?', (player_id,))
     return {'ok': True}
+
+
+@app.cli.command('backup-database')
+@click.argument('destination', type=click.Path(path_type=Path))
+def backup_database(destination):
+    """Create a consistent backup without overwriting an existing backup."""
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        with destination.open('xb'):
+            pass
+    except FileExistsError:
+        raise click.ClickException('Backup already exists; choose a new filename.') from None
+    try:
+        with database() as source:
+            target = sqlite3.connect(destination)
+            try:
+                source.backup(target)
+            finally:
+                target.close()
+    except Exception:
+        destination.unlink(missing_ok=True)
+        raise
+    click.echo(f'Backup saved: {destination}')
 
 
 @app.cli.command('create-user')
