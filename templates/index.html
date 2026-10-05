@@ -1344,10 +1344,12 @@
 </div>
 
 
+<audio id="earthMusic" src="/static/audio/earth-music.m4a" loop preload="none"></audio>
+
 <section class="earth-scene" id="earthScene" role="dialog" aria-modal="true" aria-label="Earth in space" hidden>
     <div class="earth-stars" id="earthStars" aria-hidden="true"></div>
     <button class="earth-back" id="earthBack" type="button">← Back to folders</button>
-    <model-viewer id="earthModel" camera-controls touch-action="none" data-src="/static/models/earth.glb" alt="Earth by Poly by Google, slowly rotating in space" auto-rotate auto-rotate-delay="0" rotation-per-second="5deg" camera-orbit="0deg 75deg auto" shadow-intensity="0" interaction-prompt="none"></model-viewer>
+    <model-viewer id="earthModel" camera-controls disable-pan disable-zoom min-camera-orbit="auto 75deg auto" max-camera-orbit="auto 75deg auto" touch-action="none" data-src="/static/models/earth.glb" alt="Earth by Poly by Google, slowly rotating in space" auto-rotate auto-rotate-delay="0" rotation-per-second="5deg" camera-orbit="0deg 75deg auto" shadow-intensity="0" interaction-prompt="none"></model-viewer>
 </section>
 
 <!-- 只新增的电脑点击音效 -->
@@ -4101,6 +4103,15 @@
 
     const earthScene = document.getElementById('earthScene');
     const earthModel = document.getElementById('earthModel');
+    const earthMusic = document.getElementById('earthMusic');
+    function resetEarth() {
+        earthModel.cameraOrbit = '0deg 75deg auto';
+        earthModel.resetTurntableRotation(0);
+        earthModel.jumpCameraToGoal();
+    }
+    earthModel.addEventListener('load', () => {
+        if (!earthScene.hidden) resetEarth();
+    });
     const earthBack = document.getElementById('earthBack');
     const earthFolder = document.querySelector('.desktop-folder');
     const stars = document.getElementById('earthStars');
@@ -4116,11 +4127,18 @@
     function openEarth() {
         earthScene.hidden = false;
         if (!earthModel.hasAttribute('src')) earthModel.setAttribute('src', earthModel.dataset.src);
+        if (earthModel.loaded) resetEarth();
+        earthMusic.currentTime = 0;
+        if (earthMusic.hasAttribute('src')) {
+            earthMusic.play().catch(() => {});
+        }
         earthModel.autoRotate = !matchMedia('(prefers-reduced-motion: reduce)').matches;
         earthBack.focus();
     }
     function closeEarth() {
         earthScene.hidden = true;
+        earthMusic.pause();
+        earthMusic.currentTime = 0;
         earthModel.autoRotate = false;
         earthFolder.focus();
     }
