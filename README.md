@@ -22,4 +22,4 @@ Run `gunicorn app:app`. Set a long random `SECRET_KEY` and `COOKIE_SECURE=1` whe
 
 Click (without dragging) the Earth model to open `/world`. Enter a nickname to join the shared white world. Desktop: WASD/arrows to move, click to capture the mouse, Escape to release, Enter to chat. When mouse capture is unavailable, drag the canvas to look around. Touch devices have direction buttons and drag controls. Other players use the supplied Human with few faces GLB model and display their nicknames.
 
-Positions are polled every 400ms and shared through the persistent SQLite database; inactive players expire after 30 seconds. This is a small multiplayer prototype, not a large-scale game server. Chat is public to players and the latest 200 messages are retained. All server workers must use the same persistent database.
+Positions and avatar orientations are polled every 150ms and shared through the persistent SQLite database; inactive players expire after 30 seconds. This is a small multiplayer prototype, not a large-scale game server. Chat is public to players and the latest 200 messages are retained. All server workers must use the same persistent database.

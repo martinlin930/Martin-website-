@@ -43,6 +43,9 @@ def database():
     connection.execute('CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL)')
     connection.execute('CREATE TABLE IF NOT EXISTS login_attempts (username TEXT PRIMARY KEY, failures INTEGER NOT NULL, last_attempt INTEGER NOT NULL)')
     connection.execute('CREATE TABLE IF NOT EXISTS players (id TEXT PRIMARY KEY, nickname TEXT NOT NULL, x REAL NOT NULL, z REAL NOT NULL, updated REAL NOT NULL)')
+    columns = {row['name'] for row in connection.execute('PRAGMA table_info(players)')}
+    if 'yaw' not in columns:
+        connection.execute('ALTER TABLE players ADD COLUMN yaw REAL NOT NULL DEFAULT 0')
     connection.execute('CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY, nickname TEXT NOT NULL, body TEXT NOT NULL, created REAL NOT NULL)')
     connection.commit()
     try:
@@ -155,27 +158,39 @@ def join_world():
     if not isinstance(nickname, str) or not 1 <= len(nickname.strip()) <= 24:
         return {'error': 'Enter a nickname of 1–24 characters.'}, 400
     nickname = nickname.strip()
-    if 'world_player' not in session:
-        session['world_player'] = secrets.token_urlsafe(24)
+    player_id = secrets.token_urlsafe(24)
+    session['world_players'] = (session.get('world_players', []) + [player_id])[-12:]
+    session['world_player'] = player_id
     with database() as db:
-        db.execute('INSERT OR REPLACE INTO players VALUES (?, ?, 0, 0, ?)', (session['world_player'], nickname, time.time()))
+        db.execute('INSERT OR REPLACE INTO players (id, nickname, x, z, updated) VALUES (?, ?, 0, 0, ?)', (session['world_player'], nickname, time.time()))
     session['world_message_at'] = 0
     return {'id': session['world_player'], 'nickname': nickname}
+
+
+def world_player_id(data):
+    player_id = data.get('player_id', session.get('world_player', ''))
+    if not isinstance(player_id, str) or player_id not in session.get('world_players', []):
+        abort(401)
+    return player_id
 
 
 @app.post('/api/world/state')
 def world_state():
     data = request.get_json(silent=True) or {}
+    player_id = world_player_id(data)
     coordinates = [data.get('x', 0), data.get('z', 0)]
+    yaw = data.get('yaw', 0)
+    if isinstance(yaw, bool) or not isinstance(yaw, (int, float)) or not math.isfinite(yaw):
+        return {'error': 'Invalid orientation.'}, 400
     if any(isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v) or abs(v) > 10000 for v in coordinates):
         return {'error': 'Invalid position.'}, 400
     with database() as db:
-        player = db.execute('SELECT * FROM players WHERE id = ?', (session.get('world_player', ''),)).fetchone()
+        player = db.execute('SELECT * FROM players WHERE id = ?', (player_id,)).fetchone()
         if not player:
             return {'error': 'Join the world first.'}, 401
-        db.execute('UPDATE players SET x = ?, z = ?, updated = ? WHERE id = ?', (*coordinates, time.time(), player['id']))
+        db.execute('UPDATE players SET x = ?, z = ?, yaw = ?, updated = ? WHERE id = ?', (*coordinates, yaw, time.time(), player['id']))
         db.execute('DELETE FROM players WHERE updated < ?', (time.time() - 30,))
-        players = [dict(row) for row in db.execute('SELECT id, nickname, x, z FROM players WHERE id != ?', (player['id'],))]
+        players = [dict(row) for row in db.execute('SELECT id, nickname, x, z, yaw FROM players WHERE id != ?', (player['id'],))]
         messages = [dict(row) for row in db.execute('SELECT id, nickname, body FROM messages ORDER BY id DESC LIMIT 40')][::-1]
     return {'players': players, 'messages': messages}
 
@@ -183,16 +198,17 @@ def world_state():
 @app.post('/api/world/chat')
 def world_chat():
     data = request.get_json(silent=True) or {}
+    player_id = world_player_id(data)
     body = data.get('message', '')
-    if not isinstance(body, str) or not 1 <= len(body.strip()) <= 240:
-        return {'error': 'Messages must contain 1–240 characters.'}, 400
+    if not isinstance(body, str) or not 1 <= len(body.strip()) <= 2000:
+        return {'error': 'Messages must contain 1–2000 characters.'}, 400
     if time.time() - session.get('world_message_at', 0) < 1:
         return {'error': 'Please wait a moment.'}, 429
     with database() as db:
-        player = db.execute('SELECT nickname FROM players WHERE id = ?', (session.get('world_player', ''),)).fetchone()
+        player = db.execute('SELECT nickname FROM players WHERE id = ?', (player_id,)).fetchone()
         if not player:
             return {'error': 'Join the world first.'}, 401
-        db.execute('INSERT INTO messages (nickname, body, created) VALUES (?, ?, ?)', (player['nickname'], body.strip(), time.time()))
+        db.execute('INSERT INTO messages (nickname, body, created) VALUES (?, ?, ?)', (player['nickname'], body, time.time()))
         db.execute('DELETE FROM messages WHERE id < (SELECT COALESCE(MAX(id), 0) - 200 FROM messages)')
     session['world_message_at'] = time.time()
     return {'ok': True}
@@ -200,8 +216,9 @@ def world_chat():
 
 @app.post('/api/world/leave')
 def leave_world():
+    player_id = world_player_id(request.get_json(silent=True) or {})
     with database() as db:
-        db.execute('DELETE FROM players WHERE id = ?', (session.get('world_player', ''),))
+        db.execute('DELETE FROM players WHERE id = ?', (player_id,))
     return {'ok': True}
 
 

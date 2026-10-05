@@ -17,12 +17,13 @@ class WorldTests(unittest.TestCase):
     def test_multiplayer_chat_leave(self):
         self.assertEqual(self.post(self.a,'state',{}).status_code,401)
         self.post(self.a,'join',{'nickname':'Alice'});self.post(self.b,'join',{'nickname':'Bob'})
-        self.post(self.a,'state',{'x':3,'z':4})
+        self.post(self.a,'state',{'x':3,'z':4,'yaw':1.2})
         state=self.post(self.b,'state',{}).json
         self.assertEqual(state['players'][0]['nickname'],'Alice')
         self.assertEqual(state['players'][0]['x'],3)
-        self.assertEqual(self.post(self.a,'chat',{'message':'Hello'}).status_code,200)
-        self.assertEqual(self.post(self.b,'state',{}).json['messages'][0]['body'],'Hello')
+        self.assertEqual(state['players'][0]['yaw'],1.2)
+        self.assertEqual(self.post(self.a,'chat',{'message':'你好 🌍 <>& / \\ " hello'}).status_code,200)
+        self.assertEqual(self.post(self.b,'state',{}).json['messages'][0]['body'],'你好 🌍 <>& / \\ " hello')
         self.assertEqual(self.post(self.a,'chat',{'message':'Again'}).status_code,429)
         self.post(self.a,'leave',{})
         self.assertEqual(self.post(self.b,'state',{}).json['players'],[])
@@ -30,5 +31,15 @@ class WorldTests(unittest.TestCase):
         self.assertEqual(self.post(self.a,'join',{'nickname':' '}).status_code,400)
         self.post(self.a,'join',{'nickname':'Alice'})
         self.assertEqual(self.post(self.a,'state',{'x':'bad'}).status_code,400)
-        self.assertEqual(self.post(self.a,'chat',{'message':'x'*241}).status_code,400)
+        self.assertEqual(self.post(self.a,'chat',{'message':'x'*2001}).status_code,400)
         self.assertEqual(self.a.post('/api/world/chat',json={'message':'Hi'}).status_code,400)
+
+    def test_two_tabs_have_distinct_players(self):
+        first=self.post(self.a,'join',{'nickname':'First'}).json['id']
+        second=self.post(self.a,'join',{'nickname':'Second'}).json['id']
+        self.assertNotEqual(first,second)
+        self.post(self.a,'state',{'player_id':first,'x':5,'z':6,'yaw':2})
+        state=self.post(self.a,'state',{'player_id':second,'x':0,'z':0}).json
+        peer=next(p for p in state['players'] if p['id']==first)
+        self.assertEqual((peer['x'],peer['z'],peer['yaw']),(5,6,2))
+        self.assertEqual(self.post(self.a,'state',{'player_id':'unowned'}).status_code,401)
