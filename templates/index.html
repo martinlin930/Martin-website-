@@ -29,6 +29,8 @@
         rel="stylesheet"
     >
 
+    <script type="module" src="/static/vendor/model-viewer.min.js"></script>
+
     <style>
 
         :root {
@@ -657,430 +659,28 @@
         }
 
 
-        .computer {
-            position:
-                relative;
-
-            width:
-                min(
-                    75vw,
-                    440px
-                );
-
-            filter:
-                drop-shadow(
-                    0
-                    30px
-                    28px
-                    rgba(0,0,0,.10)
-                );
+        #computerModel {
+            display: block;
+            width: min(85vw, 580px);
+            height: min(65vh, 500px);
+            min-height: 280px;
+            pointer-events: none;
+            --progress-bar-color: #111;
         }
 
-
-        .monitor {
-            position:
-                relative;
-
-            width:
-                77%;
-
-            height:
-                355px;
-
-            margin:
-                0 auto;
-
-            border:
-                2px
-                solid
-                #baa889;
-
-            border-radius:
-                18px
-                18px
-                11px
-                11px;
-
-            background:
-                linear-gradient(
-                    145deg,
-                    #eee4ce,
-                    #d5c4a6
-                );
+        .computer-button:focus-visible {
+            outline: 3px solid #4069bc;
+            outline-offset: 8px;
+            border-radius: 16px;
         }
 
-
-        .monitor::after {
-            content:
-                "";
-
-            position:
-                absolute;
-
-            inset:
-                7px;
-
-            border:
-                1px
-                solid
-                rgba(255,255,255,.5);
-
-            border-radius:
-                12px;
-
-            pointer-events:
-                none;
+        .model-status {
+            position: absolute;
+            inset: 50% 0 auto;
+            font-size: 13px;
+            color: #555;
+            text-align: center;
         }
-
-
-        .screen-frame {
-            position:
-                absolute;
-
-            top:
-                35px;
-
-            left:
-                50%;
-
-            width:
-                72%;
-
-            height:
-                175px;
-
-            padding:
-                11px;
-
-            transform:
-                translateX(-50%);
-
-            border-radius:
-                13px;
-
-            background:
-                #303033;
-        }
-
-
-        .screen {
-            position:
-                relative;
-
-            width:
-                100%;
-
-            height:
-                100%;
-
-            overflow:
-                hidden;
-
-            border:
-                2px
-                solid
-                #141414;
-
-            border-radius:
-                7px;
-
-            background:
-                linear-gradient(
-                    #d5ded9,
-                    #a6b5b0
-                );
-        }
-
-
-        .screen-bar {
-            height:
-                18px;
-
-            background:
-                #e0e4df;
-
-            border-bottom:
-                1px
-                solid
-                rgba(0,0,0,.2);
-        }
-
-
-        .screen-content {
-            height:
-                calc(
-                    100%
-                    - 18px
-                );
-
-            display:
-                flex;
-
-            align-items:
-                center;
-
-            justify-content:
-                center;
-
-            font-family:
-                var(--display);
-
-            font-size:
-                35px;
-
-            letter-spacing:
-                -.05em;
-
-            color:
-                #151515;
-        }
-
-
-        .disk-slot {
-            position:
-                absolute;
-
-            top:
-                245px;
-
-            right:
-                31px;
-
-            width:
-                78px;
-
-            height:
-                10px;
-
-            background:
-                #776b59;
-
-            border-radius:
-                2px;
-        }
-
-
-        .computer-logo {
-            position:
-                absolute;
-
-            left:
-                25px;
-
-            bottom:
-                27px;
-
-            width:
-                13px;
-
-            height:
-                13px;
-
-            background:
-                #cbb99c;
-
-            border:
-                1px
-                solid
-                #ac987a;
-        }
-
-
-        .computer-neck {
-            width:
-                67%;
-
-            height:
-                17px;
-
-            margin:
-                0 auto;
-
-            background:
-                #d2c0a2;
-
-            border-left:
-                2px
-                solid
-                #b3a083;
-
-            border-right:
-                2px
-                solid
-                #b3a083;
-        }
-
-
-        .keyboard {
-            position:
-                relative;
-
-            width:
-                100%;
-
-            min-height:
-                106px;
-
-            padding:
-                18px
-                22px;
-
-            border:
-                2px
-                solid
-                #baa789;
-
-            border-radius:
-                10px;
-
-            background:
-                linear-gradient(
-                    145deg,
-                    #e9ddc6,
-                    #d3c1a3
-                );
-
-            transform:
-                perspective(500px)
-                rotateX(4deg);
-
-            transform-origin:
-                top;
-        }
-
-
-        .keys {
-            display:
-                grid;
-
-            grid-template-columns:
-                repeat(
-                    12,
-                    1fr
-                );
-
-            gap:
-                5px;
-        }
-
-
-        .key {
-            height:
-                18px;
-
-            border:
-                1px
-                solid
-                #4e4437;
-
-            border-radius:
-                2px;
-
-            background:
-                linear-gradient(
-                    #887a64,
-                    #625543
-                );
-        }
-
-
-        .space {
-            grid-column:
-                span 5;
-        }
-
-
-        .mouse {
-            position:
-                absolute;
-
-            right:
-                -84px;
-
-            bottom:
-                3px;
-
-            width:
-                59px;
-
-            height:
-                72px;
-
-            border:
-                2px
-                solid
-                #baa88a;
-
-            border-radius:
-                10px;
-
-            background:
-                #ddceb5;
-        }
-
-
-        .mouse::before {
-            content:
-                "";
-
-            position:
-                absolute;
-
-            top:
-                11px;
-
-            left:
-                50%;
-
-            width:
-                26px;
-
-            transform:
-                translateX(-50%);
-
-            border-top:
-                2px
-                solid
-                #b5a184;
-        }
-
-
-        .cable {
-            position:
-                absolute;
-
-            left:
-                -70px;
-
-            bottom:
-                80px;
-
-            width:
-                100px;
-
-            height:
-                70px;
-
-            border-left:
-                7px
-                solid
-                #a99168;
-
-            border-bottom:
-                7px
-                solid
-                #a99168;
-
-            border-radius:
-                0
-                0
-                0
-                70px;
-
-            transform:
-                rotate(-10deg);
-        }
-
 
         .computer-caption {
             position:
@@ -1646,101 +1246,19 @@
         aria-label="Open photograph"
     >
 
-        <div class="computer">
-
-
-            <div class="cable"></div>
-
-
-            <div class="monitor">
-
-
-                <div class="screen-frame">
-
-                    <div class="screen">
-
-                        <div
-                            class="screen-bar"
-                        ></div>
-
-
-                        <div
-                            class="screen-content"
-                        >
-                            MARTIN
-                        </div>
-
-                    </div>
-
-                </div>
-
-
-                <div class="disk-slot"></div>
-
-
-                <div
-                    class="computer-logo"
-                ></div>
-
-            </div>
-
-
-            <div
-                class="computer-neck"
-            ></div>
-
-
-            <div class="keyboard">
-
-                <div class="keys">
-
-                    <div class="key"></div>
-                    <div class="key"></div>
-                    <div class="key"></div>
-                    <div class="key"></div>
-                    <div class="key"></div>
-                    <div class="key"></div>
-                    <div class="key"></div>
-                    <div class="key"></div>
-                    <div class="key"></div>
-                    <div class="key"></div>
-                    <div class="key"></div>
-                    <div class="key"></div>
-
-                    <div class="key"></div>
-                    <div class="key"></div>
-                    <div class="key"></div>
-                    <div class="key"></div>
-                    <div class="key"></div>
-                    <div class="key"></div>
-                    <div class="key"></div>
-                    <div class="key"></div>
-                    <div class="key"></div>
-                    <div class="key"></div>
-                    <div class="key"></div>
-                    <div class="key"></div>
-
-                    <div class="key"></div>
-                    <div class="key"></div>
-                    <div class="key"></div>
-                    <div class="key"></div>
-
-                    <div
-                        class="key space"
-                    ></div>
-
-                    <div class="key"></div>
-                    <div class="key"></div>
-                    <div class="key"></div>
-
-                </div>
-
-            </div>
-
-
-            <div class="mouse"></div>
-
-        </div>
+        <model-viewer
+            id="computerModel"
+            src="/static/models/simple-computer.glb"
+            alt="Simple computer by Robert Schlyter"
+            camera-orbit="155deg 75deg auto"
+            field-of-view="30deg"
+            shadow-intensity="1"
+            exposure="1"
+            loading="eager"
+            interaction-prompt="none"
+            aria-hidden="true"
+        ></model-viewer>
+        <span class="model-status" id="modelStatus" aria-live="polite">Loading computer…</span>
 
     </button>
 
@@ -4506,6 +4024,23 @@
 
 
     /* 新增：电脑点击音效 */
+    const computerModel = document.getElementById('computerModel');
+    const modelStatus = document.getElementById('modelStatus');
+    computerModel.addEventListener('load', () => { modelStatus.hidden = true; });
+    computerModel.addEventListener('error', () => {
+        modelStatus.textContent = 'Computer unavailable. Click to view photograph.';
+    });
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        computer.addEventListener('pointermove', event => {
+            const bounds = computer.getBoundingClientRect();
+            const angle = 155 + ((event.clientX - bounds.left) / bounds.width - .5) * 30;
+            computerModel.cameraOrbit = `${angle}deg 75deg auto`;
+        });
+        computer.addEventListener('pointerleave', () => {
+            computerModel.cameraOrbit = '155deg 75deg auto';
+        });
+    }
+
     const computerSound =
         document.getElementById(
             "computerSound"
