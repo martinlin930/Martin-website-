@@ -15,3 +15,5 @@
 @media(max-width:600px){#jump{right:18px;bottom:205px}.top{left:12px;right:12px;gap:8px;font-size:12px}.top button{padding:10px 8px}#status{display:none}}
 
 #saveStatus{font-size:12px}.top{flex-wrap:wrap}@media(max-width:600px){#saveStatus{order:5;flex-basis:100%;font-size:11px}}
+
+#worldClock{font-variant-numeric:tabular-nums;white-space:nowrap}

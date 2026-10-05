@@ -47,3 +47,7 @@ App tables use the private `game` schema, with RLS enabled and no access granted
 Before switching, preserve any accessible old SQLite database. To import a private local backup into an **empty** Supabase application database, run `flask --app app import-sqlite /path/to/users.sqlite3` with `DATABASE_URL` and `SECRET_KEY` configured privately. This preserves IDs, existing password hashes and account saves without resetting passwords. A nonempty target is rejected. Online player presence and rolling chat are not imported. If an old free Render instance's ephemeral database has already disappeared or cannot be exported, it cannot be recovered from the GitHub repository.
 
 Use `pg_dump` for independent PostgreSQL backups. Free services have limits and may pause with inactivity; an update retains data in the same Supabase project, but the free plan is not a promise of perpetual availability.
+
+## Shared day/night cycle
+
+One in-game day lasts 24 real minutes: 06:00–18:00 is daylight (12 real minutes), and 18:00–06:00 is night (12 real minutes). The phase comes from server Unix time, so reconnects and deploys do not restart the shared clock. Night sky is deep blue; sunlight, ambient light, fog and environment reflections fade at dawn and dusk. Run `node tests/day-night.mjs` to verify duration and phase boundaries.

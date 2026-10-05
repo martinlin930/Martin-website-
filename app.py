@@ -198,7 +198,7 @@ def join_world():
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET nickname = excluded.nickname""",
                 (user_id, nickname, state['avatar'], state['x'], state['z'], state['yaw'], state['pitch'], state['music_muted'], time.time()))
     session['world_message_at'] = 0
-    return {'id': player_id, 'nickname': nickname, 'persistent': bool(user_id), 'state': {k: state[k] for k in ('x', 'z', 'yaw', 'pitch', 'avatar', 'music_muted')}}
+    return {'id': player_id, 'nickname': nickname, 'persistent': bool(user_id), 'server_time': time.time(), 'state': {k: state[k] for k in ('x', 'z', 'yaw', 'pitch', 'avatar', 'music_muted')}}
 
 
 def world_player_id(data):
@@ -237,7 +237,7 @@ def world_state():
         db.execute('DELETE FROM players WHERE updated < ?', (time.time() - 30,))
         players = [dict(row) for row in db.execute('SELECT id, nickname, x, z, yaw, avatar, jump, running FROM players WHERE id != ?', (player['id'],))]
         messages = [dict(row) for row in db.execute('SELECT id, nickname, body FROM messages ORDER BY id DESC LIMIT 40')][::-1]
-    return {'players': players, 'messages': messages}
+    return {'players': players, 'messages': messages, 'server_time': time.time()}
 
 
 @app.post('/api/world/chat')

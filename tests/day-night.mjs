@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {worldTime,DAY_LENGTH_MS} from '../static/day-night.js';
+assert.equal(DAY_LENGTH_MS,24*60*1000);
+assert.equal(worldTime(0).label,'00:00');
+assert.equal(worldTime(60*1000).label,'01:00');
+assert.equal(worldTime(12*60*1000).daylight,1);
+assert.equal(worldTime(0).daylight,0);
+assert.equal(worldTime(6*60*1000).day,true);
+assert.equal(worldTime(18*60*1000).day,false);
+let daySeconds=0;
+for(let second=0;second<1440;second++)if(worldTime(second*1000).day)daySeconds++;
+assert.equal(daySeconds,720);
+assert.deepEqual(worldTime(123456),worldTime(123456+DAY_LENGTH_MS));
+assert.ok(worldTime(6.5*60*1000).daylight>0&&worldTime(6.5*60*1000).daylight<1);
+console.log('24-minute cycle: 12 minutes day, 12 minutes night, smooth dawn and repeat verified.');
