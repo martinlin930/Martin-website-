@@ -68,6 +68,9 @@ def database():
         avatar TEXT NOT NULL, x REAL NOT NULL, z REAL NOT NULL, yaw REAL NOT NULL,
         pitch REAL NOT NULL DEFAULT 0, music_muted INTEGER NOT NULL DEFAULT 0,
         updated REAL NOT NULL, save_version INTEGER NOT NULL DEFAULT 1)''')
+    save_columns = {row['name'] for row in connection.execute('PRAGMA table_info(game_saves)')}
+    if 'dog_name' not in save_columns:
+        connection.execute("ALTER TABLE game_saves ADD COLUMN dog_name TEXT NOT NULL DEFAULT ''")
     connection.execute('CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY, nickname TEXT NOT NULL, body TEXT NOT NULL, created REAL NOT NULL)')
     connection.commit()
     try:
@@ -198,7 +201,7 @@ def join_world():
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET nickname = excluded.nickname""",
                 (user_id, nickname, state['avatar'], state['x'], state['z'], state['yaw'], state['pitch'], state['music_muted'], time.time()))
     session['world_message_at'] = 0
-    return {'id': player_id, 'nickname': nickname, 'persistent': bool(user_id), 'server_time': time.time(), 'state': {k: state[k] for k in ('x', 'z', 'yaw', 'pitch', 'avatar', 'music_muted')}}
+    return {'id': player_id, 'nickname': nickname, 'persistent': bool(user_id), 'dog_name': state.get('dog_name', ''), 'server_time': time.time(), 'state': {k: state[k] for k in ('x', 'z', 'yaw', 'pitch', 'avatar', 'music_muted')}}
 
 
 def world_player_id(data):
@@ -235,9 +238,30 @@ def world_state():
             db.execute('UPDATE game_saves SET x = ?, z = ?, yaw = ?, pitch = ?, music_muted = ?, updated = ? WHERE user_id = ?',
                        (*coordinates, yaw, pitch, int(music_muted), time.time(), player['user_id']))
         db.execute('DELETE FROM players WHERE updated < ?', (time.time() - 30,))
-        players = [dict(row) for row in db.execute('SELECT id, nickname, x, z, yaw, avatar, jump, running FROM players WHERE id != ?', (player['id'],))]
+        players = [dict(row) for row in db.execute("SELECT p.id, p.nickname, p.x, p.z, p.yaw, p.avatar, p.jump, p.running, COALESCE(s.dog_name, '') AS dog_name FROM players p LEFT JOIN game_saves s ON s.user_id=p.user_id WHERE p.id != ?", (player['id'],))]
         messages = [dict(row) for row in db.execute('SELECT id, nickname, body FROM messages ORDER BY id DESC LIMIT 40')][::-1]
-    return {'players': players, 'messages': messages, 'server_time': time.time()}
+        pet = db.execute('SELECT dog_name FROM game_saves WHERE user_id = ?', (player['user_id'],)).fetchone() if player['user_id'] else None
+    return {'players': players, 'messages': messages, 'dog_name': pet['dog_name'] if pet else '', 'server_time': time.time()}
+
+
+@app.post('/api/world/dog')
+def adopt_dog():
+    data = request.get_json(silent=True) or {}
+    player_id = world_player_id(data)
+    user_id = session.get('user_id')
+    if not user_id:
+        return {'error': '请先登录账户，才能领养并保存狗。'}, 401
+    name = data.get('name', '')
+    if not isinstance(name, str) or not 1 <= len(name.strip()) <= 24:
+        return {'error': '请输入 1–24 个字符的名字。'}, 400
+    with database() as db:
+        player = db.execute('SELECT user_id FROM players WHERE id = ?', (player_id,)).fetchone()
+        if not player or player['user_id'] != user_id:
+            return {'error': '请先进入世界。'}, 401
+        # Account identity comes only from the authenticated session. Updating
+        # this one field cannot overwrite position or another account's pet.
+        db.execute('UPDATE game_saves SET dog_name = ? WHERE user_id = ?', (name.strip(), user_id))
+    return {'dog_name': name.strip()}
 
 
 @app.post('/api/world/chat')

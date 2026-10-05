@@ -80,3 +80,29 @@ class SaveTests(unittest.TestCase):
         try:self.assertEqual(backup.execute('SELECT x FROM game_saves').fetchone()[0],88)
         finally:backup.close()
         self.assertNotEqual(runner.invoke(args=['backup-database',str(target)]).exit_code,0)
+
+    def test_pet_survives_login_and_is_shared_without_cross_account_writes(self):
+        uid=self.login_as(self.a,'Alice')
+        joined=self.post(self.a,'join',{'nickname':'A'}).json
+        name='小狗 🐶 <>& / 雪'
+        self.assertEqual(self.post(self.a,'dog',{'name':name,'user_id':999}).json['dog_name'],name)
+        self.post(self.a,'state',{'x':75,'z':-130})
+        self.login_as(self.b,'Bob');self.post(self.b,'join',{'nickname':'B'})
+        observed=self.post(self.b,'state',{}).json
+        self.assertEqual(observed['dog_name'],'')
+        self.assertEqual(observed['players'][0]['dog_name'],name)
+        self.assertEqual(self.post(self.b,'dog',{'name':'stolen','player_id':joined['id']}).status_code,401)
+        for value in ['', ' '*3, 'x'*25, 123]:
+            self.assertEqual(self.post(self.a,'dog',{'name':value}).status_code,400)
+        self.assertEqual(self.a.post('/api/world/dog',json={'name':'bad'}).status_code,400)
+        self.post(self.a,'leave',{})
+        with self.a.session_transaction() as session:session.clear()
+        self.login_as(self.a,'Alice')
+        restored=self.post(self.a,'join',{'nickname':'A'}).json
+        self.assertEqual(restored['dog_name'],name)
+        self.assertEqual(restored['state']['x'],75)
+        self.assertEqual(self.post(self.a,'dog',{'name':'新名字'}).json['dog_name'],'新名字')
+        with database() as db:
+            self.assertEqual(db.execute('SELECT dog_name FROM game_saves WHERE user_id=?',(uid,)).fetchone()[0],'新名字')
+        guest=app.test_client();guest.get('/world');self.post(guest,'join',{'nickname':'G'})
+        self.assertEqual(self.post(guest,'dog',{'name':'Guest dog'}).status_code,401)

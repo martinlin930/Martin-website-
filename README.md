@@ -55,3 +55,7 @@ One in-game day lasts 24 real minutes: 06:00–18:00 is daylight (12 real minute
 ## Village dogs
 
 Six Beagles wander near the village entrance, alternating walking, running and resting with procedural leg, head and tail movement. Their closed paths are checked against terrain and building collision, and server time keeps their positions consistent between players. Model: user-provided **Beagle by Poly by Google** (`static/models/dogs/beagle.glb`), with its original texture retained. Run `node tests/dogs.mjs` to verify ground support, safe routes, continuous movement and shared timing.
+
+### Adopt a companion
+
+Sign in, approach a village dog within 3 metres, then click **领养这只狗** and enter a name (1–24 Unicode characters). Each account has one Beagle companion, which follows the owner's route on the ground; its name floats above it and is visible to other players. Use the pet button to rename it. Visitors must sign in to adopt. The pet name is stored in `game_saves.dog_name` using an additive migration; leaving, logging out or deploying does not erase it. Rejoining restores the companion beside its owner. Names are rendered as text, and adoption/renaming updates only the authenticated account's save.

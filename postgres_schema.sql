@@ -14,3 +14,6 @@ ALTER TABLE game.game_saves ENABLE ROW LEVEL SECURITY;
 ALTER TABLE game.messages ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON SCHEMA game FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON ALL TABLES IN SCHEMA game FROM PUBLIC, anon, authenticated;
+
+-- Additive pet migration preserves every existing account/save.
+ALTER TABLE game.game_saves ADD COLUMN IF NOT EXISTS dog_name TEXT NOT NULL DEFAULT '';

@@ -17,3 +17,5 @@
 #saveStatus{font-size:12px}.top{flex-wrap:wrap}@media(max-width:600px){#saveStatus{order:5;flex-basis:100%;font-size:11px}}
 
 #worldClock{font-variant-numeric:tabular-nums;white-space:nowrap}
+
+#petAction{position:fixed;right:20px;top:110px;background:#fffef0;max-width:220px}#petDialog{width:min(420px,90vw);border:0;border-radius:16px;padding:24px;box-shadow:0 10px 60px #0005}#petDialog::backdrop{background:#0006}#petName{width:100%;margin:10px 0}#petForm>div{display:flex;justify-content:flex-end;gap:10px}#petError{color:#a33}.dogLabel{position:fixed;pointer-events:none;transform:translate(-50%,-100%);background:#ffffffdd;padding:4px 8px;border-radius:6px;color:#222;font-size:12px}#petAction[hidden],.dogLabel[hidden]{display:none}

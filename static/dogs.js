@@ -75,7 +75,58 @@ export async function createDogs(scene,map){
   if(!route)continue;
   const dog=dogModel(template);scene.add(dog.root);dogs.push({...dog,route,index});
  }
- return {count:dogs.length,update(serverTimeMs){
+ const companions=new Map();
+ function removeCompanion(pet){
+  scene.remove(pet.root);pet.label?.remove();
+  pet.root.traverse(mesh=>{if(mesh.isMesh)mesh.geometry.dispose();});
+ }
+ return {count:dogs.length,nearest(x,z){
+  return Math.min(...dogs.map(d=>Math.hypot(d.root.position.x-x,d.root.position.z-z)));
+ },update(serverTimeMs,owners=[],dt=.016,camera=null,width=0,height=0){
+  const alive=new Set(owners.filter(o=>o.dog_name).map(o=>o.id));
+  for(const [id,pet] of companions)if(!alive.has(id)){removeCompanion(pet);companions.delete(id);}
+  for(const owner of owners){
+   if(!owner.dog_name)continue;
+   let pet=companions.get(owner.id);
+   if(!pet){
+    pet={...dogModel(template),index:6,distance:0,trail:[{x:owner.x,z:owner.z}],last:{x:owner.x,z:owner.z},blocked:0};
+    pet.root.position.set(owner.x,map.groundHeight(owner.x,owner.z),owner.z);
+    // Start beside the owner if there is safe space, including after login.
+    for(const [dx,dz] of [[1,0],[-1,0],[0,1],[0,-1]])if(map.canMove(owner.x+dx,owner.z+dz,owner.x,owner.z)){
+     pet.root.position.set(owner.x+dx,map.groundHeight(owner.x+dx,owner.z+dz),owner.z+dz);break;
+    }
+    if(typeof document!=='undefined'){pet.label=document.createElement('span');pet.label.className='dogLabel';document.getElementById('world').append(pet.label);}
+    scene.add(pet.root);companions.set(owner.id,pet);
+   }
+   const gap=Math.hypot(owner.x-pet.last.x,owner.z-pet.last.z);
+   if(gap>20){pet.trail=[];pet.root.position.set(owner.x,map.groundHeight(owner.x,owner.z),owner.z);}
+   if(gap>.12){pet.trail.push({x:owner.x,z:owner.z});pet.last={x:owner.x,z:owner.z};}
+   if(pet.trail.length>500)pet.trail.splice(0,pet.trail.length-500);
+   let remaining=0,previous=pet.root.position;
+   for(const point of pet.trail){remaining+=Math.hypot(point.x-previous.x,point.z-previous.z);previous=point;}
+   const fast=remaining>4,speed=fast?8:4.3;
+   let travelled=0,budget=speed*Math.min(dt,.05);
+   while(remaining>1.5&&budget>0&&pet.trail.length){
+    const target=pet.trail[0],pos=pet.root.position;
+    const dx=target.x-pos.x,dz=target.z-pos.z,dist=Math.hypot(dx,dz);
+    if(dist<.08){pet.trail.shift();continue;}
+    const step=Math.min(budget,dist,remaining-1.5),nx=pos.x+dx/dist*step,nz=pos.z+dz/dist*step;
+    const ox=pos.x,oz=pos.z;
+    if(map.canMove(nx,nz,ox,oz)){pos.x=nx;pos.z=nz;}
+    else{if(map.canMove(nx,oz,ox,oz))pos.x=nx;if(map.canMove(pos.x,nz,pos.x,oz))pos.z=nz;}
+    const moved=Math.hypot(pos.x-ox,pos.z-oz);if(moved<.0001)break;
+    pos.y=map.groundHeight(pos.x,pos.z);pet.root.rotation.y=Math.atan2(pos.x-ox,pos.z-oz);
+    travelled+=moved;budget-=step;remaining-=moved;
+   }
+   pet.distance+=travelled;animateDog(pet,pet.distance,travelled>.001,fast,serverTimeMs);
+   if(pet.label&&camera){
+    pet.label.textContent=owner.dog_name;
+    const point=pet.root.position.clone();point.y+=.95;point.project(camera);
+    pet.label.hidden=point.z>1||point.z< -1||Math.abs(point.x)>1||Math.abs(point.y)>1;
+    pet.label.style.left=(point.x*.5+.5)*width+'px';pet.label.style.top=(-point.y*.5+.5)*height+'px';
+   }
+  }
+
   for(const dog of dogs){
    const {points,length}=dog.route;
    const walkDuration=length*.4/1.1,runDuration=length*.6/3.1,period=walkDuration+runDuration+3;
