@@ -4086,6 +4086,18 @@
 
 
     document.querySelectorAll('.desktop-folder').forEach(folder => {
+        const model = folder.querySelector('model-viewer');
+        if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            folder.addEventListener('pointermove', event => {
+                const bounds = folder.getBoundingClientRect();
+                const x = (event.clientX - bounds.left) / bounds.width - .5;
+                const y = (event.clientY - bounds.top) / bounds.height - .5;
+                model.cameraOrbit = `${-20 + x * 40}deg ${75 + y * 20}deg auto`;
+            });
+            folder.addEventListener('pointerleave', () => {
+                model.cameraOrbit = '-20deg 75deg auto';
+            });
+        }
         folder.addEventListener('click', () => {
             document.querySelectorAll('.desktop-folder').forEach(item => {
                 item.classList.toggle('selected', item === folder);
