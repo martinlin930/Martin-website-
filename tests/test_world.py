@@ -43,3 +43,18 @@ class WorldTests(unittest.TestCase):
         peer=next(p for p in state['players'] if p['id']==first)
         self.assertEqual((peer['x'],peer['z'],peer['yaw']),(5,6,2))
         self.assertEqual(self.post(self.a,'state',{'player_id':'unowned'}).status_code,401)
+
+    def test_avatar_is_random_on_entry_and_stable_while_walking(self):
+        from unittest.mock import patch
+        with patch('app.secrets.choice', side_effect=['01f','02m']):
+            first=self.post(self.a,'join',{'nickname':'First'}).json['id']
+            self.post(self.b,'join',{'nickname':'Observer'})
+        for position in [0,3]:
+            self.post(self.a,'state',{'player_id':first,'x':position})
+            peer=next(p for p in self.post(self.b,'state',{}).json['players'] if p['id']==first)
+            self.assertEqual(peer['avatar'],'01f')
+        self.post(self.a,'leave',{'player_id':first})
+        with patch('app.secrets.choice', return_value='02f'):
+            again=self.post(self.a,'join',{'nickname':'First'}).json['id']
+        peer=next(p for p in self.post(self.b,'state',{}).json['players'] if p['id']==again)
+        self.assertEqual(peer['avatar'],'02f')

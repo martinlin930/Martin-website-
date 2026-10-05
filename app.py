@@ -46,6 +46,8 @@ def database():
     columns = {row['name'] for row in connection.execute('PRAGMA table_info(players)')}
     if 'yaw' not in columns:
         connection.execute('ALTER TABLE players ADD COLUMN yaw REAL NOT NULL DEFAULT 0')
+    if 'avatar' not in columns:
+        connection.execute("ALTER TABLE players ADD COLUMN avatar TEXT NOT NULL DEFAULT '01m'")
     connection.execute('CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY, nickname TEXT NOT NULL, body TEXT NOT NULL, created REAL NOT NULL)')
     connection.commit()
     try:
@@ -162,7 +164,7 @@ def join_world():
     session['world_players'] = (session.get('world_players', []) + [player_id])[-12:]
     session['world_player'] = player_id
     with database() as db:
-        db.execute('INSERT OR REPLACE INTO players (id, nickname, x, z, updated) VALUES (?, ?, 0, 0, ?)', (session['world_player'], nickname, time.time()))
+        db.execute('INSERT OR REPLACE INTO players (id, nickname, x, z, updated, avatar) VALUES (?, ?, 0, 0, ?, ?)', (session['world_player'], nickname, time.time(), secrets.choice(['01m', '02m', '01f', '02f'])))
     session['world_message_at'] = 0
     return {'id': session['world_player'], 'nickname': nickname}
 
@@ -190,7 +192,7 @@ def world_state():
             return {'error': 'Join the world first.'}, 401
         db.execute('UPDATE players SET x = ?, z = ?, yaw = ?, updated = ? WHERE id = ?', (*coordinates, yaw, time.time(), player['id']))
         db.execute('DELETE FROM players WHERE updated < ?', (time.time() - 30,))
-        players = [dict(row) for row in db.execute('SELECT id, nickname, x, z, yaw FROM players WHERE id != ?', (player['id'],))]
+        players = [dict(row) for row in db.execute('SELECT id, nickname, x, z, yaw, avatar FROM players WHERE id != ?', (player['id'],))]
         messages = [dict(row) for row in db.execute('SELECT id, nickname, body FROM messages ORDER BY id DESC LIMIT 40')][::-1]
     return {'players': players, 'messages': messages}
 

@@ -1,4 +1,5 @@
 import * as THREE from './vendor/three.module.js';
+import { clone as cloneSkeleton } from './vendor/SkeletonUtils.js';
 import { GLTFLoader } from './vendor/GLTFLoader.js';
 const $ = id => document.getElementById(id);
 let playerId=null, active=false, x=0,z=0,yaw=0,pitch=0, peers=[],keys=new Set(),last=performance.now(),timer,busy=false;
@@ -10,26 +11,31 @@ scene.add(new THREE.HemisphereLight(0xffffff,0xe5e5e5,2));
 const sun=new THREE.DirectionalLight(0xffffff,2);sun.position.set(10,20,10);scene.add(sun);
 const camera=new THREE.PerspectiveCamera(70,1,.1,150);camera.rotation.order='YXZ';
 const grid=new THREE.GridHelper(200,100,0xf3f3f3,0xf3f3f3);scene.add(grid);
-const avatars=new Map();let human;
-new GLTFLoader().load('/static/models/human.glb',g=>{
-    human=g.scene;
-    const box=new THREE.Box3().setFromObject(human),size=box.getSize(new THREE.Vector3());
-    const scale=1.8/size.y;human.scale.setScalar(scale);
-    human.position.set(-(box.min.x+box.max.x)/2*scale,-box.min.y*scale,-(box.min.z+box.max.z)/2*scale);
-},undefined,()=>{$('status').textContent='Avatar could not load. Refresh to retry.';});
+const avatars=new Map(), templates=new Map(), pendingModels=new Set();
+const textureLoader=new THREE.TextureLoader();const textures=new Map();
+let materials={};
+const materialsReady=fetch('/static/models/npc/materials.json').then(r=>r.json()).then(m=>{materials=m;});
+function loadAvatar(kind){
+ if(templates.has(kind)||pendingModels.has(kind))return;
+ pendingModels.add(kind);
+ materialsReady.then(()=>new GLTFLoader().load('/static/models/npc/'+kind+'.glb',g=>{
+  const model=g.scene;
+  model.traverse(n=>{if(n.isMesh){n.frustumCulled=false;const mapped=(Array.isArray(n.material)?n.material:[n.material]).map(mat=>{
+   const [name,index]=mat.name.split('__');const info=materials[kind]?.[name]?.[Number(index)];
+   if(info){mat.color.fromArray(info.color);if(info.texture){let tex=textures.get(info.texture);if(!tex){tex=textureLoader.load('/static/models/npc/'+info.texture);tex.flipY=false;tex.colorSpace=THREE.SRGBColorSpace;textures.set(info.texture,tex);}mat.map=tex;mat.needsUpdate=true;}}
+   return mat;
+  });n.material=mapped.length===1?mapped[0]:mapped;}});
+  const box=new THREE.Box3().setFromObject(model),size=box.getSize(new THREE.Vector3());
+  const scale=1.8/size.y;model.scale.multiplyScalar(scale);
+  model.position.set(-(box.min.x+box.max.x)/2*scale,-box.min.y*scale,-(box.min.z+box.max.z)/2*scale);
+  templates.set(kind,model);pendingModels.delete(kind);
+ },undefined,()=>{pendingModels.delete(kind);$('status').textContent='Character unavailable. Reconnecting…';}));
+}
 function avatar(p){
-    const group=new THREE.Group();const body=human.clone(true);group.add(body);
-    const limbs=[];
-    body.traverse(node=>{
-        if(!node.isMesh)return;
-        node.geometry=node.geometry.clone();
-        const original=node.geometry.attributes.position.array.slice();
-        node.geometry.computeBoundingBox();
-        const box=node.geometry.boundingBox;
-        limbs.push({mesh:node,original,minY:box.min.y,height:box.max.y-box.min.y,centerX:(box.min.x+box.max.x)/2,centerZ:(box.min.z+box.max.z)/2,width:box.max.x-box.min.x});
-    });
-    const label=document.createElement('span');label.textContent=p.nickname;label.style.cssText='position:fixed;pointer-events:none;color:#444;font:13px Arial;transform:translate(-50%,-100%);';
-    $('world').appendChild(label);scene.add(group);return {group,label,limbs,phase:0,stride:0};
+ const group=new THREE.Group(),body=cloneSkeleton(templates.get(p.avatar||'01m'));group.add(body);
+ const bones=[];body.traverse(n=>{if(/^(Left|Right)(Arm|UpLeg|Leg)(?:_\d+)?$/.test(n.name)&&n.position.lengthSq()>1e-8){bones.push({bone:n,rest:n.quaternion.clone()});}});
+ const label=document.createElement('span');label.textContent=p.nickname;label.style.cssText='position:fixed;pointer-events:none;color:#444;font:13px Arial;transform:translate(-50%,-100%);';
+ $('world').appendChild(label);scene.add(group);group.position.set(p.x,0,p.z);return {group,label,bones,phase:0,stride:0};
 }
 
 async function api(route,data){const r=await fetch('/api/world/'+route,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':window.worldToken},body:JSON.stringify({...data,player_id:playerId})});let result;try{result=await r.json();}catch{throw Error('连接异常，请刷新页面后重试。');}if(!r.ok)throw Error(result.error||'Connection unavailable');return result;}
@@ -45,32 +51,17 @@ document.addEventListener('mousemove',e=>{if(document.pointerLockElement===canva
 let finger=null;canvas.onpointerdown=e=>{if(document.pointerLockElement!==canvas){finger=[e.clientX,e.clientY];canvas.setPointerCapture(e.pointerId);}};canvas.onpointermove=e=>{if(finger){yaw+=(e.clientX-finger[0])*.005;pitch=Math.max(-.7,Math.min(.7,pitch+(e.clientY-finger[1])*.005));finger=[e.clientX,e.clientY];}};canvas.onpointerup=canvas.onpointercancel=()=>{finger=null;};
 document.querySelectorAll('[data-key]').forEach(b=>{b.onpointerdown=e=>{e.preventDefault();b.setPointerCapture(e.pointerId);keys.add(b.dataset.key);};b.onpointerup=b.onpointercancel=()=>keys.delete(b.dataset.key);});
 window.onkeydown=e=>{if(!active||e.target.matches('input'))return;if(e.key==='Enter'){document.exitPointerLock?.();$('message').focus();return;}const map={ArrowUp:'w',ArrowDown:'s',ArrowLeft:'a',ArrowRight:'d'};let k=map[e.key]||({'KeyW':'w','KeyA':'a','KeyS':'s','KeyD':'d'}[e.code])||e.key.toLowerCase();if(['w','a','s','d'].includes(k)){e.preventDefault();keys.add(k);}};window.onkeyup=e=>{const map={ArrowUp:'w',ArrowDown:'s',ArrowLeft:'a',ArrowRight:'d'};keys.delete(map[e.key]||({'KeyW':'w','KeyA':'a','KeyS':'s','KeyD':'d'}[e.code])||e.key.toLowerCase());};window.onblur=()=>keys.clear();
-// The supplied model is a single static mesh. Bend its limbs around hip and shoulder pivots.
 function animateWalk(avatar,moving,dt){
-    avatar.stride+=(Number(moving)-avatar.stride)*(1-Math.exp(-dt*10));
-    if(moving)avatar.phase+=dt*8;
-    const swing=Math.sin(avatar.phase)*avatar.stride;
-    avatar.limbs.forEach(l=>{
-        const positions=l.mesh.geometry.attributes.position;
-        for(let i=0;i<positions.count;i++){
-            const k=i*3,ox=l.original[k],oy=l.original[k+1],oz=l.original[k+2];
-            const y=(oy-l.minY)/l.height,side=ox>=l.centerX?1:-1;
-            let angle=0,pivot=oy;
-            if(y<.48){
-                pivot=l.minY+l.height*.48;
-                const weight=Math.min(1,(.48-y)/.12);
-                angle=side*swing*.38*weight;
-            }else if(y<.79&&Math.abs(ox-l.centerX)>l.width*.24){
-                pivot=l.minY+l.height*.79;
-                const weight=Math.min(1,(.79-y)/.12)*Math.min(1,(Math.abs(ox-l.centerX)/l.width-.24)/.09);
-                angle=-side*swing*.32*weight;
-            }
-            const dy=oy-pivot,dz=oz-l.centerZ;
-            positions.setXYZ(i,ox,pivot+dy*Math.cos(angle)-dz*Math.sin(angle),l.centerZ+dy*Math.sin(angle)+dz*Math.cos(angle));
-        }
-        positions.needsUpdate=true;
-        l.mesh.geometry.computeVertexNormals();
-    });
+ avatar.stride+=(Number(moving)-avatar.stride)*(1-Math.exp(-dt*10));
+ if(moving)avatar.phase+=dt*8;
+ const swing=Math.sin(avatar.phase)*avatar.stride;
+ avatar.bones.forEach(({bone,rest})=>{
+  bone.quaternion.copy(rest);
+  const name=bone.name.replace(/_\d+$/, '');const side=name.includes('Left')?1:-1;
+  if(/^(Left|Right)UpLeg$/.test(name))bone.rotateX(side*swing*.4);
+  if(/^(Left|Right)Leg$/.test(name))bone.rotateX(Math.max(0,-side*swing)*.25);
+  if(/^(Left|Right)Arm$/.test(name)){bone.rotateZ(-1.15);bone.rotateX(-side*swing*.32);}
+ });
 }
 
 function draw(now){
@@ -82,8 +73,9 @@ function draw(now){
   if(renderer.domElement.width!==Math.round(w*renderer.getPixelRatio())||renderer.domElement.height!==Math.round(h*renderer.getPixelRatio())){renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
   camera.position.set(x,1.65,z);camera.rotation.set(-pitch,Math.PI-yaw,0);camera.updateMatrixWorld();grid.position.set(Math.round(x/2)*2,0,Math.round(z/2)*2);
   const alive=new Set(peers.map(p=>p.id));
-  avatars.forEach((a,id)=>{if(!alive.has(id)){scene.remove(a.group);a.limbs.forEach(l=>l.mesh.geometry.dispose());a.label.remove();avatars.delete(id);}});
-  if(human)peers.forEach(p=>{
+  avatars.forEach((a,id)=>{if(!alive.has(id)){scene.remove(a.group);a.label.remove();avatars.delete(id);}});
+  peers.forEach(p=>{
+   const kind=p.avatar||'01m';loadAvatar(kind);if(!templates.has(kind))return;
    if(!avatars.has(p.id))avatars.set(p.id,avatar(p));
    const a=avatars.get(p.id);a.group.position.lerp(new THREE.Vector3(p.x,0,p.z),1-Math.exp(-dt*18));
    const target=-(p.yaw||0);const delta=Math.atan2(Math.sin(target-a.group.rotation.y),Math.cos(target-a.group.rotation.y));a.group.rotation.y+=delta*(1-Math.exp(-dt*18));
