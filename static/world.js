@@ -18,14 +18,23 @@ new GLTFLoader().load('/static/models/human.glb',g=>{
     human.position.set(-(box.min.x+box.max.x)/2*scale,-box.min.y*scale,-(box.min.z+box.max.z)/2*scale);
 },undefined,()=>{$('status').textContent='Avatar could not load. Refresh to retry.';});
 function avatar(p){
-    const group=new THREE.Group();group.add(human.clone(true));
+    const group=new THREE.Group();const body=human.clone(true);group.add(body);
+    const limbs=[];
+    body.traverse(node=>{
+        if(!node.isMesh)return;
+        node.geometry=node.geometry.clone();
+        const original=node.geometry.attributes.position.array.slice();
+        node.geometry.computeBoundingBox();
+        const box=node.geometry.boundingBox;
+        limbs.push({mesh:node,original,minY:box.min.y,height:box.max.y-box.min.y,centerX:(box.min.x+box.max.x)/2,centerZ:(box.min.z+box.max.z)/2,width:box.max.x-box.min.x});
+    });
     const label=document.createElement('span');label.textContent=p.nickname;label.style.cssText='position:fixed;pointer-events:none;color:#444;font:13px Arial;transform:translate(-50%,-100%);';
-    $('world').appendChild(label);scene.add(group);return {group,label};
+    $('world').appendChild(label);scene.add(group);return {group,label,limbs,phase:0,stride:0};
 }
 
 async function api(route,data){const r=await fetch('/api/world/'+route,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':window.worldToken},body:JSON.stringify({...data,player_id:playerId})});let result;try{result=await r.json();}catch{throw Error('连接异常，请刷新页面后重试。');}if(!r.ok)throw Error(result.error||'Connection unavailable');return result;}
 $('join').onsubmit=async e=>{e.preventDefault();try{const user=await api('join',{nickname:$('nickname').value});$('entry').hidden=true;$('world').hidden=false;$('identity').textContent=user.nickname;playerId=user.id;active=true;x=z=yaw=pitch=0;timer=setInterval(sync,150);sync();canvas.focus();}catch(e){$('entryError').textContent=e.message;}};
-async function sync(){if(!active||busy)return;busy=true;try{const data=await api('state',{x,z,yaw});peers=data.players;$('status').textContent=(peers.length+1)+' online';const list=$('messages');list.replaceChildren(...data.messages.map(m=>{const li=document.createElement('li');li.textContent=m.nickname+': '+m.body;return li;}));list.scrollTop=list.scrollHeight;}catch(e){$('status').textContent='Reconnecting…';}finally{busy=false;}}
+async function sync(){if(!active||busy)return;busy=true;try{const data=await api('state',{x,z,yaw});const now=performance.now();const previous=new Map(peers.map(p=>[p.id,p]));peers=data.players.map(p=>{const old=previous.get(p.id);p.movingUntil=old&&Math.hypot(p.x-old.x,p.z-old.z)>.015?now+350:(old?.movingUntil||0);return p;});$('status').textContent=(peers.length+1)+' online';const list=$('messages');list.replaceChildren(...data.messages.map(m=>{const li=document.createElement('li');li.textContent=m.nickname+': '+m.body;return li;}));list.scrollTop=list.scrollHeight;}catch(e){$('status').textContent='Reconnecting…';}finally{busy=false;}}
 $('message').addEventListener('focus',()=>keys.clear());
 $('send').onsubmit=async e=>{e.preventDefault();try{await api('chat',{message:$('message').value});$('message').value='';$('chatError').textContent='';sync();}catch(e){$('chatError').textContent=e instanceof DOMException ? '消息未发送成功，请重试或刷新页面。' : e.message;}};
 $('leave').onclick=async()=>{active=false;clearInterval(timer);document.exitPointerLock?.();try{await api('leave',{});}catch{}location.href='/';};
@@ -36,6 +45,34 @@ document.addEventListener('mousemove',e=>{if(document.pointerLockElement===canva
 let finger=null;canvas.onpointerdown=e=>{if(document.pointerLockElement!==canvas){finger=[e.clientX,e.clientY];canvas.setPointerCapture(e.pointerId);}};canvas.onpointermove=e=>{if(finger){yaw+=(e.clientX-finger[0])*.005;pitch=Math.max(-.7,Math.min(.7,pitch+(e.clientY-finger[1])*.005));finger=[e.clientX,e.clientY];}};canvas.onpointerup=canvas.onpointercancel=()=>{finger=null;};
 document.querySelectorAll('[data-key]').forEach(b=>{b.onpointerdown=e=>{e.preventDefault();b.setPointerCapture(e.pointerId);keys.add(b.dataset.key);};b.onpointerup=b.onpointercancel=()=>keys.delete(b.dataset.key);});
 window.onkeydown=e=>{if(!active||e.target.matches('input'))return;if(e.key==='Enter'){document.exitPointerLock?.();$('message').focus();return;}const map={ArrowUp:'w',ArrowDown:'s',ArrowLeft:'a',ArrowRight:'d'};let k=map[e.key]||({'KeyW':'w','KeyA':'a','KeyS':'s','KeyD':'d'}[e.code])||e.key.toLowerCase();if(['w','a','s','d'].includes(k)){e.preventDefault();keys.add(k);}};window.onkeyup=e=>{const map={ArrowUp:'w',ArrowDown:'s',ArrowLeft:'a',ArrowRight:'d'};keys.delete(map[e.key]||({'KeyW':'w','KeyA':'a','KeyS':'s','KeyD':'d'}[e.code])||e.key.toLowerCase());};window.onblur=()=>keys.clear();
+// The supplied model is a single static mesh. Bend its limbs around hip and shoulder pivots.
+function animateWalk(avatar,moving,dt){
+    avatar.stride+=(Number(moving)-avatar.stride)*(1-Math.exp(-dt*10));
+    if(moving)avatar.phase+=dt*8;
+    const swing=Math.sin(avatar.phase)*avatar.stride;
+    avatar.limbs.forEach(l=>{
+        const positions=l.mesh.geometry.attributes.position;
+        for(let i=0;i<positions.count;i++){
+            const k=i*3,ox=l.original[k],oy=l.original[k+1],oz=l.original[k+2];
+            const y=(oy-l.minY)/l.height,side=ox>=l.centerX?1:-1;
+            let angle=0,pivot=oy;
+            if(y<.48){
+                pivot=l.minY+l.height*.48;
+                const weight=Math.min(1,(.48-y)/.12);
+                angle=side*swing*.38*weight;
+            }else if(y<.79&&Math.abs(ox-l.centerX)>l.width*.24){
+                pivot=l.minY+l.height*.79;
+                const weight=Math.min(1,(.79-y)/.12)*Math.min(1,(Math.abs(ox-l.centerX)/l.width-.24)/.09);
+                angle=-side*swing*.32*weight;
+            }
+            const dy=oy-pivot,dz=oz-l.centerZ;
+            positions.setXYZ(i,ox,pivot+dy*Math.cos(angle)-dz*Math.sin(angle),l.centerZ+dy*Math.sin(angle)+dz*Math.cos(angle));
+        }
+        positions.needsUpdate=true;
+        l.mesh.geometry.computeVertexNormals();
+    });
+}
+
 function draw(now){
  const dt=Math.min((now-last)/1000,.05);last=now;
  if(active){
@@ -45,11 +82,12 @@ function draw(now){
   if(renderer.domElement.width!==Math.round(w*renderer.getPixelRatio())||renderer.domElement.height!==Math.round(h*renderer.getPixelRatio())){renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
   camera.position.set(x,1.65,z);camera.rotation.set(-pitch,Math.PI-yaw,0);camera.updateMatrixWorld();grid.position.set(Math.round(x/2)*2,0,Math.round(z/2)*2);
   const alive=new Set(peers.map(p=>p.id));
-  avatars.forEach((a,id)=>{if(!alive.has(id)){scene.remove(a.group);a.label.remove();avatars.delete(id);}});
+  avatars.forEach((a,id)=>{if(!alive.has(id)){scene.remove(a.group);a.limbs.forEach(l=>l.mesh.geometry.dispose());a.label.remove();avatars.delete(id);}});
   if(human)peers.forEach(p=>{
    if(!avatars.has(p.id))avatars.set(p.id,avatar(p));
    const a=avatars.get(p.id);a.group.position.lerp(new THREE.Vector3(p.x,0,p.z),1-Math.exp(-dt*18));
    const target=-(p.yaw||0);const delta=Math.atan2(Math.sin(target-a.group.rotation.y),Math.cos(target-a.group.rotation.y));a.group.rotation.y+=delta*(1-Math.exp(-dt*18));
+   animateWalk(a,p.movingUntil>now,dt);
    const point=new THREE.Vector3(p.x,2.05,p.z).project(camera);
    a.label.hidden=point.z>1||point.z< -1||Math.abs(point.x)>1||Math.abs(point.y)>1;
    a.label.style.left=(point.x*.5+.5)*w+'px';a.label.style.top=(-point.y*.5+.5)*h+'px';
