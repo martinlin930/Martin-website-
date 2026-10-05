@@ -54,6 +54,14 @@
     <script type="module" src="/static/vendor/model-viewer.min.js"></script>
 
     <style>
+        .earth-scene { position: fixed; inset: 0; z-index: 1100; background: #000; display: grid; place-items: center; }
+        .earth-scene[hidden] { display: none; }
+        .earth-stars { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+        .earth-stars i { position: absolute; width: 2px; height: 2px; border-radius: 50%; background: #fff; }
+        #earthModel { width: min(58vw, 480px); height: min(58vh, 480px); background: transparent; --progress-bar-color: #777; }
+        .earth-back { position: absolute; top: 28px; left: 28px; z-index: 2; background: #000; border: 1px solid #555; color: #eee; padding: 12px 18px; border-radius: 25px; cursor: pointer; }
+        .earth-back:focus-visible { outline: 2px solid white; outline-offset: 4px; }
+
         .desktop { background: #dce6e5; border: 2px solid #30383a; border-radius: 12px; overflow: hidden; box-shadow: 0 30px 90px #0002; min-height: min(65vh, 540px); }
         .desktop-bar { width: 100%; display: flex; justify-content: space-between; padding: 14px 20px; background: #f3f3ee; border-bottom: 1px solid #30383a; font-size: 13px; }
         .desktop-files { width: 100%; display: flex; gap: 24px; padding: 35px 25px; flex: 1; align-items: flex-start; }
@@ -1335,6 +1343,12 @@
 
 </div>
 
+
+<section class="earth-scene" id="earthScene" role="dialog" aria-modal="true" aria-label="Earth in space" hidden>
+    <div class="earth-stars" id="earthStars" aria-hidden="true"></div>
+    <button class="earth-back" id="earthBack" type="button">← Back to folders</button>
+    <model-viewer id="earthModel" camera-controls touch-action="none" data-src="/static/models/earth.glb" alt="Earth by Poly by Google, slowly rotating in space" auto-rotate auto-rotate-delay="0" rotation-per-second="5deg" camera-orbit="0deg 75deg auto" shadow-intensity="0" interaction-prompt="none"></model-viewer>
+</section>
 
 <!-- 只新增的电脑点击音效 -->
 <audio
@@ -4085,6 +4099,47 @@
         );
 
 
+    const earthScene = document.getElementById('earthScene');
+    const earthModel = document.getElementById('earthModel');
+    const earthBack = document.getElementById('earthBack');
+    const earthFolder = document.querySelector('.desktop-folder');
+    const stars = document.getElementById('earthStars');
+    for (let i = 0; i < 90; i++) {
+        const star = document.createElement('i');
+        star.style.left = `${Math.random() * 100}%`;
+        star.style.top = `${Math.random() * 100}%`;
+        star.style.opacity = .2 + Math.random() * .6;
+        const size = Math.random() > .9 ? 2 : 1;
+        star.style.width = star.style.height = `${size}px`;
+        stars.appendChild(star);
+    }
+    function openEarth() {
+        earthScene.hidden = false;
+        if (!earthModel.hasAttribute('src')) earthModel.setAttribute('src', earthModel.dataset.src);
+        earthModel.autoRotate = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+        earthBack.focus();
+    }
+    function closeEarth() {
+        earthScene.hidden = true;
+        earthModel.autoRotate = false;
+        earthFolder.focus();
+    }
+    earthFolder.addEventListener('dblclick', openEarth);
+    earthFolder.addEventListener('keydown', event => {
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            openEarth();
+        }
+    });
+    // A tap opens the folder on touch devices.
+    earthFolder.addEventListener('pointerup', event => {
+        if (event.pointerType === 'touch') openEarth();
+    });
+    earthBack.addEventListener('click', closeEarth);
+    earthScene.addEventListener('keydown', event => {
+        if (event.key === 'Tab') { event.preventDefault(); earthBack.focus(); }
+    });
+
     document.querySelectorAll('.desktop-folder').forEach(folder => {
         const model = folder.querySelector('model-viewer');
         if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -4216,7 +4271,8 @@
                 "Escape"
             ) {
 
-                closePhoto();
+                if (!earthScene.hidden) closeEarth();
+                else closePhoto();
 
             }
 
