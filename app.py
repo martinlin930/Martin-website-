@@ -1,6 +1,8 @@
 import os
 import secrets
 import sqlite3
+import math
+import time
 from pathlib import Path
 from contextlib import contextmanager
 
@@ -40,6 +42,8 @@ def database():
     connection.row_factory = sqlite3.Row
     connection.execute('CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL)')
     connection.execute('CREATE TABLE IF NOT EXISTS login_attempts (username TEXT PRIMARY KEY, failures INTEGER NOT NULL, last_attempt INTEGER NOT NULL)')
+    connection.execute('CREATE TABLE IF NOT EXISTS players (id TEXT PRIMARY KEY, nickname TEXT NOT NULL, x REAL NOT NULL, z REAL NOT NULL, updated REAL NOT NULL)')
+    connection.execute('CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY, nickname TEXT NOT NULL, body TEXT NOT NULL, created REAL NOT NULL)')
     connection.commit()
     try:
         with connection:
@@ -59,7 +63,7 @@ def auth_context():
 def check_csrf():
     if request.method == 'POST':
         expected = session.get('csrf_token', '')
-        supplied = request.form.get('csrf_token', '')
+        supplied = request.headers.get('X-CSRF-Token', '') or request.form.get('csrf_token', '')
         if not expected or not secrets.compare_digest(expected, supplied):
             abort(400, description='Form expired. Reload the page and try again.')
 
@@ -137,6 +141,68 @@ def account():
 def logout():
     session.clear()
     return redirect(url_for('home'))
+
+
+@app.get('/world')
+def world():
+    return render_template('world.html')
+
+
+@app.post('/api/world/join')
+def join_world():
+    data = request.get_json(silent=True) or {}
+    nickname = data.get('nickname', '')
+    if not isinstance(nickname, str) or not 1 <= len(nickname.strip()) <= 24:
+        return {'error': 'Enter a nickname of 1–24 characters.'}, 400
+    nickname = nickname.strip()
+    if 'world_player' not in session:
+        session['world_player'] = secrets.token_urlsafe(24)
+    with database() as db:
+        db.execute('INSERT OR REPLACE INTO players VALUES (?, ?, 0, 0, ?)', (session['world_player'], nickname, time.time()))
+    session['world_message_at'] = 0
+    return {'id': session['world_player'], 'nickname': nickname}
+
+
+@app.post('/api/world/state')
+def world_state():
+    data = request.get_json(silent=True) or {}
+    coordinates = [data.get('x', 0), data.get('z', 0)]
+    if any(isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v) or abs(v) > 10000 for v in coordinates):
+        return {'error': 'Invalid position.'}, 400
+    with database() as db:
+        player = db.execute('SELECT * FROM players WHERE id = ?', (session.get('world_player', ''),)).fetchone()
+        if not player:
+            return {'error': 'Join the world first.'}, 401
+        db.execute('UPDATE players SET x = ?, z = ?, updated = ? WHERE id = ?', (*coordinates, time.time(), player['id']))
+        db.execute('DELETE FROM players WHERE updated < ?', (time.time() - 30,))
+        players = [dict(row) for row in db.execute('SELECT id, nickname, x, z FROM players WHERE id != ?', (player['id'],))]
+        messages = [dict(row) for row in db.execute('SELECT id, nickname, body FROM messages ORDER BY id DESC LIMIT 40')][::-1]
+    return {'players': players, 'messages': messages}
+
+
+@app.post('/api/world/chat')
+def world_chat():
+    data = request.get_json(silent=True) or {}
+    body = data.get('message', '')
+    if not isinstance(body, str) or not 1 <= len(body.strip()) <= 240:
+        return {'error': 'Messages must contain 1–240 characters.'}, 400
+    if time.time() - session.get('world_message_at', 0) < 1:
+        return {'error': 'Please wait a moment.'}, 429
+    with database() as db:
+        player = db.execute('SELECT nickname FROM players WHERE id = ?', (session.get('world_player', ''),)).fetchone()
+        if not player:
+            return {'error': 'Join the world first.'}, 401
+        db.execute('INSERT INTO messages (nickname, body, created) VALUES (?, ?, ?)', (player['nickname'], body.strip(), time.time()))
+        db.execute('DELETE FROM messages WHERE id < (SELECT COALESCE(MAX(id), 0) - 200 FROM messages)')
+    session['world_message_at'] = time.time()
+    return {'ok': True}
+
+
+@app.post('/api/world/leave')
+def leave_world():
+    with database() as db:
+        db.execute('DELETE FROM players WHERE id = ?', (session.get('world_player', ''),))
+    return {'ok': True}
 
 
 @app.cli.command('create-user')

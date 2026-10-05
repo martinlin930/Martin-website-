@@ -4124,6 +4124,21 @@
         star.style.width = star.style.height = `${size}px`;
         stars.appendChild(star);
     }
+    let earthPress;
+    earthModel.addEventListener('pointerdown', event => {
+        earthPress = { x: event.clientX, y: event.clientY, moved: false, time: performance.now() };
+    });
+    earthModel.addEventListener('pointermove', event => {
+        if (earthPress && Math.hypot(event.clientX - earthPress.x, event.clientY - earthPress.y) > 8) earthPress.moved = true;
+    });
+    earthModel.addEventListener('pointercancel', () => { earthPress = null; });
+    earthModel.addEventListener('pointerup', event => {
+        if (earthPress && !earthPress.moved && performance.now() - earthPress.time < 600) {
+            closeEarth();
+            location.href = '/world';
+        }
+        earthPress = null;
+    });
     function openEarth() {
         earthScene.hidden = false;
         if (!earthModel.hasAttribute('src')) earthModel.setAttribute('src', earthModel.dataset.src);
