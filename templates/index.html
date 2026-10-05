@@ -29,6 +29,28 @@
         rel="stylesheet"
     >
 
+    <script>
+        // Begin every visit at the hero, even after refreshing a work-section URL.
+        if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+        if (location.hash === '#work' || location.hash === '#home') {
+            history.replaceState(history.state, '', location.pathname + location.search);
+        }
+        window.addEventListener('pageshow', () => {
+            window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+        });
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('a[href="#work"], a[href="#home"]').forEach(link => {
+                link.addEventListener('click', event => {
+                    event.preventDefault();
+                    const target = document.querySelector(link.getAttribute('href'));
+                    target.scrollIntoView({
+                        behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
+                        block: 'start'
+                    });
+                });
+            });
+        });
+    </script>
     <script type="module" src="/static/vendor/model-viewer.min.js"></script>
 
     <style>
