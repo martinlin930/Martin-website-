@@ -46,7 +46,7 @@ function animateDog(dog,distance,moving,running,time){
 
 // Validate the full closed patrol against the same terrain and building collision
 // used by players. Small substeps prevent crossing a wall between waypoints.
-function patrol(map,cx,cz,radius){
+export function patrol(map,cx,cz,radius){
  const points=[];
  for(let i=0;i<=80;i++){
   const angle=i/80*Math.PI*2;

@@ -42,3 +42,5 @@ ALTER TABLE game.forum_posts ADD COLUMN IF NOT EXISTS deleted_at DOUBLE PRECISIO
 ALTER TABLE game.forum_posts ADD COLUMN IF NOT EXISTS deleted_by BIGINT REFERENCES game.users(id);
 ALTER TABLE game.forum_comments ADD COLUMN IF NOT EXISTS deleted_at DOUBLE PRECISION;
 ALTER TABLE game.forum_comments ADD COLUMN IF NOT EXISTS deleted_by BIGINT REFERENCES game.users(id);
+
+ALTER TABLE game.game_saves ADD COLUMN IF NOT EXISTS animal_pets TEXT NOT NULL DEFAULT '{}';

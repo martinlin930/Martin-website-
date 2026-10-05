@@ -75,7 +75,7 @@ def database():
     save_columns = {row['name'] for row in connection.execute('PRAGMA table_info(game_saves)')}
     if 'dog_name' not in save_columns:
         connection.execute("ALTER TABLE game_saves ADD COLUMN dog_name TEXT NOT NULL DEFAULT ''")
-    for column,definition in {'dog_food':'INTEGER NOT NULL DEFAULT 0','dog_xp':'INTEGER NOT NULL DEFAULT 0','food_claims':"TEXT NOT NULL DEFAULT '{}'",'dog_interaction_at':'REAL NOT NULL DEFAULT 0'}.items():
+    for column,definition in {'animal_pets':"TEXT NOT NULL DEFAULT '{}'",'dog_food':'INTEGER NOT NULL DEFAULT 0','dog_xp':'INTEGER NOT NULL DEFAULT 0','food_claims':"TEXT NOT NULL DEFAULT '{}'",'dog_interaction_at':'REAL NOT NULL DEFAULT 0'}.items():
         if column not in save_columns:
             connection.execute('ALTER TABLE game_saves ADD COLUMN '+column+' '+definition)
     connection.execute('CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY, nickname TEXT NOT NULL, body TEXT NOT NULL, created REAL NOT NULL)')
@@ -229,7 +229,7 @@ def join_world():
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET nickname = excluded.nickname""",
                 (user_id, nickname, state['avatar'], state['x'], state['z'], state['yaw'], state['pitch'], state['music_muted'], time.time()))
     session['world_message_at'] = 0
-    return {'id': player_id, 'nickname': nickname, 'persistent': bool(user_id), 'pet': pet_progress(state), 'dog_name': state.get('dog_name', ''), 'server_time': time.time(), 'state': {k: state[k] for k in ('x', 'z', 'yaw', 'pitch', 'avatar', 'music_muted')}}
+    return {'id': player_id, 'nickname': nickname, 'persistent': bool(user_id), 'animals':json.loads(state.get('animal_pets','{}')), 'pet': pet_progress(state), 'dog_name': state.get('dog_name', ''), 'server_time': time.time(), 'state': {k: state[k] for k in ('x', 'z', 'yaw', 'pitch', 'avatar', 'music_muted')}}
 
 
 def world_player_id(data):
@@ -266,10 +266,13 @@ def world_state():
             db.execute('UPDATE game_saves SET x = ?, z = ?, yaw = ?, pitch = ?, music_muted = ?, updated = ? WHERE user_id = ?',
                        (*coordinates, yaw, pitch, int(music_muted), time.time(), player['user_id']))
         db.execute('DELETE FROM players WHERE updated < ?', (time.time() - 30,))
-        players = [dict(row) for row in db.execute("SELECT p.id, p.nickname, p.x, p.z, p.yaw, p.avatar, p.jump, p.running, COALESCE(s.dog_name, '') AS dog_name, COALESCE(s.dog_xp, 0) AS dog_xp FROM players p LEFT JOIN game_saves s ON s.user_id=p.user_id WHERE p.id != ?", (player['id'],))]
+        players = [dict(row) for row in db.execute("SELECT p.id, p.nickname, p.x, p.z, p.yaw, p.avatar, p.jump, p.running, COALESCE(s.dog_name, '') AS dog_name, COALESCE(s.dog_xp, 0) AS dog_xp, COALESCE(s.animal_pets, '{}') AS animal_pets FROM players p LEFT JOIN game_saves s ON s.user_id=p.user_id WHERE p.id != ?", (player['id'],))]
         messages = [dict(row) for row in db.execute('SELECT id, nickname, body FROM messages ORDER BY id DESC LIMIT 40')][::-1]
         pet = db.execute('SELECT * FROM game_saves WHERE user_id = ?', (player['user_id'],)).fetchone() if player['user_id'] else None
-    return {'players': players, 'messages': messages, 'pet': pet_progress(pet), 'dog_name': pet['dog_name'] if pet else '', 'server_time': time.time()}
+    for peer in players:
+        pets=json.loads(peer.pop('animal_pets'));kind=pets.get('active');info=pets.get(kind) if kind else None
+        peer['animals']={'active':kind,kind:{'name':info['name'],'xp':info['xp']}} if info else {}
+    return {'animals':json.loads(pet['animal_pets']) if pet else {},'players': players, 'messages': messages, 'pet': pet_progress(pet), 'dog_name': pet['dog_name'] if pet else '', 'server_time': time.time()}
 
 
 @app.post('/api/world/dog')
@@ -432,6 +435,9 @@ def create_user(username, password):
         raise click.ClickException('That username already exists.') from None
     click.echo(f'Created account: {username}')
 
+
+from animals import install_animals
+install_animals(app,database,world_player_id,pet_progress)
 
 from forum import install_forum
 install_forum(app, database)
