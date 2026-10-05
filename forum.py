@@ -17,7 +17,7 @@ def install_forum(app, database):
         if not uid:
             return None
         with database() as db:
-            return db.execute('SELECT id,username FROM users WHERE id=?', (uid,)).fetchone()
+            return db.execute('SELECT id,username,is_admin FROM users WHERE id=?', (uid,)).fetchone()
 
     def before_id():
         value = request.args.get('before', '')
@@ -25,14 +25,15 @@ def install_forum(app, database):
 
     @app.get('/forum')
     def forum_page():
-        return render_template('forum.html')
+        user = author()
+        return render_template('forum.html', forum_admin=bool(user and user['is_admin']))
 
     @app.get('/api/forum/posts')
     def forum_posts():
         with database() as db:
             rows = [dict(r) for r in db.execute('''SELECT p.id,p.display_name,p.body,p.created,
-                (SELECT COUNT(*) FROM forum_comments c WHERE c.post_id=p.id) AS comment_count
-                FROM forum_posts p WHERE p.id < ? ORDER BY p.id DESC LIMIT 20''', (before_id(),))]
+                (SELECT COUNT(*) FROM forum_comments c WHERE c.post_id=p.id AND c.deleted_at IS NULL) AS comment_count
+                FROM forum_posts p WHERE p.deleted_at IS NULL AND p.id < ? ORDER BY p.id DESC LIMIT 20''', (before_id(),))]
             images = []
             if rows:
                 ids = [p['id'] for p in rows]
@@ -90,17 +91,17 @@ def install_forum(app, database):
     @app.get('/api/forum/images/<int:image_id>')
     def forum_image(image_id):
         with database() as db:
-            row=db.execute('SELECT jpeg_base64 FROM forum_images WHERE id=?',(image_id,)).fetchone()
+            row=db.execute('SELECT i.jpeg_base64 FROM forum_images i JOIN forum_posts p ON p.id=i.post_id WHERE i.id=? AND p.deleted_at IS NULL',(image_id,)).fetchone()
         if not row:
             return error('照片不存在。',404)
-        return Response(base64.b64decode(row['jpeg_base64']),mimetype='image/jpeg',headers={'Cache-Control':'public, max-age=86400','X-Content-Type-Options':'nosniff'})
+        return Response(base64.b64decode(row['jpeg_base64']),mimetype='image/jpeg',headers={'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'})
 
     @app.get('/api/forum/posts/<int:post_id>/comments')
     def forum_comments(post_id):
         with database() as db:
-            if not db.execute('SELECT id FROM forum_posts WHERE id=?',(post_id,)).fetchone():
+            if not db.execute('SELECT id FROM forum_posts WHERE id=? AND deleted_at IS NULL',(post_id,)).fetchone():
                 return error('动态不存在。',404)
-            rows=[dict(r) for r in db.execute('SELECT id,display_name,body,created FROM forum_comments WHERE post_id=? AND id<? ORDER BY id DESC LIMIT 20',(post_id,before_id()))]
+            rows=[dict(r) for r in db.execute('SELECT id,display_name,body,created FROM forum_comments WHERE deleted_at IS NULL AND post_id=? AND id<? ORDER BY id DESC LIMIT 20',(post_id,before_id()))]
         return {'comments':rows[::-1], 'next':rows[-1]['id'] if len(rows)==20 else None}
 
     @app.post('/api/forum/posts/<int:post_id>/comments')
@@ -116,10 +117,32 @@ def install_forum(app, database):
             return error('评论请输入 1–1000 个字符。')
         now=time.time()
         with database() as db:
-            if not db.execute('SELECT id FROM forum_posts WHERE id=?',(post_id,)).fetchone():
+            if not db.execute('SELECT id FROM forum_posts WHERE id=? AND deleted_at IS NULL',(post_id,)).fetchone():
                 return error('动态不存在。',404)
             recent=db.execute('SELECT created FROM forum_comments WHERE user_id=? ORDER BY id DESC LIMIT 1',(user['id'],)).fetchone()
             if recent and now-recent['created']<2:
                 return error('评论得太快了，请稍等 2 秒。',429)
             row=db.execute('INSERT INTO forum_comments(post_id,user_id,display_name,body,created) VALUES(?,?,?,?,?) RETURNING id',(post_id,user['id'],user['username'],body.strip(),now)).fetchone()
         return {'id':row['id']},201
+
+
+    def moderate(table, item_id):
+        # Identity and current permission come from the database, never request fields or a nickname.
+        user = author()
+        if not user:
+            return error('请先登录管理员账户。', 401)
+        if not user['is_admin']:
+            return error('只有管理员可以删除论坛内容。', 403)
+        with database() as db:
+            row = db.execute('UPDATE '+table+' SET deleted_at=?,deleted_by=? WHERE id=? AND deleted_at IS NULL RETURNING id', (time.time(), user['id'], item_id)).fetchone()
+        if not row:
+            return error('内容不存在或已经删除。', 404)
+        return {'ok': True, 'id': row['id']}
+
+    @app.post('/api/forum/posts/<int:post_id>/delete')
+    def forum_delete_post(post_id):
+        return moderate('forum_posts', post_id)
+
+    @app.post('/api/forum/comments/<int:comment_id>/delete')
+    def forum_delete_comment(comment_id):
+        return moderate('forum_comments', comment_id)

@@ -51,6 +51,9 @@ def database():
     connection = sqlite3.connect(app.config['DATABASE'])
     connection.row_factory = sqlite3.Row
     connection.execute('CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL)')
+    user_columns = {row['name'] for row in connection.execute('PRAGMA table_info(users)')}
+    if 'is_admin' not in user_columns:
+        connection.execute('ALTER TABLE users ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 0')
     connection.execute('CREATE TABLE IF NOT EXISTS login_attempts (username TEXT PRIMARY KEY, failures INTEGER NOT NULL, last_attempt INTEGER NOT NULL)')
     connection.execute('CREATE TABLE IF NOT EXISTS players (id TEXT PRIMARY KEY, nickname TEXT NOT NULL, x REAL NOT NULL, z REAL NOT NULL, updated REAL NOT NULL)')
     columns = {row['name'] for row in connection.execute('PRAGMA table_info(players)')}
@@ -79,6 +82,11 @@ def database():
     connection.execute('CREATE TABLE IF NOT EXISTS forum_posts (id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id), display_name TEXT NOT NULL, body TEXT NOT NULL, created REAL NOT NULL)')
     connection.execute('CREATE TABLE IF NOT EXISTS forum_images (id INTEGER PRIMARY KEY, post_id INTEGER NOT NULL REFERENCES forum_posts(id), jpeg_base64 TEXT NOT NULL)')
     connection.execute('CREATE TABLE IF NOT EXISTS forum_comments (id INTEGER PRIMARY KEY, post_id INTEGER NOT NULL REFERENCES forum_posts(id), user_id INTEGER NOT NULL REFERENCES users(id), display_name TEXT NOT NULL, body TEXT NOT NULL, created REAL NOT NULL)')
+    for table in ('forum_posts', 'forum_comments'):
+        columns = {row['name'] for row in connection.execute('PRAGMA table_info('+table+')')}
+        for column,definition in {'deleted_at':'REAL', 'deleted_by':'INTEGER REFERENCES users(id)'}.items():
+            if column not in columns:
+                connection.execute('ALTER TABLE '+table+' ADD COLUMN '+column+' '+definition)
     connection.execute('CREATE INDEX IF NOT EXISTS forum_images_post_idx ON forum_images(post_id,id)')
     connection.execute('CREATE INDEX IF NOT EXISTS forum_comments_post_idx ON forum_comments(post_id,id)')
     connection.execute('CREATE INDEX IF NOT EXISTS forum_posts_user_idx ON forum_posts(user_id,id)')
@@ -430,3 +438,4 @@ install_forum(app, database)
 
 if __name__ == '__main__':
     app.run()
+

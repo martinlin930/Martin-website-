@@ -34,3 +34,11 @@ ALTER TABLE game.forum_posts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE game.forum_images ENABLE ROW LEVEL SECURITY;
 ALTER TABLE game.forum_comments ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON game.forum_posts, game.forum_images, game.forum_comments FROM PUBLIC, anon, authenticated;
+
+
+-- Explicit backend-managed administrator role; registrations remain ordinary accounts.
+ALTER TABLE game.users ADD COLUMN IF NOT EXISTS is_admin INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE game.forum_posts ADD COLUMN IF NOT EXISTS deleted_at DOUBLE PRECISION;
+ALTER TABLE game.forum_posts ADD COLUMN IF NOT EXISTS deleted_by BIGINT REFERENCES game.users(id);
+ALTER TABLE game.forum_comments ADD COLUMN IF NOT EXISTS deleted_at DOUBLE PRECISION;
+ALTER TABLE game.forum_comments ADD COLUMN IF NOT EXISTS deleted_by BIGINT REFERENCES game.users(id);
