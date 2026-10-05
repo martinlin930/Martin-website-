@@ -1,6 +1,8 @@
 import os
 import secrets
 import sqlite3
+import psycopg
+from postgres_store import database as postgres_database
 import math
 import time
 from pathlib import Path
@@ -13,6 +15,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 BASE_DIR = Path(__file__).resolve().parent
 app = Flask(__name__, template_folder=str(BASE_DIR / 'templates'))
 app.config.update(
+    DATABASE_URL=os.environ.get('DATABASE_URL', ''),
     DATABASE=os.environ.get('DATABASE_PATH', str(BASE_DIR / 'instance' / 'users.sqlite3')),
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE='Lax',
@@ -21,6 +24,8 @@ app.config.update(
 )
 # Persist the local secret so sessions survive restarts. Set SECRET_KEY in production.
 secret = os.environ.get('SECRET_KEY')
+if app.config['DATABASE_URL'] and not secret:
+    raise RuntimeError('Set a persistent SECRET_KEY when using PostgreSQL.')
 if not secret:
     secret_path = Path(app.config['DATABASE']).parent / 'secret.key'
     secret_path.parent.mkdir(parents=True, exist_ok=True)
@@ -37,6 +42,10 @@ DUMMY_HASH = generate_password_hash(secrets.token_hex(32))
 
 @contextmanager
 def database():
+    if app.config['DATABASE_URL']:
+        with postgres_database(app.config['DATABASE_URL']) as connection:
+            yield connection
+        return
     Path(app.config['DATABASE']).parent.mkdir(parents=True, exist_ok=True)
     connection = sqlite3.connect(app.config['DATABASE'])
     connection.row_factory = sqlite3.Row
@@ -103,7 +112,7 @@ def login():
         username = request.form.get('username', '').strip()[:80]
         password = request.form.get('password', '')
         with database() as db:
-            attempt = db.execute("SELECT * FROM login_attempts WHERE username = ? AND last_attempt > unixepoch() - 900", (username,)).fetchone()
+            attempt = db.execute("SELECT * FROM login_attempts WHERE username = ? AND last_attempt > ?", (username, int(time.time()) - 900,)).fetchone()
             if attempt and attempt['failures'] >= 10:
                 return render_template('login.html', error='Too many attempts. Try again in 15 minutes.', username=username), 429
             user = db.execute('SELECT * FROM users WHERE username = ?', (username,)).fetchone()
@@ -114,7 +123,7 @@ def login():
                 session['user_id'] = user['id']
                 session['username'] = user['username']
                 return redirect(url_for('account'))
-            db.execute("INSERT INTO login_attempts VALUES (?, 1, unixepoch()) ON CONFLICT(username) DO UPDATE SET failures = CASE WHEN last_attempt > unixepoch() - 900 THEN failures + 1 ELSE 1 END, last_attempt = unixepoch()", (username,))
+            db.execute("INSERT INTO login_attempts VALUES (?, 1, ?) ON CONFLICT(username) DO UPDATE SET failures = CASE WHEN login_attempts.last_attempt > ? THEN login_attempts.failures + 1 ELSE 1 END, last_attempt = excluded.last_attempt", (username, int(time.time()), int(time.time()) - 900))
         error = 'Incorrect username or password.'
     return render_template('login.html', error=error, username=request.form.get('username', ''))
 
@@ -134,9 +143,9 @@ def register():
         else:
             try:
                 with database() as db:
-                    cursor = db.execute('INSERT INTO users (username, password_hash) VALUES (?, ?)', (username, generate_password_hash(password)))
-                    user_id = cursor.lastrowid
-            except sqlite3.IntegrityError:
+                    cursor = db.execute('INSERT INTO users (username, password_hash) VALUES (?, ?) RETURNING id', (username, generate_password_hash(password)))
+                    user_id = cursor.fetchone()['id']
+            except (sqlite3.IntegrityError, psycopg.IntegrityError):
                 error = 'That username is already taken.'
             else:
                 session.clear()
@@ -258,10 +267,38 @@ def leave_world():
     return {'ok': True}
 
 
+@app.cli.command('import-sqlite')
+@click.argument('source', type=click.Path(exists=True, path_type=Path))
+def import_sqlite(source):
+    """Import accounts and saves from a private SQLite backup into an empty PostgreSQL database."""
+    if not app.config['DATABASE_URL']:
+        raise click.ClickException('Set DATABASE_URL first.')
+    local = sqlite3.connect(f'file:{source.resolve()}?mode=ro', uri=True)
+    local.row_factory = sqlite3.Row
+    try:
+        users = local.execute('SELECT id, username, password_hash FROM users').fetchall()
+        tables = {row[0] for row in local.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+        saves = local.execute('SELECT * FROM game_saves').fetchall() if 'game_saves' in tables else []
+        with database() as db:
+            if db.execute('SELECT COUNT(*) AS count FROM users').fetchone()['count']:
+                raise click.ClickException('Target already contains accounts; import stopped without changing them.')
+            for user in users:
+                db.execute('INSERT INTO users (id, username, password_hash) VALUES (?, ?, ?)', tuple(user))
+            for save in saves:
+                keys = ('user_id','nickname','avatar','x','z','yaw','pitch','music_muted','updated','save_version')
+                db.execute('INSERT INTO game_saves (' + ','.join(keys) + ') VALUES (' + ','.join('?' for _ in keys) + ')', tuple(save[k] for k in keys))
+            db.execute("SELECT setval(pg_get_serial_sequence('game.users','id'), COALESCE(MAX(id),1), COUNT(*)>0) FROM users")
+    finally:
+        local.close()
+    click.echo(f'Imported {len(users)} accounts and {len(saves)} saves.')
+
+
 @app.cli.command('backup-database')
 @click.argument('destination', type=click.Path(path_type=Path))
 def backup_database(destination):
     """Create a consistent backup without overwriting an existing backup."""
+    if app.config['DATABASE_URL']:
+        raise click.ClickException('Use pg_dump for PostgreSQL backups; this command backs up SQLite only.')
     destination.parent.mkdir(parents=True, exist_ok=True)
     try:
         with destination.open('xb'):
@@ -294,7 +331,7 @@ def create_user(username, password):
     try:
         with database() as db:
             db.execute('INSERT INTO users (username, password_hash) VALUES (?, ?)', (username, generate_password_hash(password)))
-    except sqlite3.IntegrityError:
+    except (sqlite3.IntegrityError, psycopg.IntegrityError):
         raise click.ClickException('That username already exists.') from None
     click.echo(f'Created account: {username}')
 

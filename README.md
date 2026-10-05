@@ -37,3 +37,13 @@ Run `flask --app app backup-database /var/data/backups/users-YYYY-MM-DD.sqlite3`
 Desktop: WASD/arrows, Shift to run, Space to jump, drag/click to look, Enter to chat. Mobile: drag the joystick, push fully to run, tap Jump, drag to look. Village music loops while inside and stops on exit. Other players' positions, avatar orientation, running and jumping are synchronized.
 
 Run `python -m unittest discover -s tests` for authentication, multiplayer and save isolation/restoration/migration tests; run `node tests/village_collision.mjs` for stair surface checks against the actual map geometry.
+
+## Supabase on free Render
+
+Set `DATABASE_URL` to the Supabase session pooler PostgreSQL URI (port 5432), with the database password percent-encoded. Set a stable random `SECRET_KEY` and `COOKIE_SECURE=1` in Render Environment. Keep credentials out of the repository and browser scripts. PostgreSQL connection failure never falls back to temporary SQLite storage.
+
+App tables use the private `game` schema, with RLS enabled and no access granted to browser `anon`/`authenticated` roles. The Flask backend manages username/password login and account ownership; Supabase Auth or social login is not required. The server connects using the project's database credentials over TLS and a bounded connection pool. Schema creation is additive and protected by a transaction advisory lock.
+
+Before switching, preserve any accessible old SQLite database. To import a private local backup into an **empty** Supabase application database, run `flask --app app import-sqlite /path/to/users.sqlite3` with `DATABASE_URL` and `SECRET_KEY` configured privately. This preserves IDs, existing password hashes and account saves without resetting passwords. A nonempty target is rejected. Online player presence and rolling chat are not imported. If an old free Render instance's ephemeral database has already disappeared or cannot be exported, it cannot be recovered from the GitHub repository.
+
+Use `pg_dump` for independent PostgreSQL backups. Free services have limits and may pause with inactivity; an update retains data in the same Supabase project, but the free plan is not a promise of perpetual availability.
