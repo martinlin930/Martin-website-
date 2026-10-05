@@ -1,5 +1,6 @@
 import * as THREE from './vendor/three.module.js';
 import { GLTFLoader } from './vendor/GLTFLoader.js';
+import { createNightLights } from './night-lights.js';
 const base='/static/models/village/';
 export async function loadVillage(scene,onProgress=()=>{},renderer){
  const [data,terrain,binary,bounds]=await Promise.all([
@@ -44,6 +45,26 @@ export async function loadVillage(scene,onProgress=()=>{},renderer){
  data.nodes.forEach(node=>visit(node));
  const models=new Map(),ids=Object.keys(data.assets),loader=new GLTFLoader();let cursor=0,complete=0;
  await Promise.all(Array.from({length:6},async()=>{while(cursor<ids.length){const id=ids[cursor++];const g=await loader.loadAsync(base+id+'.glb');g.scene.updateMatrixWorld(true);models.set(id,g.scene);onProgress(++complete/ids.length);}}));
+ // Place bulbs inside each lamp head using the same transforms as the imported meshes.
+ const fixtures=[];
+ for(const {node,matrix} of records){
+  const asset=data.assets[node.asset];if(!/SM_(lamp_street|lantern)_/i.test(asset))continue;
+  const model=models.get(node.asset),lantern=/lantern_/i.test(asset);
+  let position;
+  model.traverse(mesh=>{
+   if(position||!mesh.isMesh)return;
+   mesh.geometry.computeBoundingBox();const box=mesh.geometry.boundingBox,size=box.getSize(new THREE.Vector3());
+   position=box.getCenter(new THREE.Vector3());
+   if(!lantern){
+    // Locate the bulb in geometry space before applying the model's axis conversion.
+    position.x=/street_01/i.test(asset)?box.max.x-size.x*.24:box.min.x+size.x*.18;
+    position.y=box.max.y-size.y*.16;
+   }
+   position.applyMatrix4(mesh.matrixWorld);
+  });
+  position.applyMatrix4(matrix);fixtures.push({position,lantern});
+ }
+ const nightLights=createNightLights(scene,fixtures);
  // Use road surfaces, including curbs, to support railing posts before batching them.
  const supportMeshes=[],supportMaterial=new THREE.MeshBasicMaterial({side:THREE.DoubleSide}),supportRay=new THREE.Raycaster();supportRay.far=2.5;
  for(const {node,matrix} of records)if(/\/Roads\//.test(data.assets[node.asset])&&/road|sidewalk|platform/i.test(node.name))models.get(node.asset).traverse(mesh=>{
@@ -73,6 +94,17 @@ export async function loadVillage(scene,onProgress=()=>{},renderer){
   if(!mesh.isMesh)return;
   const source=Array.isArray(mesh.material)?mesh.material[0]:mesh.material;const slot=source.name.match(/slot_(\d+)/)?.[1]||'0';const guid=node.materials[slot];if(/invisible/i.test(data.materials[guid]?.name||''))return;const key=mesh.geometry.uuid+'-'+guid;
   if(!batches.has(key))batches.set(key,{geometry:mesh.geometry,material:material(guid),matrices:[],walkable:isWalkable(node),shadow:/\/(Buildings|Nature|Props|Roads|Modular pieces)\//.test(data.assets[node.asset])&&!/grass|weeds|cornplant|riceplant/i.test(node.name)});
+  const batch=batches.get(key),asset=data.assets[node.asset];
+  if(/SM_(lamp_street|lantern)_/i.test(asset)&&!batch.glowing){
+   batch.glowing=true;batch.material=batch.material.clone();
+   const mask=/street_01/i.test(asset)?'step(25.0,lampPosition.x)*step(178.0,lampPosition.y)*(1.0-step(203.0,lampPosition.y))':/street_02/i.test(asset)?'(1.0-step(-12.0,lampPosition.x))*step(161.0,lampPosition.y)*(1.0-step(190.0,lampPosition.y))':'step(4.0,lampPosition.y)*(1.0-step(25.0,lampPosition.y))';
+   batch.material.onBeforeCompile=shader=>{
+    shader.uniforms.lampGlow=nightLights.glow;
+    shader.vertexShader='varying vec3 lampPosition;\n'+shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\n lampPosition=position;');
+    shader.fragmentShader='varying vec3 lampPosition; uniform float lampGlow;\n'+shader.fragmentShader.replace('#include <opaque_fragment>','outgoingLight += vec3(2.8,1.6,0.55)*lampGlow*('+mask+');\n#include <opaque_fragment>');
+   };
+   batch.material.customProgramCacheKey=()=>asset;
+  }
   batches.get(key).matrices.push(matrix.clone().multiply(mesh.matrixWorld));
  });}
  for(const batch of batches.values()){
@@ -85,7 +117,7 @@ export async function loadVillage(scene,onProgress=()=>{},renderer){
  const terrainHeight=groundHeight;
  const surfaceHeight=(x,z)=>{const floor=terrainHeight(x,z);ray.set(new THREE.Vector3(x,floor+10,z),down);const hit=ray.intersectObjects(walkables,false)[0];return hit&&hit.point.y>floor-.08?Math.max(floor,hit.point.y+.035):floor;};
 
- return {spawn:terrain.spawn,yaw:terrain.yaw,groundHeight:surfaceHeight,canMove(x,z,fromX,fromZ){
+ return {nightLights,spawn:terrain.spawn,yaw:terrain.yaw,groundHeight:surfaceHeight,canMove(x,z,fromX,fromZ){
   if(x<1||x>size-1||z> -1||z<1-size)return false;
   const y=surfaceHeight(x,z);if(y-surfaceHeight(fromX,fromZ)>.45)return false;
   for(const o of obstacles){point.set(x,y+.8,z).applyMatrix4(o.inverse);if(point.y>o.min.y&&point.y<o.max.y&&point.x>o.min.x+.15&&point.x<o.max.x-.15&&point.z>o.min.z+.15&&point.z<o.max.z-.15)return false;}

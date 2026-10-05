@@ -32,6 +32,7 @@ const skyNight={value:0};
 function updateDayNight(now){
  const time=worldTime(worldClockAnchor+now-worldClockReceived);
  const daylight=time.daylight;
+ village?.nightLights.update(1-daylight,camera.position);
  skyNight.value=1-daylight;scene.fog.color.copy(nightSky).lerp(daySky,daylight);
  ambient.color.copy(nightAmbient).lerp(dayAmbient,daylight);ambient.intensity=.3+.25*daylight;
  sun.intensity=2.4*daylight;scene.environmentIntensity=.04+.26*daylight;

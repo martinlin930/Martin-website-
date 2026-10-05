@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {scene,village} from './village_collision.mjs';
+import * as THREE from '../static/vendor/three.module.js';
+const system=village.nightLights;
+assert.equal(system.fixtures.length,43);
+assert.equal(system.lights.length,8);
+assert.ok(system.fixtures.every(f=>Number.isFinite(f.position.y)&&f.position.y>village.groundHeight(f.position.x,f.position.z)));
+const camera=new THREE.Vector3(70,5,-133);
+system.update(0,camera);assert.equal(system.group.visible,false);
+system.update(1,camera);assert.equal(system.group.visible,true);
+assert.ok(system.lights.every(light=>light.intensity>0&&light.position.distanceTo(camera)<35));
+system.update(.5,camera);assert.ok(system.lights.every(light=>light.intensity>0&&light.intensity<100));
+system.update(0,camera);assert.ok(system.lights.every(light=>light.intensity===0));
+console.log('Verified lamp placement, night illumination, dawn fade and eight-light budget.');
