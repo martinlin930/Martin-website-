@@ -1591,6 +1591,11 @@
                     Contact
                 </a>
 
+                <span>/</span>
+                <a href="{{ url_for('account') if session.get('user_id') else url_for('login') }}">
+                    {{ 'Account' if session.get('user_id') else 'Log in' }}
+                </a>
+
             </nav>
 
         </div>

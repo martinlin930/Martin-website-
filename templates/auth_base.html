@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Account{% endblock %} — Martin Photography</title>
+<style>
+* { box-sizing: border-box; }
+body { margin: 0; background: #f3f3ee; color: #111; font-family: Arial, sans-serif; }
+nav { display: flex; justify-content: space-between; padding: 30px 5%; }
+a { color: inherit; text-underline-offset: 4px; }
+.logo { font-weight: bold; letter-spacing: 2px; text-decoration: none; }
+main { width: min(420px, 90%); margin: 12vh auto 60px; }
+h1 { font-size: clamp(40px, 9vw, 64px); letter-spacing: -3px; margin-bottom: 16px; }
+p { line-height: 1.6; }
+label { display: block; margin-top: 24px; font-size: 14px; }
+input { width: 100%; padding: 14px; margin-top: 8px; background: white; border: 1px solid #888; border-radius: 6px; font-size: 16px; }
+button { width: 100%; margin-top: 28px; padding: 16px; background: #111; color: white; border: 0; border-radius: 6px; font-size: 16px; cursor: pointer; }
+:focus-visible { outline: 3px solid #4069bc; outline-offset: 3px; }
+.error { padding: 12px; background: #ffe7e4; color: #8b2020; border-radius: 6px; }
+</style>
+</head>
+<body>
+<nav><a class="logo" href="{{ url_for('home') }}">MARTIN.</a><a href="{{ url_for('home') }}">Back home</a></nav>
+<main>{% block content %}{% endblock %}</main>
+</body>
+</html>
