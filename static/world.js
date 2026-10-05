@@ -196,7 +196,7 @@ function draw(now){
    a.label.style.left=(point.x*.5+.5)*w+'px';a.label.style.top=(-point.y*.5+.5)*h+'px';
   });
   room?.update(dt);$('roomAction').hidden=!room?.near(x,z);$('roomAction').textContent=room?.open?'关门 · E':'打开小屋门 · E';
-  if(train)$('trainStatus').textContent=train.update(worldClockAnchor+now-worldClockReceived);
+  if(train)train.update(worldClockAnchor+now-worldClockReceived);
   if(room){const marker=new THREE.Vector3(58,5.9,-129.8).project(camera);$('roomMarker').hidden=Math.hypot(x-58,z+130)>32||marker.z>1||marker.z< -1||Math.abs(marker.x)>1||Math.abs(marker.y)>1;$('roomMarker').style.left=(marker.x*.5+.5)*w+'px';$('roomMarker').style.top=(-marker.y*.5+.5)*h+'px';}
   animals?.update(worldClockAnchor+now-worldClockReceived,[{id:playerId,x,z,animals:animalPets},...peers],dt,camera,w,h);
   nearAnimal=animals?.nearest(x,z)?.kind??null;
