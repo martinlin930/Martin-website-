@@ -64,6 +64,8 @@
 
         .desktop { background: #dce6e5; border: 2px solid #30383a; border-radius: 12px; overflow: hidden; box-shadow: 0 30px 90px #0002; min-height: min(65vh, 540px); }
         .desktop-bar { width: 100%; display: flex; justify-content: space-between; padding: 14px 20px; background: #f3f3ee; border-bottom: 1px solid #30383a; font-size: 13px; }
+        .desktop-files[hidden], #desktopBack[hidden] { display: none; }
+        #desktopBack { border: 1px solid #b1babb; border-radius: 5px; background: white; padding: 4px 9px; cursor: pointer; }
         .desktop-files { width: 100%; display: flex; gap: 24px; padding: 35px 25px; flex: 1; align-items: flex-start; }
         .desktop-folder { border: 1px solid transparent; background: transparent; border-radius: 8px; padding: 8px; cursor: pointer; color: #182426; font: 16px Arial, sans-serif; }
         .desktop-folder model-viewer { width: clamp(100px, 18vw, 170px); height: clamp(100px, 18vw, 160px); pointer-events: none; }
@@ -1327,18 +1329,15 @@
 
 
     <div class="viewer__content desktop">
-        <div class="desktop-bar"><span>MARTIN</span><span>Desktop</span></div>
-        <div class="desktop-files">
-            <button class="desktop-folder" type="button" aria-label="Select earth folder">
-                <model-viewer src="/static/models/file-folder.glb" alt="File folder by Ryan Dewalt" camera-orbit="-20deg 75deg auto" shadow-intensity="0.5" interaction-prompt="none" aria-hidden="true"></model-viewer>
-                <span>earth</span>
-            </button>
-            <button class="desktop-folder" type="button" aria-label="Select pictures folder">
-                <model-viewer src="/static/models/file-folder.glb" alt="File folder by Ryan Dewalt" camera-orbit="-20deg 75deg auto" shadow-intensity="0.5" interaction-prompt="none" aria-hidden="true"></model-viewer>
-                <span>pictures</span>
-            </button>
+        <div class="desktop-bar"><span>MARTIN</span><span id="desktopPath">Desktop</span><button id="desktopBack" type="button" hidden>← Desktop</button></div>
+        <div class="desktop-files" id="desktopRoot">
+            <button class="desktop-folder" type="button" aria-label="Open pictures folder"><model-viewer src="/static/models/file-folder.glb" alt="File folder by Ryan Dewalt" camera-orbit="-20deg 75deg auto" shadow-intensity="0.5" interaction-prompt="none" aria-hidden="true"></model-viewer><span>pictures</span></button>
+            <button class="desktop-folder" id="gameFolder" type="button" aria-label="Open game folder"><model-viewer src="/static/models/file-folder.glb" alt="File folder by Ryan Dewalt" camera-orbit="-20deg 75deg auto" shadow-intensity="0.5" interaction-prompt="none" aria-hidden="true"></model-viewer><span>game</span></button>
         </div>
-        <div class="desktop-footer">2 folders</div>
+        <div class="desktop-files" id="gameFiles" hidden>
+            <button class="desktop-folder" id="earthFolder" type="button" aria-label="Open earth folder"><model-viewer src="/static/models/file-folder.glb" alt="File folder by Ryan Dewalt" camera-orbit="-20deg 75deg auto" shadow-intensity="0.5" interaction-prompt="none" aria-hidden="true"></model-viewer><span>earth</span></button>
+        </div>
+        <div class="desktop-footer" id="desktopCount">2 folders</div>
     </div>
 
 </div>
@@ -1348,7 +1347,7 @@
 
 <section class="earth-scene" id="earthScene" role="dialog" aria-modal="true" aria-label="Earth in space" hidden>
     <div class="earth-stars" id="earthStars" aria-hidden="true"></div>
-    <button class="earth-back" id="earthBack" type="button">← Back to folders</button>
+    <button class="earth-back" id="earthBack" type="button">← Back to game</button>
     <model-viewer id="earthModel" camera-controls disable-pan disable-zoom min-camera-orbit="auto 75deg auto" max-camera-orbit="auto 75deg auto" touch-action="none" data-src="/static/models/earth.glb" alt="Earth by Poly by Google, slowly rotating in space" auto-rotate auto-rotate-delay="0" rotation-per-second="5deg" camera-orbit="0deg 75deg auto" shadow-intensity="0" interaction-prompt="none"></model-viewer>
 </section>
 
@@ -4113,7 +4112,21 @@
         if (!earthScene.hidden) resetEarth();
     });
     const earthBack = document.getElementById('earthBack');
-    const earthFolder = document.querySelector('.desktop-folder');
+    const earthFolder = document.getElementById('earthFolder');
+    const gameFolder = document.getElementById('gameFolder');
+    const desktopBack = document.getElementById('desktopBack');
+    function showDesktopFolder(game) {
+        document.getElementById('desktopRoot').hidden = game;
+        document.getElementById('gameFiles').hidden = !game;
+        desktopBack.hidden = !game;
+        document.getElementById('desktopPath').textContent = game ? 'Desktop / game' : 'Desktop';
+        document.getElementById('desktopCount').textContent = game ? '1 folder' : '2 folders';
+        document.querySelectorAll('.desktop-folder').forEach(folder => {
+            folder.classList.remove('selected');
+            folder.setAttribute('aria-pressed', 'false');
+        });
+    }
+    desktopBack.addEventListener('click', () => { showDesktopFolder(false); gameFolder.focus(); });
     const stars = document.getElementById('earthStars');
     for (let i = 0; i < 90; i++) {
         const star = document.createElement('i');
@@ -4157,17 +4170,6 @@
         earthModel.autoRotate = false;
         earthFolder.focus();
     }
-    earthFolder.addEventListener('dblclick', openEarth);
-    earthFolder.addEventListener('keydown', event => {
-        if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault();
-            openEarth();
-        }
-    });
-    // A tap opens the folder on touch devices.
-    earthFolder.addEventListener('pointerup', event => {
-        if (event.pointerType === 'touch') openEarth();
-    });
     earthBack.addEventListener('click', closeEarth);
     earthScene.addEventListener('keydown', event => {
         if (event.key === 'Tab') { event.preventDefault(); earthBack.focus(); }
@@ -4191,10 +4193,13 @@
                 item.classList.toggle('selected', item === folder);
                 item.setAttribute('aria-pressed', String(item === folder));
             });
+            if (folder === gameFolder) { showDesktopFolder(true); earthFolder.focus(); }
+            if (folder === earthFolder) openEarth();
         });
     });
 
     function openPhoto() {
+        showDesktopFolder(false);
 
 
         /* 新增：点击电脑立刻播放一次音效 */
@@ -4305,6 +4310,7 @@
             ) {
 
                 if (!earthScene.hidden) closeEarth();
+                else if (!desktopBack.hidden) { showDesktopFolder(false); gameFolder.focus(); }
                 else closePhoto();
 
             }
