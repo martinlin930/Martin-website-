@@ -59,6 +59,7 @@
         .earth-stars { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
         .earth-stars i { position: absolute; width: 2px; height: 2px; border-radius: 50%; background: #fff; }
         #earthModel { width: min(58vw, 480px); height: min(58vh, 480px); background: transparent; --progress-bar-color: #777; }
+        .earth-enter-hint { position: absolute; top: calc(50% + min(29vh, 240px) + 12px); left: 50%; transform: translateX(-50%); margin: 0; color: rgba(255,255,255,.55); font: 400 14px/1.5 Arial, sans-serif; letter-spacing: .06em; white-space: nowrap; pointer-events: none; }
         .earth-back { position: absolute; top: 28px; left: 28px; z-index: 2; background: #000; border: 1px solid #555; color: #eee; padding: 12px 18px; border-radius: 25px; cursor: pointer; }
         .earth-back:focus-visible { outline: 2px solid white; outline-offset: 4px; }
 
@@ -1350,6 +1351,7 @@
     <div class="earth-stars" id="earthStars" aria-hidden="true"></div>
     <button class="earth-back" id="earthBack" type="button">← Back to game</button>
     <model-viewer id="earthModel" camera-controls disable-pan disable-zoom min-camera-orbit="auto 75deg auto" max-camera-orbit="auto 75deg auto" touch-action="none" data-src="/static/models/earth.glb" alt="Earth by Poly by Google, slowly rotating in space" auto-rotate auto-rotate-delay="0" rotation-per-second="5deg" camera-orbit="0deg 75deg auto" shadow-intensity="0" interaction-prompt="none"></model-viewer>
+    <p class="earth-enter-hint">click earth to enter</p>
 </section>
 
 <!-- 只新增的电脑点击音效 -->
