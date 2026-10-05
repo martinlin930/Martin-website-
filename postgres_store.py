@@ -1,4 +1,5 @@
 """Private PostgreSQL storage for the Flask backend; no browser database keys."""
+import atexit
 from contextlib import contextmanager
 from pathlib import Path
 from threading import Lock
@@ -33,6 +34,7 @@ def database(url):
                 except Exception:
                     pool.close()
                     raise
+                atexit.register(pool.close)
                 _pool = pool
     with _pool.connection() as connection:
         connection.execute('SET LOCAL search_path TO game, pg_catalog')
