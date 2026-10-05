@@ -40,3 +40,5 @@ for(const {node,matrix} of stairs){
 }
 assert.ok(checked>30);
 console.log(`Verified ${checked} walking surface samples across ${stairs.length} stairs and platforms.`);
+
+export {scene,village};

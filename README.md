@@ -51,3 +51,7 @@ Use `pg_dump` for independent PostgreSQL backups. Free services have limits and 
 ## Shared day/night cycle
 
 One in-game day lasts 24 real minutes: 06:00–18:00 is daylight (12 real minutes), and 18:00–06:00 is night (12 real minutes). The phase comes from server Unix time, so reconnects and deploys do not restart the shared clock. Night sky is deep blue; sunlight, ambient light, fog and environment reflections fade at dawn and dusk. Run `node tests/day-night.mjs` to verify duration and phase boundaries.
+
+## Village dogs
+
+Six Beagles wander near the village entrance, alternating walking, running and resting with procedural leg, head and tail movement. Their closed paths are checked against terrain and building collision, and server time keeps their positions consistent between players. Model: user-provided **Beagle by Poly by Google** (`static/models/dogs/beagle.glb`), with its original texture retained. Run `node tests/dogs.mjs` to verify ground support, safe routes, continuous movement and shared timing.
