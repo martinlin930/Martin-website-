@@ -56,7 +56,23 @@ function lock(){try{const result=canvas.requestPointerLock?.();result?.catch(()=
 document.addEventListener('pointerlockchange',()=>{$('look').hidden=document.pointerLockElement===canvas;keys.clear();});
 document.addEventListener('mousemove',e=>{if(document.pointerLockElement===canvas){yaw+=e.movementX*.003;pitch=Math.max(-.7,Math.min(.7,pitch+e.movementY*.003));}});
 let finger=null;canvas.onpointerdown=e=>{if(document.pointerLockElement!==canvas){finger=[e.clientX,e.clientY];canvas.setPointerCapture(e.pointerId);}};canvas.onpointermove=e=>{if(finger){yaw+=(e.clientX-finger[0])*.005;pitch=Math.max(-.7,Math.min(.7,pitch+(e.clientY-finger[1])*.005));finger=[e.clientX,e.clientY];}};canvas.onpointerup=canvas.onpointercancel=()=>{finger=null;};
-document.querySelectorAll('[data-key]').forEach(b=>{b.onpointerdown=e=>{e.preventDefault();b.setPointerCapture(e.pointerId);keys.add(b.dataset.key);};b.onpointerup=b.onpointercancel=()=>keys.delete(b.dataset.key);});
+const joystick=$('joystick'),knob=$('joystickKnob');
+let stickPointer=null,stickX=0,stickY=0;
+function resetStick(){stickPointer=null;stickX=stickY=0;knob.style.transform='translate(-50%,-50%)';}
+function updateStick(e){
+ const rect=joystick.getBoundingClientRect(),radius=rect.width*.32;
+ let dx=e.clientX-rect.left-rect.width/2,dy=e.clientY-rect.top-rect.height/2;
+ const distance=Math.hypot(dx,dy),limit=Math.min(1,radius/(distance||1));dx*=limit;dy*=limit;
+ const magnitude=Math.hypot(dx,dy)/radius,strength=Math.max(0,(magnitude-.12)/.88);
+ stickX=magnitude?dx/radius/magnitude*strength:0;stickY=magnitude?dy/radius/magnitude*strength:0;
+ knob.style.transform=`translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px))`;
+}
+joystick.onpointerdown=e=>{if(stickPointer!==null)return;e.preventDefault();stickPointer=e.pointerId;joystick.setPointerCapture(e.pointerId);document.activeElement?.blur();updateStick(e);};
+joystick.onpointermove=e=>{if(e.pointerId===stickPointer)updateStick(e);};
+joystick.onpointerup=joystick.onpointercancel=joystick.onlostpointercapture=e=>{if(e.pointerId===stickPointer)resetStick();};
+window.addEventListener('blur',resetStick);document.addEventListener('visibilitychange',()=>{if(document.hidden)resetStick();});
+$('message').addEventListener('focus',resetStick);
+
 window.onkeydown=e=>{if(!active||e.target.matches('input'))return;if(e.key==='Enter'){document.exitPointerLock?.();$('message').focus();return;}const map={ArrowUp:'w',ArrowDown:'s',ArrowLeft:'a',ArrowRight:'d'};let k=map[e.key]||({'KeyW':'w','KeyA':'a','KeyS':'s','KeyD':'d'}[e.code])||e.key.toLowerCase();if(['w','a','s','d'].includes(k)){e.preventDefault();keys.add(k);}};window.onkeyup=e=>{const map={ArrowUp:'w',ArrowDown:'s',ArrowLeft:'a',ArrowRight:'d'};keys.delete(map[e.key]||({'KeyW':'w','KeyA':'a','KeyS':'s','KeyD':'d'}[e.code])||e.key.toLowerCase());};window.onblur=()=>keys.clear();
 function animateWalk(avatar,moving,dt){
  avatar.stride+=(Number(moving)-avatar.stride)*(1-Math.exp(-dt*10));
@@ -74,7 +90,7 @@ function animateWalk(avatar,moving,dt){
 function draw(now){
  const dt=Math.min((now-last)/1000,.05);last=now;
  if(active){
-  let f=(keys.has('w')?1:0)-(keys.has('s')?1:0),s=(keys.has('d')?1:0)-(keys.has('a')?1:0);const length=Math.hypot(f,s)||1;
+  let f=(keys.has('w')?1:0)-(keys.has('s')?1:0)-stickY,s=(keys.has('d')?1:0)-(keys.has('a')?1:0)+stickX;const length=Math.max(1,Math.hypot(f,s));
   const nextX=x+(-Math.sin(yaw)*f-Math.cos(yaw)*s)*dt*4/length,nextZ=z+(Math.cos(yaw)*f-Math.sin(yaw)*s)*dt*4/length;
   if(village.canMove(nextX,z,x,z))x=nextX;if(village.canMove(x,nextZ,x,z))z=nextZ;
   const w=canvas.clientWidth,h=canvas.clientHeight;
