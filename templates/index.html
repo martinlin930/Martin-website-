@@ -54,6 +54,18 @@
     <script type="module" src="/static/vendor/model-viewer.min.js"></script>
 
     <style>
+        .desktop { background: #dce6e5; border: 2px solid #30383a; border-radius: 12px; overflow: hidden; box-shadow: 0 30px 90px #0002; min-height: min(65vh, 540px); }
+        .desktop-bar { width: 100%; display: flex; justify-content: space-between; padding: 14px 20px; background: #f3f3ee; border-bottom: 1px solid #30383a; font-size: 13px; }
+        .desktop-files { width: 100%; display: flex; gap: 24px; padding: 35px 25px; flex: 1; align-items: flex-start; }
+        .desktop-folder { border: 1px solid transparent; background: transparent; border-radius: 8px; padding: 8px; cursor: pointer; color: #182426; font: 16px Arial, sans-serif; }
+        .desktop-folder model-viewer { width: clamp(100px, 18vw, 170px); height: clamp(100px, 18vw, 160px); pointer-events: none; }
+        .desktop-folder span { display: inline-block; padding: 5px 12px; border-radius: 4px; }
+        .desktop-folder.selected { background: #fff5; border-color: #456a88; }
+        .desktop-folder.selected span { background: #345c7c; color: white; }
+        .desktop-folder:focus-visible { outline: 3px solid #345c7c; }
+        .desktop-footer { width: 100%; padding: 12px 20px; font-size: 12px; color: #526265; }
+        @media (max-width: 480px) { .desktop-files { gap: 10px; padding: 25px 12px; } }
+
 
         :root {
             --paper: #f3f3ee;
@@ -1265,7 +1277,7 @@
     <button
         class="computer-button"
         id="computerButton"
-        aria-label="Open photograph"
+        aria-label="Open computer desktop"
     >
 
         <model-viewer
@@ -1306,27 +1318,19 @@
     </button>
 
 
-    <div class="viewer__content">
-
-
-        <img
-            src="/static/images/DSC00686-2.JPG"
-            alt="Martin Photography"
-        >
-
-
-        <div class="viewer__meta">
-
-            <span>
-                01
-            </span>
-
-            <span>
-                Martin Photography
-            </span>
-
+    <div class="viewer__content desktop">
+        <div class="desktop-bar"><span>MARTIN</span><span>Desktop</span></div>
+        <div class="desktop-files">
+            <button class="desktop-folder" type="button" aria-label="Select earth folder">
+                <model-viewer src="/static/models/file-folder.glb" alt="File folder by Ryan Dewalt" camera-orbit="-20deg 75deg auto" shadow-intensity="0.5" interaction-prompt="none" aria-hidden="true"></model-viewer>
+                <span>earth</span>
+            </button>
+            <button class="desktop-folder" type="button" aria-label="Select pictures folder">
+                <model-viewer src="/static/models/file-folder.glb" alt="File folder by Ryan Dewalt" camera-orbit="-20deg 75deg auto" shadow-intensity="0.5" interaction-prompt="none" aria-hidden="true"></model-viewer>
+                <span>pictures</span>
+            </button>
         </div>
-
+        <div class="desktop-footer">2 folders</div>
     </div>
 
 </div>
@@ -4080,6 +4084,15 @@
             "closeViewer"
         );
 
+
+    document.querySelectorAll('.desktop-folder').forEach(folder => {
+        folder.addEventListener('click', () => {
+            document.querySelectorAll('.desktop-folder').forEach(item => {
+                item.classList.toggle('selected', item === folder);
+                item.setAttribute('aria-pressed', String(item === folder));
+            });
+        });
+    });
 
     function openPhoto() {
 
