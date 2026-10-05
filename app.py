@@ -46,6 +46,10 @@ def database():
     columns = {row['name'] for row in connection.execute('PRAGMA table_info(players)')}
     if 'yaw' not in columns:
         connection.execute('ALTER TABLE players ADD COLUMN yaw REAL NOT NULL DEFAULT 0')
+    if 'jump' not in columns:
+        connection.execute('ALTER TABLE players ADD COLUMN jump REAL NOT NULL DEFAULT 0')
+    if 'running' not in columns:
+        connection.execute('ALTER TABLE players ADD COLUMN running INTEGER NOT NULL DEFAULT 0')
     if 'avatar' not in columns:
         connection.execute("ALTER TABLE players ADD COLUMN avatar TEXT NOT NULL DEFAULT '01m'")
     connection.execute('CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY, nickname TEXT NOT NULL, body TEXT NOT NULL, created REAL NOT NULL)')
@@ -182,6 +186,10 @@ def world_state():
     player_id = world_player_id(data)
     coordinates = [data.get('x', 0), data.get('z', 0)]
     yaw = data.get('yaw', 0)
+    jump = data.get('jump', 0)
+    running = data.get('running', False)
+    if isinstance(jump, bool) or not isinstance(jump, (int, float)) or not math.isfinite(jump) or not 0 <= jump <= 3 or not isinstance(running, bool):
+        return {'error': 'Invalid movement.'}, 400
     if isinstance(yaw, bool) or not isinstance(yaw, (int, float)) or not math.isfinite(yaw):
         return {'error': 'Invalid orientation.'}, 400
     if any(isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v) or abs(v) > 10000 for v in coordinates):
@@ -190,9 +198,9 @@ def world_state():
         player = db.execute('SELECT * FROM players WHERE id = ?', (player_id,)).fetchone()
         if not player:
             return {'error': 'Join the world first.'}, 401
-        db.execute('UPDATE players SET x = ?, z = ?, yaw = ?, updated = ? WHERE id = ?', (*coordinates, yaw, time.time(), player['id']))
+        db.execute('UPDATE players SET x = ?, z = ?, yaw = ?, jump = ?, running = ?, updated = ? WHERE id = ?', (*coordinates, yaw, jump, int(running), time.time(), player['id']))
         db.execute('DELETE FROM players WHERE updated < ?', (time.time() - 30,))
-        players = [dict(row) for row in db.execute('SELECT id, nickname, x, z, yaw, avatar FROM players WHERE id != ?', (player['id'],))]
+        players = [dict(row) for row in db.execute('SELECT id, nickname, x, z, yaw, avatar, jump, running FROM players WHERE id != ?', (player['id'],))]
         messages = [dict(row) for row in db.execute('SELECT id, nickname, body FROM messages ORDER BY id DESC LIMIT 40')][::-1]
     return {'players': players, 'messages': messages}
 

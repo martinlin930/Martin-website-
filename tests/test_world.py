@@ -58,3 +58,17 @@ class WorldTests(unittest.TestCase):
             again=self.post(self.a,'join',{'nickname':'First'}).json['id']
         peer=next(p for p in self.post(self.b,'state',{}).json['players'] if p['id']==again)
         self.assertEqual(peer['avatar'],'02f')
+
+    def test_running_and_jump_are_shared_and_validated(self):
+        self.post(self.a,'join',{'nickname':'Runner'})
+        self.post(self.b,'join',{'nickname':'Observer'})
+        response=self.post(self.a,'state',{'x':2,'z':3,'jump':1.2,'running':True})
+        self.assertEqual(response.status_code,200)
+        peer=self.post(self.b,'state',{}).json['players'][0]
+        self.assertEqual(peer['jump'],1.2)
+        self.assertEqual(peer['running'],1)
+        for payload in [{'jump':-1},{'jump':4},{'jump':True},{'running':'yes'}]:
+            self.assertEqual(self.post(self.a,'state',payload).status_code,400)
+        self.post(self.a,'state',{'jump':0,'running':False})
+        peer=self.post(self.b,'state',{}).json['players'][0]
+        self.assertEqual((peer['jump'],peer['running']),(0,0))
