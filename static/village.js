@@ -68,10 +68,11 @@ export async function loadVillage(scene,onProgress=()=>{},renderer){
  }
  supportMaterial.dispose();
  const batches=new Map(),walkables=[];
+ const isWalkable=node=>/\/Roads\//.test(data.assets[node.asset])&&/road|sidewalk|platform/i.test(node.name)||/staircase/i.test(node.name);
  for(const{node,matrix}of records){models.get(node.asset)?.traverse(mesh=>{
   if(!mesh.isMesh)return;
   const source=Array.isArray(mesh.material)?mesh.material[0]:mesh.material;const slot=source.name.match(/slot_(\d+)/)?.[1]||'0';const guid=node.materials[slot];if(/invisible/i.test(data.materials[guid]?.name||''))return;const key=mesh.geometry.uuid+'-'+guid;
-  if(!batches.has(key))batches.set(key,{geometry:mesh.geometry,material:material(guid),matrices:[],walkable:/\/Roads\//.test(data.assets[node.asset])&&/road|sidewalk|platform/i.test(node.name),shadow:/\/(Buildings|Nature|Props|Roads|Modular pieces)\//.test(data.assets[node.asset])&&!/grass|weeds|cornplant|riceplant/i.test(node.name)});
+  if(!batches.has(key))batches.set(key,{geometry:mesh.geometry,material:material(guid),matrices:[],walkable:isWalkable(node),shadow:/\/(Buildings|Nature|Props|Roads|Modular pieces)\//.test(data.assets[node.asset])&&!/grass|weeds|cornplant|riceplant/i.test(node.name)});
   batches.get(key).matrices.push(matrix.clone().multiply(mesh.matrixWorld));
  });}
  for(const batch of batches.values()){
@@ -80,13 +81,13 @@ export async function loadVillage(scene,onProgress=()=>{},renderer){
  }
  // Wait for the maps requested by material() before opening the world.
  await Promise.all(texturePromises);
- const point=new THREE.Vector3(),ray=new THREE.Raycaster(),down=new THREE.Vector3(0,-1,0);ray.far=2.5;
+ const point=new THREE.Vector3(),ray=new THREE.Raycaster(),down=new THREE.Vector3(0,-1,0);ray.far=12;
  const terrainHeight=groundHeight;
- const surfaceHeight=(x,z)=>{const floor=terrainHeight(x,z);ray.set(new THREE.Vector3(x,floor+1.5,z),down);const hit=ray.intersectObjects(walkables,false)[0];return hit&&hit.point.y>floor-.08?Math.max(floor,hit.point.y+.035):floor;};
+ const surfaceHeight=(x,z)=>{const floor=terrainHeight(x,z);ray.set(new THREE.Vector3(x,floor+10,z),down);const hit=ray.intersectObjects(walkables,false)[0];return hit&&hit.point.y>floor-.08?Math.max(floor,hit.point.y+.035):floor;};
 
  return {spawn:terrain.spawn,yaw:terrain.yaw,groundHeight:surfaceHeight,canMove(x,z,fromX,fromZ){
   if(x<1||x>size-1||z> -1||z<1-size)return false;
-  const y=groundHeight(x,z);if(y-groundHeight(fromX,fromZ)>.45)return false;
+  const y=surfaceHeight(x,z);if(y-surfaceHeight(fromX,fromZ)>.45)return false;
   for(const o of obstacles){point.set(x,y+.8,z).applyMatrix4(o.inverse);if(point.y>o.min.y&&point.y<o.max.y&&point.x>o.min.x+.15&&point.x<o.max.x-.15&&point.z>o.min.z+.15&&point.z<o.max.z-.15)return false;}
   return true;
  }};
