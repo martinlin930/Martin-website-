@@ -76,6 +76,13 @@ def database():
         if column not in save_columns:
             connection.execute('ALTER TABLE game_saves ADD COLUMN '+column+' '+definition)
     connection.execute('CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY, nickname TEXT NOT NULL, body TEXT NOT NULL, created REAL NOT NULL)')
+    connection.execute('CREATE TABLE IF NOT EXISTS forum_posts (id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id), display_name TEXT NOT NULL, body TEXT NOT NULL, created REAL NOT NULL)')
+    connection.execute('CREATE TABLE IF NOT EXISTS forum_images (id INTEGER PRIMARY KEY, post_id INTEGER NOT NULL REFERENCES forum_posts(id), jpeg_base64 TEXT NOT NULL)')
+    connection.execute('CREATE TABLE IF NOT EXISTS forum_comments (id INTEGER PRIMARY KEY, post_id INTEGER NOT NULL REFERENCES forum_posts(id), user_id INTEGER NOT NULL REFERENCES users(id), display_name TEXT NOT NULL, body TEXT NOT NULL, created REAL NOT NULL)')
+    connection.execute('CREATE INDEX IF NOT EXISTS forum_images_post_idx ON forum_images(post_id,id)')
+    connection.execute('CREATE INDEX IF NOT EXISTS forum_comments_post_idx ON forum_comments(post_id,id)')
+    connection.execute('CREATE INDEX IF NOT EXISTS forum_posts_user_idx ON forum_posts(user_id,id)')
+    connection.execute('CREATE INDEX IF NOT EXISTS forum_comments_user_idx ON forum_comments(user_id,id)')
     connection.commit()
     try:
         with connection:
@@ -93,6 +100,8 @@ def auth_context():
 
 @app.before_request
 def check_csrf():
+    if request.path == '/api/forum/posts' and request.method == 'POST':
+        request.max_content_length = 17 * 1024 * 1024
     if request.method == 'POST':
         expected = session.get('csrf_token', '')
         supplied = request.headers.get('X-CSRF-Token', '') or request.form.get('csrf_token', '')
@@ -113,7 +122,7 @@ def work():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if session.get('user_id'):
-        return redirect(url_for('account'))
+        return redirect('/forum' if request.args.get('next') == '/forum' else url_for('account'))
     error = None
     if request.method == 'POST':
         username = request.form.get('username', '').strip()[:80]
@@ -129,7 +138,7 @@ def login():
                 session.clear()
                 session['user_id'] = user['id']
                 session['username'] = user['username']
-                return redirect(url_for('account'))
+                return redirect('/forum' if request.args.get('next') == '/forum' else url_for('account'))
             db.execute("INSERT INTO login_attempts VALUES (?, 1, ?) ON CONFLICT(username) DO UPDATE SET failures = CASE WHEN login_attempts.last_attempt > ? THEN login_attempts.failures + 1 ELSE 1 END, last_attempt = excluded.last_attempt", (username, int(time.time()), int(time.time()) - 900))
         error = 'Incorrect username or password.'
     return render_template('login.html', error=error, username=request.form.get('username', ''))
@@ -138,7 +147,7 @@ def login():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if session.get('user_id'):
-        return redirect(url_for('account'))
+        return redirect('/forum' if request.args.get('next') == '/forum' else url_for('account'))
     error = None
     username = request.form.get('username', '').strip()
     if request.method == 'POST':
@@ -158,7 +167,7 @@ def register():
                 session.clear()
                 session['user_id'] = user_id
                 session['username'] = username
-                return redirect(url_for('account'))
+                return redirect('/forum' if request.args.get('next') == '/forum' else url_for('account'))
     return render_template('register.html', error=error, username=username)
 
 
@@ -415,6 +424,9 @@ def create_user(username, password):
         raise click.ClickException('That username already exists.') from None
     click.echo(f'Created account: {username}')
 
+
+from forum import install_forum
+install_forum(app, database)
 
 if __name__ == '__main__':
     app.run()

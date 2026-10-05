@@ -2,3 +2,4 @@ Flask
 gunicorn
 psycopg[binary]==3.2.10
 psycopg-pool==3.3.3
+Pillow==12.3.0

@@ -66,7 +66,7 @@
         .desktop-bar { width: 100%; display: flex; justify-content: space-between; padding: 14px 20px; background: #f3f3ee; border-bottom: 1px solid #30383a; font-size: 13px; }
         .desktop-files[hidden], #desktopBack[hidden] { display: none; }
         #desktopBack { border: 1px solid #b1babb; border-radius: 5px; background: white; padding: 4px 9px; cursor: pointer; }
-        .desktop-files { width: 100%; display: flex; gap: 24px; padding: 35px 25px; flex: 1; align-items: flex-start; }
+        .desktop-files { flex-wrap: wrap; width: 100%; display: flex; gap: 24px; padding: 35px 25px; flex: 1; align-items: flex-start; }
         .desktop-folder { border: 1px solid transparent; background: transparent; border-radius: 8px; padding: 8px; cursor: pointer; color: #182426; font: 16px Arial, sans-serif; }
         .desktop-folder model-viewer { width: clamp(100px, 18vw, 170px); height: clamp(100px, 18vw, 160px); pointer-events: none; }
         .desktop-folder span { display: inline-block; padding: 5px 12px; border-radius: 4px; }
@@ -1333,11 +1333,12 @@
         <div class="desktop-files" id="desktopRoot">
             <button class="desktop-folder" type="button" aria-label="Open pictures folder"><model-viewer src="/static/models/file-folder.glb" alt="File folder by Ryan Dewalt" camera-orbit="-20deg 75deg auto" shadow-intensity="0.5" interaction-prompt="none" aria-hidden="true"></model-viewer><span>pictures</span></button>
             <button class="desktop-folder" id="gameFolder" type="button" aria-label="Open game folder"><model-viewer src="/static/models/file-folder.glb" alt="File folder by Ryan Dewalt" camera-orbit="-20deg 75deg auto" shadow-intensity="0.5" interaction-prompt="none" aria-hidden="true"></model-viewer><span>game</span></button>
+            <button class="desktop-folder" id="forumFolder" type="button" aria-label="打开论坛"><model-viewer src="/static/models/file-folder.glb" alt="论坛文件夹" camera-orbit="-20deg 75deg auto" shadow-intensity="0.5" interaction-prompt="none" aria-hidden="true"></model-viewer><span>论坛</span></button>
         </div>
         <div class="desktop-files" id="gameFiles" hidden>
             <button class="desktop-folder" id="earthFolder" type="button" aria-label="Open earth folder"><model-viewer src="/static/models/file-folder.glb" alt="File folder by Ryan Dewalt" camera-orbit="-20deg 75deg auto" shadow-intensity="0.5" interaction-prompt="none" aria-hidden="true"></model-viewer><span>earth</span></button>
         </div>
-        <div class="desktop-footer" id="desktopCount">2 folders</div>
+        <div class="desktop-footer" id="desktopCount">3 folders</div>
     </div>
 
 </div>
@@ -4120,7 +4121,7 @@
         document.getElementById('gameFiles').hidden = !game;
         desktopBack.hidden = !game;
         document.getElementById('desktopPath').textContent = game ? 'Desktop / game' : 'Desktop';
-        document.getElementById('desktopCount').textContent = game ? '1 folder' : '2 folders';
+        document.getElementById('desktopCount').textContent = game ? '1 folder' : '3 folders';
         document.querySelectorAll('.desktop-folder').forEach(folder => {
             folder.classList.remove('selected');
             folder.setAttribute('aria-pressed', 'false');
@@ -4195,6 +4196,7 @@
             });
             if (folder === gameFolder) { showDesktopFolder(true); earthFolder.focus(); }
             if (folder === earthFolder) openEarth();
+            if (folder.id === 'forumFolder') location.href = '/forum';
         });
     });
 
