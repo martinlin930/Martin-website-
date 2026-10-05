@@ -68,7 +68,7 @@ export async function loadVillage(scene,onProgress=()=>{},renderer){
  }
  supportMaterial.dispose();
  const batches=new Map(),walkables=[];
- const isWalkable=node=>/\/Roads\//.test(data.assets[node.asset])&&/road|sidewalk|platform/i.test(node.name)||/staircase/i.test(node.name);
+ const isWalkable=node=>/\/Roads\//.test(data.assets[node.asset])&&/road|sidewalk|platform/i.test(node.name)||/staircase|platform/i.test(node.name);
  for(const{node,matrix}of records){models.get(node.asset)?.traverse(mesh=>{
   if(!mesh.isMesh)return;
   const source=Array.isArray(mesh.material)?mesh.material[0]:mesh.material;const slot=source.name.match(/slot_(\d+)/)?.[1]||'0';const guid=node.materials[slot];if(/invisible/i.test(data.materials[guid]?.name||''))return;const key=mesh.geometry.uuid+'-'+guid;
