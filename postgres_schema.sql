@@ -17,3 +17,8 @@ REVOKE ALL ON ALL TABLES IN SCHEMA game FROM PUBLIC, anon, authenticated;
 
 -- Additive pet migration preserves every existing account/save.
 ALTER TABLE game.game_saves ADD COLUMN IF NOT EXISTS dog_name TEXT NOT NULL DEFAULT '';
+
+ALTER TABLE game.game_saves ADD COLUMN IF NOT EXISTS dog_food INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE game.game_saves ADD COLUMN IF NOT EXISTS dog_xp INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE game.game_saves ADD COLUMN IF NOT EXISTS food_claims TEXT NOT NULL DEFAULT '{}';
+ALTER TABLE game.game_saves ADD COLUMN IF NOT EXISTS dog_interaction_at DOUBLE PRECISION NOT NULL DEFAULT 0;

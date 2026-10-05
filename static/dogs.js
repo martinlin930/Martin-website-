@@ -80,7 +80,7 @@ export async function createDogs(scene,map){
   scene.remove(pet.root);pet.label?.remove();
   pet.root.traverse(mesh=>{if(mesh.isMesh)mesh.geometry.dispose();});
  }
- return {count:dogs.length,nearest(x,z){
+ return {count:dogs.length,interact(id,action){const pet=companions.get(id);if(pet)pet.reaction={action,until:performance.now()+3000};},nearest(x,z){
   return Math.min(...dogs.map(d=>Math.hypot(d.root.position.x-x,d.root.position.z-z)));
  },update(serverTimeMs,owners=[],dt=.016,camera=null,width=0,height=0){
   const alive=new Set(owners.filter(o=>o.dog_name).map(o=>o.id));
@@ -106,11 +106,11 @@ export async function createDogs(scene,map){
    for(const point of pet.trail){remaining+=Math.hypot(point.x-previous.x,point.z-previous.z);previous=point;}
    const fast=remaining>4,speed=fast?8:4.3;
    let travelled=0,budget=speed*Math.min(dt,.05);
-   while(remaining>1.5&&budget>0&&pet.trail.length){
+   while(remaining>(pet.reaction?.action==='call'&&pet.reaction.until>performance.now()?.6:1.5)&&budget>0&&pet.trail.length){
     const target=pet.trail[0],pos=pet.root.position;
     const dx=target.x-pos.x,dz=target.z-pos.z,dist=Math.hypot(dx,dz);
     if(dist<.08){pet.trail.shift();continue;}
-    const step=Math.min(budget,dist,remaining-1.5),nx=pos.x+dx/dist*step,nz=pos.z+dz/dist*step;
+    const step=Math.min(budget,dist,remaining-(pet.reaction?.action==='call'&&pet.reaction.until>performance.now()?.6:1.5)),nx=pos.x+dx/dist*step,nz=pos.z+dz/dist*step;
     const ox=pos.x,oz=pos.z;
     if(map.canMove(nx,nz,ox,oz)){pos.x=nx;pos.z=nz;}
     else{if(map.canMove(nx,oz,ox,oz))pos.x=nx;if(map.canMove(pos.x,nz,pos.x,oz))pos.z=nz;}
@@ -119,8 +119,14 @@ export async function createDogs(scene,map){
     travelled+=moved;budget-=step;remaining-=moved;
    }
    pet.distance+=travelled;animateDog(pet,pet.distance,travelled>.001,fast,serverTimeMs);
+   if(pet.reaction?.until>performance.now()){
+    const progress=1-(pet.reaction.until-performance.now())/3000;
+    animateDog(pet,pet.distance,false,false,serverTimeMs*2);
+    if(pet.reaction.action==='pet')pet.body.position.y=Math.abs(Math.sin(progress*Math.PI*6))*.08;
+    if(pet.reaction.action==='feed')pet.body.rotation.x=Math.sin(progress*Math.PI)*.18;
+   }else pet.body.rotation.x=0;
    if(pet.label&&camera){
-    pet.label.textContent=owner.dog_name;
+    pet.label.textContent=owner.dog_name+' · Lv. '+Math.min(100,Math.floor((owner.dog_xp||0)/100));
     const point=pet.root.position.clone();point.y+=.95;point.project(camera);
     pet.label.hidden=point.z>1||point.z< -1||Math.abs(point.x)>1||Math.abs(point.y)>1;
     pet.label.style.left=(point.x*.5+.5)*width+'px';pet.label.style.top=(-point.y*.5+.5)*height+'px';

@@ -4,6 +4,7 @@ import sqlite3
 import psycopg
 from postgres_store import database as postgres_database
 import math
+import json
 import time
 from pathlib import Path
 from contextlib import contextmanager
@@ -71,6 +72,9 @@ def database():
     save_columns = {row['name'] for row in connection.execute('PRAGMA table_info(game_saves)')}
     if 'dog_name' not in save_columns:
         connection.execute("ALTER TABLE game_saves ADD COLUMN dog_name TEXT NOT NULL DEFAULT ''")
+    for column,definition in {'dog_food':'INTEGER NOT NULL DEFAULT 0','dog_xp':'INTEGER NOT NULL DEFAULT 0','food_claims':"TEXT NOT NULL DEFAULT '{}'",'dog_interaction_at':'REAL NOT NULL DEFAULT 0'}.items():
+        if column not in save_columns:
+            connection.execute('ALTER TABLE game_saves ADD COLUMN '+column+' '+definition)
     connection.execute('CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY, nickname TEXT NOT NULL, body TEXT NOT NULL, created REAL NOT NULL)')
     connection.commit()
     try:
@@ -181,6 +185,13 @@ def world():
     return render_template('world.html', saved_game=saved)
 
 
+def pet_progress(saved):
+    saved = dict(saved) if saved else {}
+    xp = saved.get('dog_xp', 0)
+    return {'food': saved.get('dog_food', 0), 'xp': xp, 'level': min(100, xp // 100),
+            'claims': json.loads(saved.get('food_claims', '{}'))}
+
+
 @app.post('/api/world/join')
 def join_world():
     data = request.get_json(silent=True) or {}
@@ -201,7 +212,7 @@ def join_world():
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET nickname = excluded.nickname""",
                 (user_id, nickname, state['avatar'], state['x'], state['z'], state['yaw'], state['pitch'], state['music_muted'], time.time()))
     session['world_message_at'] = 0
-    return {'id': player_id, 'nickname': nickname, 'persistent': bool(user_id), 'dog_name': state.get('dog_name', ''), 'server_time': time.time(), 'state': {k: state[k] for k in ('x', 'z', 'yaw', 'pitch', 'avatar', 'music_muted')}}
+    return {'id': player_id, 'nickname': nickname, 'persistent': bool(user_id), 'pet': pet_progress(state), 'dog_name': state.get('dog_name', ''), 'server_time': time.time(), 'state': {k: state[k] for k in ('x', 'z', 'yaw', 'pitch', 'avatar', 'music_muted')}}
 
 
 def world_player_id(data):
@@ -238,10 +249,10 @@ def world_state():
             db.execute('UPDATE game_saves SET x = ?, z = ?, yaw = ?, pitch = ?, music_muted = ?, updated = ? WHERE user_id = ?',
                        (*coordinates, yaw, pitch, int(music_muted), time.time(), player['user_id']))
         db.execute('DELETE FROM players WHERE updated < ?', (time.time() - 30,))
-        players = [dict(row) for row in db.execute("SELECT p.id, p.nickname, p.x, p.z, p.yaw, p.avatar, p.jump, p.running, COALESCE(s.dog_name, '') AS dog_name FROM players p LEFT JOIN game_saves s ON s.user_id=p.user_id WHERE p.id != ?", (player['id'],))]
+        players = [dict(row) for row in db.execute("SELECT p.id, p.nickname, p.x, p.z, p.yaw, p.avatar, p.jump, p.running, COALESCE(s.dog_name, '') AS dog_name, COALESCE(s.dog_xp, 0) AS dog_xp FROM players p LEFT JOIN game_saves s ON s.user_id=p.user_id WHERE p.id != ?", (player['id'],))]
         messages = [dict(row) for row in db.execute('SELECT id, nickname, body FROM messages ORDER BY id DESC LIMIT 40')][::-1]
-        pet = db.execute('SELECT dog_name FROM game_saves WHERE user_id = ?', (player['user_id'],)).fetchone() if player['user_id'] else None
-    return {'players': players, 'messages': messages, 'dog_name': pet['dog_name'] if pet else '', 'server_time': time.time()}
+        pet = db.execute('SELECT * FROM game_saves WHERE user_id = ?', (player['user_id'],)).fetchone() if player['user_id'] else None
+    return {'players': players, 'messages': messages, 'pet': pet_progress(pet), 'dog_name': pet['dog_name'] if pet else '', 'server_time': time.time()}
 
 
 @app.post('/api/world/dog')
@@ -262,6 +273,51 @@ def adopt_dog():
         # this one field cannot overwrite position or another account's pet.
         db.execute('UPDATE game_saves SET dog_name = ? WHERE user_id = ?', (name.strip(), user_id))
     return {'dog_name': name.strip()}
+
+
+@app.post('/api/world/pet-action')
+def pet_action():
+    data = request.get_json(silent=True) or {}
+    player_id = world_player_id(data)
+    uid = session.get('user_id')
+    if not uid:
+        return {'error': '请先登录，才能保存狗粮和养成进度。'}, 401
+    action = data.get('action')
+    now = time.time()
+    with database() as db:
+        player = db.execute('SELECT * FROM players WHERE id=?', (player_id,)).fetchone()
+        if not player or player['user_id'] != uid:
+            return {'error': '请先进入世界。'}, 401
+        saved = db.execute('SELECT * FROM game_saves WHERE user_id=?', (uid,)).fetchone()
+        if action == 'collect':
+            spot = next((p for p in json.loads((BASE_DIR / 'static/food-spots.json').read_text()) if p['id'] == data.get('spot')), None)
+            if not spot or math.hypot(player['x']-spot['x'], player['z']-spot['z']) > 3:
+                return {'error': '走近有食物的草丛再采集。'}, 400
+            claims = json.loads(saved['food_claims'])
+            if now - claims.get(spot['id'], 0) < 120:
+                return {'error': '这处食物正在补充，稍后再来。'}, 429
+            claims[spot['id']] = now
+            changed = db.execute('UPDATE game_saves SET dog_food=dog_food+3, food_claims=? WHERE user_id=? AND food_claims=? RETURNING user_id', (json.dumps(claims), uid, saved['food_claims'])).fetchone()
+            if not changed:
+                return {'error': '食物刚刚已采集，请稍后重试。'}, 409
+            message = '采集到 3 份狗粮'
+        elif action in ('feed', 'pet', 'call'):
+            if not saved['dog_name']:
+                return {'error': '先领养一只狗吧。'}, 400
+            if now - saved['dog_interaction_at'] < 5:
+                return {'error': '让狗缓一缓，5 秒后再互动。'}, 429
+            if action == 'feed' and saved['dog_food'] < 1:
+                return {'error': '狗粮不足，去有食物的草丛采集吧。'}, 400
+            cost = 1 if action == 'feed' else 0
+            reward = 25 if action == 'feed' else 5 if action == 'pet' else 0
+            changed = db.execute('UPDATE game_saves SET dog_food=dog_food-?, dog_xp=CASE WHEN dog_xp+? > 10000 THEN 10000 ELSE dog_xp+? END, dog_interaction_at=? WHERE user_id=? AND dog_interaction_at=? AND dog_food>=? RETURNING user_id', (cost,reward,reward,now,uid,saved['dog_interaction_at'],cost)).fetchone()
+            if not changed:
+                return {'error': '互动刚刚已完成，请稍后重试。'}, 409
+            message = {'feed':'喂食成功 · +25 经验', 'pet':'狗开心地摇尾巴 · +5 经验', 'call':'狗听见你在呼唤它'}[action]
+        else:
+            return {'error': '未知互动。'}, 400
+        updated = db.execute('SELECT * FROM game_saves WHERE user_id=?', (uid,)).fetchone()
+    return {'pet': pet_progress(updated), 'message': message, 'action': action}
 
 
 @app.post('/api/world/chat')

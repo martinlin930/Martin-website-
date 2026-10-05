@@ -59,3 +59,7 @@ Six Beagles wander near the village entrance, alternating walking, running and r
 ### Adopt a companion
 
 Sign in, approach a village dog within 3 metres, then click **领养这只狗** and enter a name (1–24 Unicode characters). Each account has one Beagle companion, which follows the owner's route on the ground; its name floats above it and is visible to other players. Use the pet button to rename it. Visitors must sign in to adopt. The pet name is stored in `game_saves.dog_name` using an additive migration; leaving, logging out or deploying does not erase it. Rejoining restores the companion beside its owner. Names are rendered as text, and adoption/renaming updates only the authenticated account's save.
+
+### Dog care and foraging
+
+Glowing food bags in small grass patches around the village can be collected within 3 metres: +3 portions, with a 120-second refill per patch per account. Feed a companion to spend 1 portion and earn 25 XP; pet it for 5 XP, or call it closer. Interactions have a shared 5-second cooldown. Every 100 XP is one level, from 0 to 100 (10,000 XP cap). Food inventory, XP and patch refill timestamps are saved with the account through additive SQLite/PostgreSQL columns. The server checks account ownership, distance, food costs and cooldowns and uses conditional updates to prevent double rewards from concurrent requests. Clients cannot set XP or inventory. Companions respond with head/tail/body animation; players can see their level above them.

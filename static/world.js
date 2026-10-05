@@ -3,11 +3,13 @@ import { clone as cloneSkeleton } from './vendor/SkeletonUtils.js';
 import { GLTFLoader } from './vendor/GLTFLoader.js';
 import { loadVillage } from './village.js';
 import { worldTime } from './day-night.js';
+import { createForage } from './forage.js';
 import { createDogs } from './dogs.js';
 const $ = id => document.getElementById(id);
 let playerId=null, active=false, x=0,z=0,yaw=0,pitch=0, peers=[],keys=new Set(),last=performance.now(),timer,busy=false;
 const canvas=$('view');
-let dogName='';
+let dogName='',petState={food:0,xp:0,level:0,claims:{}},forageSpot=null,petBusy=false;
+let noticeTimer;
 let jumpHeight=0,jumpVelocity=0,running=false;
 const music=new Audio('/static/world-music.m4a');music.loop=true;music.volume=.45;music.preload='none';music.muted=!!window.worldMusicMuted;
 function musicLabel(){$('music').textContent=music.paused?'播放音乐':music.muted?'音乐：关':'音乐：开';}
@@ -44,8 +46,8 @@ Object.assign(sun.shadow.camera,{left:-55,right:55,top:55,bottom:-55,near:1,far:
 scene.add(sun,sun.target);
 const sunOffset=new THREE.Vector3(0,0,-1).applyQuaternion(new THREE.Quaternion(-.5429736,.7981683,.19599362,.17231831).normalize()).multiplyScalar(-70);
 const camera=new THREE.PerspectiveCamera(70,1,.1,500);camera.rotation.order='YXZ';
-let village,dogs;const joinButton=$('join').querySelector('button');joinButton.disabled=true;
-const villageReady=loadVillage(scene,progress=>{joinButton.textContent='Loading village… '+Math.round(progress*100)+'%';},renderer).then(async map=>{village=map;dogs=await createDogs(scene,map);
+let village,dogs,forage;const joinButton=$('join').querySelector('button');joinButton.disabled=true;
+const villageReady=loadVillage(scene,progress=>{joinButton.textContent='Loading village… '+Math.round(progress*100)+'%';},renderer).then(async map=>{village=map;dogs=await createDogs(scene,map);forage=await createForage(scene,map);
  const skyMaterial=new THREE.MeshBasicMaterial({map:scene.background,side:THREE.BackSide,depthWrite:false,fog:false,toneMapped:false});
  skyMaterial.onBeforeCompile=shader=>{shader.uniforms.nightMix=skyNight;shader.uniforms.nightColor={value:nightSky};shader.fragmentShader='uniform float nightMix; uniform vec3 nightColor;\n'+shader.fragmentShader;shader.fragmentShader=shader.fragmentShader.replace('#include <map_fragment>','#include <map_fragment>\n diffuseColor.rgb=mix(diffuseColor.rgb,nightColor,nightMix);');};
  skyDome=new THREE.Mesh(new THREE.SphereGeometry(450,32,16),skyMaterial);skyDome.frustumCulled=false;skyDome.renderOrder=-1;scene.add(skyDome);scene.background=null;
@@ -78,10 +80,24 @@ function avatar(p){
 }
 
 async function api(route,data){const r=await fetch('/api/world/'+route,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':window.worldToken},body:JSON.stringify({...data,player_id:playerId})});let result;try{result=await r.json();}catch{throw Error('连接异常，请刷新页面后重试。');}if(!r.ok)throw Error(result.error||'Connection unavailable');return result;}
-$('join').onsubmit=async e=>{e.preventDefault();if(!village)return;startMusic();try{const user=await api('join',{nickname:$('nickname').value});$('entry').hidden=true;$('world').hidden=false;$('identity').textContent=user.nickname;playerId=user.id;dogName=user.dog_name||'';active=true;if(Number.isFinite(user.server_time)){worldClockAnchor=user.server_time*1000;worldClockReceived=performance.now();}x=user.state.x;z=user.state.z;yaw=user.state.yaw;pitch=user.state.pitch;music.muted=!!user.state.music_muted;musicLabel();$('saveStatus').textContent=user.persistent?'账户存档：自动保存':'访客模式：不保存进度';jumpHeight=jumpVelocity=0;timer=setInterval(sync,150);sync();canvas.focus();}catch(e){stopMusic();$('entryError').textContent=e.message;}};
-async function sync(){if(!active||busy)return;busy=true;try{const data=await api('state',{x,z,yaw,pitch,music_muted:music.muted,jump:jumpHeight,running});const now=performance.now();if(Number.isFinite(data.server_time)){worldClockAnchor=data.server_time*1000;worldClockReceived=now;}dogName=data.dog_name||'';const previous=new Map(peers.map(p=>[p.id,p]));peers=data.players.map(p=>{const old=previous.get(p.id);p.movingUntil=old&&Math.hypot(p.x-old.x,p.z-old.z)>.015?now+350:(old?.movingUntil||0);return p;});$('status').textContent=(peers.length+1)+' online';$('saveStatus').textContent=window.worldAccount?'账户存档：已保存':'访客模式：不保存进度';const list=$('messages');list.replaceChildren(...data.messages.map(m=>{const li=document.createElement('li');li.textContent=m.nickname+': '+m.body;return li;}));list.scrollTop=list.scrollHeight;}catch(e){$('status').textContent='Reconnecting…';$('saveStatus').textContent='连接中断，存档等待同步';}finally{busy=false;}}
+$('join').onsubmit=async e=>{e.preventDefault();if(!village)return;startMusic();try{const user=await api('join',{nickname:$('nickname').value});$('entry').hidden=true;$('world').hidden=false;$('identity').textContent=user.nickname;playerId=user.id;dogName=user.dog_name||'';petState=user.pet||petState;active=true;if(Number.isFinite(user.server_time)){worldClockAnchor=user.server_time*1000;worldClockReceived=performance.now();}x=user.state.x;z=user.state.z;yaw=user.state.yaw;pitch=user.state.pitch;music.muted=!!user.state.music_muted;musicLabel();$('saveStatus').textContent=user.persistent?'账户存档：自动保存':'访客模式：不保存进度';jumpHeight=jumpVelocity=0;timer=setInterval(sync,150);sync();canvas.focus();}catch(e){stopMusic();$('entryError').textContent=e.message;}};
+async function sync(){if(!active||busy)return;busy=true;try{const data=await api('state',{x,z,yaw,pitch,music_muted:music.muted,jump:jumpHeight,running});const now=performance.now();if(Number.isFinite(data.server_time)){worldClockAnchor=data.server_time*1000;worldClockReceived=now;}dogName=data.dog_name||'';petState=data.pet||petState;const previous=new Map(peers.map(p=>[p.id,p]));peers=data.players.map(p=>{const old=previous.get(p.id);p.movingUntil=old&&Math.hypot(p.x-old.x,p.z-old.z)>.015?now+350:(old?.movingUntil||0);return p;});$('status').textContent=(peers.length+1)+' online';$('saveStatus').textContent=window.worldAccount?'账户存档：已保存':'访客模式：不保存进度';const list=$('messages');list.replaceChildren(...data.messages.map(m=>{const li=document.createElement('li');li.textContent=m.nickname+': '+m.body;return li;}));list.scrollTop=list.scrollHeight;}catch(e){$('status').textContent='Reconnecting…';$('saveStatus').textContent='连接中断，存档等待同步';}finally{busy=false;}}
 $('message').addEventListener('focus',()=>keys.clear());
 $('send').onsubmit=async e=>{e.preventDefault();try{await api('chat',{message:$('message').value});$('message').value='';$('chatError').textContent='';sync();}catch(e){$('chatError').textContent=e instanceof DOMException ? '消息未发送成功，请重试或刷新页面。' : e.message;}};
+async function petInteract(action){
+ if(petBusy)return;
+ if(!window.worldAccount){location.href='/login';return;}
+ petBusy=true;
+ try{const result=await api('pet-action',{action,spot:forageSpot});petState=result.pet;
+  if(action!=='collect')dogs?.interact(playerId,action);
+  $('petNotice').textContent=result.message;
+ }catch(error){$('petNotice').textContent=error.message;}
+ finally{petBusy=false;clearTimeout(noticeTimer);noticeTimer=setTimeout(()=>$('petNotice').textContent='',4000);}
+}
+$('collectFood').onclick=()=>petInteract('collect');
+$('feedDog').onclick=()=>petInteract('feed');
+$('petDog').onclick=()=>petInteract('pet');
+$('callDog').onclick=()=>petInteract('call');
 $('petAction').onclick=()=>{
  if(!window.worldAccount){location.href='/login';return;}
  document.exitPointerLock?.();keys.clear();stickX=stickY=0;
@@ -159,9 +175,16 @@ function draw(now){
    a.label.hidden=point.z>1||point.z< -1||Math.abs(point.x)>1||Math.abs(point.y)>1;
    a.label.style.left=(point.x*.5+.5)*w+'px';a.label.style.top=(-point.y*.5+.5)*h+'px';
   });
-  dogs?.update(worldClockAnchor+now-worldClockReceived,[{id:playerId,x,z,yaw,dog_name:dogName},...peers],dt,camera,w,h);
+  dogs?.update(worldClockAnchor+now-worldClockReceived,[{id:playerId,x,z,yaw,dog_name:dogName,dog_xp:petState.xp},...peers],dt,camera,w,h);
   $('petAction').hidden=!dogName&&(!dogs||dogs.nearest(x,z)>3);
   $('petAction').textContent=dogName?dogName+' · 改名字':window.worldAccount?'领养这只狗':'登录后领养狗';
+  forageSpot=forage?.update((worldClockAnchor+now-worldClockReceived)/1000,petState.claims||{},x,z)??null;
+  $('collectFood').hidden=forageSpot===null;$('collectFood').disabled=petBusy;
+  $('petPanel').hidden=!dogName;
+  $('petStats').textContent='Lv. '+petState.level+' · 狗粮 '+petState.food+' 份';
+  $('petXp').value=petState.level===100?100:petState.xp%100;
+  $('petProgress').textContent=petState.level===100?'已达到 100 级':(petState.xp%100)+' / 100 经验';
+  for(const id of ['feedDog','petDog','callDog'])$(id).disabled=petBusy;
   updateDayNight(now);renderer.render(scene,camera);
  }
  requestAnimationFrame(draw);

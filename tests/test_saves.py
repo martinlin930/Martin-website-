@@ -106,3 +106,35 @@ class SaveTests(unittest.TestCase):
             self.assertEqual(db.execute('SELECT dog_name FROM game_saves WHERE user_id=?',(uid,)).fetchone()[0],'新名字')
         guest=app.test_client();guest.get('/world');self.post(guest,'join',{'nickname':'G'})
         self.assertEqual(self.post(guest,'dog',{'name':'Guest dog'}).status_code,401)
+
+    def test_food_feeding_levels_and_saved_progress(self):
+        import json
+        from pathlib import Path
+        from unittest.mock import patch
+        uid=self.login_as(self.a,'Alice');self.post(self.a,'join',{'nickname':'A'})
+        self.post(self.a,'dog',{'name':'Snow'})
+        spot=json.loads(Path('static/food-spots.json').read_text())[0]
+        self.assertEqual(self.post(self.a,'pet-action',{'action':'collect','spot':spot['id']}).status_code,400)
+        self.post(self.a,'state',{'x':spot['x'],'z':spot['z']})
+        collected=self.post(self.a,'pet-action',{'action':'collect','spot':spot['id']})
+        self.assertEqual(collected.json['pet']['food'],3)
+        self.assertEqual(self.post(self.a,'pet-action',{'action':'collect','spot':spot['id']}).status_code,429)
+        fed=self.post(self.a,'pet-action',{'action':'feed','xp':999999,'user_id':999})
+        self.assertEqual((fed.json['pet']['food'],fed.json['pet']['xp'],fed.json['pet']['level']),(2,25,0))
+        self.assertEqual(self.post(self.a,'pet-action',{'action':'pet'}).status_code,429)
+        with database() as db:
+            db.execute('UPDATE game_saves SET dog_xp=9990,dog_interaction_at=0 WHERE user_id=?',(uid,))
+        capped=self.post(self.a,'pet-action',{'action':'feed'}).json['pet']
+        self.assertEqual((capped['xp'],capped['level']),(10000,100))
+        with database() as db:db.execute('UPDATE game_saves SET dog_interaction_at=0,dog_food=0 WHERE user_id=?',(uid,))
+        self.assertEqual(self.post(self.a,'pet-action',{'action':'feed'}).status_code,400)
+        self.assertEqual(self.post(self.a,'pet-action',{'action':'pet'}).json['pet']['level'],100)
+        self.post(self.a,'leave',{})
+        self.login_as(self.b,'Alice')
+        restored=self.post(self.b,'join',{'nickname':'A'}).json['pet']
+        self.assertEqual((restored['food'],restored['xp'],restored['level']),(0,10000,100))
+        self.assertIn(spot['id'],restored['claims'])
+        with patch('app.time.time',return_value=restored['claims'][spot['id']]+121):
+            self.assertEqual(self.post(self.b,'pet-action',{'action':'collect','spot':spot['id']}).json['pet']['food'],3)
+        guest=app.test_client();guest.get('/world');self.post(guest,'join',{'nickname':'G'})
+        self.assertEqual(self.post(guest,'pet-action',{'action':'collect','spot':spot['id']}).status_code,401)
