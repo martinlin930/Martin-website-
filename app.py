@@ -78,6 +78,8 @@ def database():
     for column,definition in {'animal_pets':"TEXT NOT NULL DEFAULT '{}'",'dog_food':'INTEGER NOT NULL DEFAULT 0','dog_xp':'INTEGER NOT NULL DEFAULT 0','food_claims':"TEXT NOT NULL DEFAULT '{}'",'dog_interaction_at':'REAL NOT NULL DEFAULT 0'}.items():
         if column not in save_columns:
             connection.execute('ALTER TABLE game_saves ADD COLUMN '+column+' '+definition)
+    connection.execute('CREATE TABLE IF NOT EXISTS world_objects (name TEXT PRIMARY KEY, value INTEGER NOT NULL DEFAULT 0)')
+    connection.execute("INSERT INTO world_objects(name,value) VALUES('room-door',0) ON CONFLICT(name) DO NOTHING")
     connection.execute('CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY, nickname TEXT NOT NULL, body TEXT NOT NULL, created REAL NOT NULL)')
     connection.execute('CREATE TABLE IF NOT EXISTS forum_posts (id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id), display_name TEXT NOT NULL, body TEXT NOT NULL, created REAL NOT NULL)')
     connection.execute('CREATE TABLE IF NOT EXISTS forum_images (id INTEGER PRIMARY KEY, post_id INTEGER NOT NULL REFERENCES forum_posts(id), jpeg_base64 TEXT NOT NULL)')
@@ -222,6 +224,7 @@ def join_world():
     with database() as db:
         user_id = session.get('user_id')
         saved = db.execute('SELECT * FROM game_saves WHERE user_id = ?', (user_id,)).fetchone() if user_id else None
+        room_open=bool(db.execute("SELECT value FROM world_objects WHERE name='room-door'").fetchone()['value'])
         state = dict(saved) if saved else {'x': 70.4, 'z': -132.8, 'yaw': .7853981634, 'pitch': 0, 'music_muted': 0, 'avatar': secrets.choice(['01m', '02m', '01f', '02f'])}
         db.execute('INSERT INTO players (id, nickname, x, z, yaw, updated, avatar, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', (player_id, nickname, state['x'], state['z'], state['yaw'], time.time(), state['avatar'], user_id))
         if user_id:
@@ -229,7 +232,7 @@ def join_world():
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET nickname = excluded.nickname""",
                 (user_id, nickname, state['avatar'], state['x'], state['z'], state['yaw'], state['pitch'], state['music_muted'], time.time()))
     session['world_message_at'] = 0
-    return {'id': player_id, 'nickname': nickname, 'persistent': bool(user_id), 'animals':json.loads(state.get('animal_pets','{}')), 'pet': pet_progress(state), 'dog_name': state.get('dog_name', ''), 'server_time': time.time(), 'state': {k: state[k] for k in ('x', 'z', 'yaw', 'pitch', 'avatar', 'music_muted')}}
+    return {'room_open':room_open,'id': player_id, 'nickname': nickname, 'persistent': bool(user_id), 'animals':json.loads(state.get('animal_pets','{}')), 'pet': pet_progress(state), 'dog_name': state.get('dog_name', ''), 'server_time': time.time(), 'state': {k: state[k] for k in ('x', 'z', 'yaw', 'pitch', 'avatar', 'music_muted')}}
 
 
 def world_player_id(data):
@@ -269,10 +272,26 @@ def world_state():
         players = [dict(row) for row in db.execute("SELECT p.id, p.nickname, p.x, p.z, p.yaw, p.avatar, p.jump, p.running, COALESCE(s.dog_name, '') AS dog_name, COALESCE(s.dog_xp, 0) AS dog_xp, COALESCE(s.animal_pets, '{}') AS animal_pets FROM players p LEFT JOIN game_saves s ON s.user_id=p.user_id WHERE p.id != ?", (player['id'],))]
         messages = [dict(row) for row in db.execute('SELECT id, nickname, body FROM messages ORDER BY id DESC LIMIT 40')][::-1]
         pet = db.execute('SELECT * FROM game_saves WHERE user_id = ?', (player['user_id'],)).fetchone() if player['user_id'] else None
+        room_open=bool(db.execute("SELECT value FROM world_objects WHERE name='room-door'").fetchone()['value'])
     for peer in players:
         pets=json.loads(peer.pop('animal_pets'));kind=pets.get('active');info=pets.get(kind) if kind else None
         peer['animals']={'active':kind,kind:{'name':info['name'],'xp':info['xp']}} if info else {}
-    return {'animals':json.loads(pet['animal_pets']) if pet else {},'players': players, 'messages': messages, 'pet': pet_progress(pet), 'dog_name': pet['dog_name'] if pet else '', 'server_time': time.time()}
+    return {'room_open':room_open,'animals':json.loads(pet['animal_pets']) if pet else {},'players': players, 'messages': messages, 'pet': pet_progress(pet), 'dog_name': pet['dog_name'] if pet else '', 'server_time': time.time()}
+
+
+@app.post('/api/world/room-door')
+def room_door():
+    data=request.get_json(silent=True) or {}
+    player_id=world_player_id(data)
+    with database() as db:
+        player=db.execute('SELECT * FROM players WHERE id=?',(player_id,)).fetchone()
+        if not player or player['user_id']!=session.get('user_id'):
+            return {'error':'请先进入村庄。'},401
+        if math.hypot(player['x']-58,player['z']+129)<3:
+            row=db.execute("UPDATE world_objects SET value=CASE WHEN value=0 THEN 1 ELSE 0 END WHERE name='room-door' RETURNING value").fetchone()
+        else:
+            return {'error':'走近房门再开关门。'},400
+    return {'room_open':bool(row['value'])}
 
 
 @app.post('/api/world/dog')

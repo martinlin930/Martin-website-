@@ -4,6 +4,8 @@ import { GLTFLoader } from './vendor/GLTFLoader.js';
 import { loadVillage } from './village.js';
 import { worldTime } from './day-night.js';
 import { createForage } from './forage.js';
+import {createTrain} from './train.js';
+import {createRoom} from './room.js';
 import {createAnimals,animalNames} from './animals.js';
 import { createDogs } from './dogs.js';
 const $ = id => document.getElementById(id);
@@ -49,8 +51,8 @@ Object.assign(sun.shadow.camera,{left:-55,right:55,top:55,bottom:-55,near:1,far:
 scene.add(sun,sun.target);
 const sunOffset=new THREE.Vector3(0,0,-1).applyQuaternion(new THREE.Quaternion(-.5429736,.7981683,.19599362,.17231831).normalize()).multiplyScalar(-70);
 const camera=new THREE.PerspectiveCamera(70,1,.1,500);camera.rotation.order='YXZ';
-let village,dogs,forage;const joinButton=$('join').querySelector('button');joinButton.disabled=true;
-const villageReady=loadVillage(scene,progress=>{joinButton.textContent='Loading village… '+Math.round(progress*100)+'%';},renderer).then(async map=>{village=map;dogs=await createDogs(scene,map);animals=await createAnimals(scene,map);forage=await createForage(scene,map);
+let village,dogs,forage,train,room;const joinButton=$('join').querySelector('button');joinButton.disabled=true;
+const villageReady=loadVillage(scene,progress=>{joinButton.textContent='Loading village… '+Math.round(progress*100)+'%';},renderer).then(async map=>{village=map;[train,room]=await Promise.all([createTrain(scene),createRoom(scene,map)]);dogs=await createDogs(scene,map);animals=await createAnimals(scene,map);forage=await createForage(scene,map);
  const skyMaterial=new THREE.MeshBasicMaterial({map:scene.background,side:THREE.BackSide,depthWrite:false,fog:false,toneMapped:false});
  skyMaterial.onBeforeCompile=shader=>{shader.uniforms.nightMix=skyNight;shader.uniforms.nightColor={value:nightSky};shader.fragmentShader='uniform float nightMix; uniform vec3 nightColor;\n'+shader.fragmentShader;shader.fragmentShader=shader.fragmentShader.replace('#include <map_fragment>','#include <map_fragment>\n diffuseColor.rgb=mix(diffuseColor.rgb,nightColor,nightMix);');};
  skyDome=new THREE.Mesh(new THREE.SphereGeometry(450,32,16),skyMaterial);skyDome.frustumCulled=false;skyDome.renderOrder=-1;scene.add(skyDome);scene.background=null;
@@ -83,8 +85,8 @@ function avatar(p){
 }
 
 async function api(route,data){const r=await fetch('/api/world/'+route,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':window.worldToken},body:JSON.stringify({...data,player_id:playerId})});let result;try{result=await r.json();}catch{throw Error('连接异常，请刷新页面后重试。');}if(!r.ok)throw Error(result.error||'Connection unavailable');return result;}
-$('join').onsubmit=async e=>{e.preventDefault();if(!village)return;startMusic();try{const user=await api('join',{nickname:$('nickname').value});$('entry').hidden=true;$('world').hidden=false;$('identity').textContent=user.nickname;playerId=user.id;animalPets=user.animals||{};dogName=user.dog_name||'';petState=user.pet||petState;active=true;if(Number.isFinite(user.server_time)){worldClockAnchor=user.server_time*1000;worldClockReceived=performance.now();}x=user.state.x;z=user.state.z;yaw=user.state.yaw;pitch=user.state.pitch;music.muted=!!user.state.music_muted;musicLabel();$('saveStatus').textContent=user.persistent?'账户存档：自动保存':'访客模式：不保存进度';jumpHeight=jumpVelocity=0;timer=setInterval(sync,150);sync();canvas.focus();}catch(e){stopMusic();$('entryError').textContent=e.message;}};
-async function sync(){if(!active||busy)return;busy=true;try{const data=await api('state',{x,z,yaw,pitch,music_muted:music.muted,jump:jumpHeight,running});const now=performance.now();if(Number.isFinite(data.server_time)){worldClockAnchor=data.server_time*1000;worldClockReceived=now;}animalPets=data.animals||{};dogName=data.dog_name||'';petState=data.pet||petState;const previous=new Map(peers.map(p=>[p.id,p]));peers=data.players.map(p=>{const old=previous.get(p.id);p.movingUntil=old&&Math.hypot(p.x-old.x,p.z-old.z)>.015?now+350:(old?.movingUntil||0);return p;});$('status').textContent=(peers.length+1)+' online';$('saveStatus').textContent=window.worldAccount?'账户存档：已保存':'访客模式：不保存进度';const list=$('messages');list.replaceChildren(...data.messages.map(m=>{const li=document.createElement('li');li.textContent=m.nickname+': '+m.body;return li;}));list.scrollTop=list.scrollHeight;}catch(e){$('status').textContent='Reconnecting…';$('saveStatus').textContent='连接中断，存档等待同步';}finally{busy=false;}}
+$('join').onsubmit=async e=>{e.preventDefault();if(!village)return;startMusic();try{const user=await api('join',{nickname:$('nickname').value});$('entry').hidden=true;$('world').hidden=false;$('identity').textContent=user.nickname;playerId=user.id;room?.setOpen(user.room_open);animalPets=user.animals||{};dogName=user.dog_name||'';petState=user.pet||petState;active=true;if(Number.isFinite(user.server_time)){worldClockAnchor=user.server_time*1000;worldClockReceived=performance.now();}x=user.state.x;z=user.state.z;yaw=user.state.yaw;pitch=user.state.pitch;music.muted=!!user.state.music_muted;musicLabel();$('saveStatus').textContent=user.persistent?'账户存档：自动保存':'访客模式：不保存进度';jumpHeight=jumpVelocity=0;timer=setInterval(sync,150);sync();canvas.focus();}catch(e){stopMusic();$('entryError').textContent=e.message;}};
+async function sync(){if(!active||busy)return;busy=true;try{const data=await api('state',{x,z,yaw,pitch,music_muted:music.muted,jump:jumpHeight,running});const now=performance.now();if(Number.isFinite(data.server_time)){worldClockAnchor=data.server_time*1000;worldClockReceived=now;}room?.setOpen(data.room_open);animalPets=data.animals||{};dogName=data.dog_name||'';petState=data.pet||petState;const previous=new Map(peers.map(p=>[p.id,p]));peers=data.players.map(p=>{const old=previous.get(p.id);p.movingUntil=old&&Math.hypot(p.x-old.x,p.z-old.z)>.015?now+350:(old?.movingUntil||0);return p;});$('status').textContent=(peers.length+1)+' online';$('saveStatus').textContent=window.worldAccount?'账户存档：已保存':'访客模式：不保存进度';const list=$('messages');list.replaceChildren(...data.messages.map(m=>{const li=document.createElement('li');li.textContent=m.nickname+': '+m.body;return li;}));list.scrollTop=list.scrollHeight;}catch(e){$('status').textContent='Reconnecting…';$('saveStatus').textContent='连接中断，存档等待同步';}finally{busy=false;}}
 $('message').addEventListener('focus',()=>keys.clear());
 $('send').onsubmit=async e=>{e.preventDefault();try{await api('chat',{message:$('message').value});$('message').value='';$('chatError').textContent='';sync();}catch(e){$('chatError').textContent=e instanceof DOMException ? '消息未发送成功，请重试或刷新页面。' : e.message;}};
 async function petInteract(action){
@@ -123,6 +125,7 @@ $('animalCancel').onclick=()=>$('animalDialog').close();
 async function animalAction(action){if(animalBusy)return;animalBusy=true;$('animalSubmit').disabled=true;animalStats();try{const result=await api('animal',{action,kind:$('animalKind').value,name:$('animalName').value});animalPets=result.animals;petState=result.pet;animals?.interact(playerId,action);$('animalError').textContent=result.message;animalStats();}catch(e){$('animalError').textContent=e.message;}finally{animalBusy=false;$('animalSubmit').disabled=false;animalStats();}}
 $('animalForm').onsubmit=e=>{e.preventDefault();animalAction('adopt');};
 $('feedAnimal').onclick=()=>animalAction('feed');$('petAnimal').onclick=()=>animalAction('pet');$('callAnimal').onclick=()=>animalAction('call');
+$('roomAction').onclick=async()=>{if(!room?.near(x,z))return;$('roomAction').disabled=true;try{const data=await api('room-door',{});room.setOpen(data.room_open);}catch(e){$('petNotice').textContent=e.message;}finally{$('roomAction').disabled=false;}};
 $('petCancel').onclick=()=>$('petDialog').close();
 $('petForm').onsubmit=async e=>{
  e.preventDefault();$('petSubmit').disabled=true;
@@ -153,7 +156,7 @@ joystick.onpointerup=joystick.onpointercancel=joystick.onlostpointercapture=e=>{
 window.addEventListener('blur',resetStick);document.addEventListener('visibilitychange',()=>{if(document.hidden)resetStick();});
 $('message').addEventListener('focus',resetStick);
 
-window.onkeydown=e=>{if(!active||e.target.matches('input,select,textarea')||$('animalDialog').open||$('petDialog').open)return;if(e.code==='Space'){e.preventDefault();if(!e.repeat)jump();return;}if(e.key==='Shift'){keys.add('shift');return;}if(e.key==='Enter'){document.exitPointerLock?.();$('message').focus();return;}const map={ArrowUp:'w',ArrowDown:'s',ArrowLeft:'a',ArrowRight:'d'};let k=map[e.key]||({'KeyW':'w','KeyA':'a','KeyS':'s','KeyD':'d'}[e.code])||e.key.toLowerCase();if(['w','a','s','d'].includes(k)){e.preventDefault();keys.add(k);}};window.onkeyup=e=>{const map={ArrowUp:'w',ArrowDown:'s',ArrowLeft:'a',ArrowRight:'d'};keys.delete(map[e.key]||({'KeyW':'w','KeyA':'a','KeyS':'s','KeyD':'d'}[e.code])||e.key.toLowerCase());};window.onblur=()=>keys.clear();
+window.onkeydown=e=>{if(!active||e.target.matches('input,select,textarea')||$('animalDialog').open||$('petDialog').open)return;if(e.code==='KeyE'&&room?.near(x,z)){e.preventDefault();if(!e.repeat)$('roomAction').click();return;}if(e.code==='Space'){e.preventDefault();if(!e.repeat)jump();return;}if(e.key==='Shift'){keys.add('shift');return;}if(e.key==='Enter'){document.exitPointerLock?.();$('message').focus();return;}const map={ArrowUp:'w',ArrowDown:'s',ArrowLeft:'a',ArrowRight:'d'};let k=map[e.key]||({'KeyW':'w','KeyA':'a','KeyS':'s','KeyD':'d'}[e.code])||e.key.toLowerCase();if(['w','a','s','d'].includes(k)){e.preventDefault();keys.add(k);}};window.onkeyup=e=>{const map={ArrowUp:'w',ArrowDown:'s',ArrowLeft:'a',ArrowRight:'d'};keys.delete(map[e.key]||({'KeyW':'w','KeyA':'a','KeyS':'s','KeyD':'d'}[e.code])||e.key.toLowerCase());};window.onblur=()=>keys.clear();
 function animateWalk(avatar,moving,dt,isRunning=false,isJumping=false){
  avatar.stride+=(Number(moving)-avatar.stride)*(1-Math.exp(-dt*10));
  if(moving)avatar.phase+=dt*(isRunning?12:8);
@@ -192,6 +195,9 @@ function draw(now){
    a.label.hidden=point.z>1||point.z< -1||Math.abs(point.x)>1||Math.abs(point.y)>1;
    a.label.style.left=(point.x*.5+.5)*w+'px';a.label.style.top=(-point.y*.5+.5)*h+'px';
   });
+  room?.update(dt);$('roomAction').hidden=!room?.near(x,z);$('roomAction').textContent=room?.open?'关门 · E':'打开小屋门 · E';
+  if(train)$('trainStatus').textContent=train.update(worldClockAnchor+now-worldClockReceived);
+  if(room){const marker=new THREE.Vector3(58,5.9,-129.8).project(camera);$('roomMarker').hidden=Math.hypot(x-58,z+130)>32||marker.z>1||marker.z< -1||Math.abs(marker.x)>1||Math.abs(marker.y)>1;$('roomMarker').style.left=(marker.x*.5+.5)*w+'px';$('roomMarker').style.top=(-marker.y*.5+.5)*h+'px';}
   animals?.update(worldClockAnchor+now-worldClockReceived,[{id:playerId,x,z,animals:animalPets},...peers],dt,camera,w,h);
   nearAnimal=animals?.nearest(x,z)?.kind??null;
   $('animalAction').hidden=!nearAnimal&&!animalPets.active;

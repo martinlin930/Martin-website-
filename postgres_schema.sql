@@ -44,3 +44,8 @@ ALTER TABLE game.forum_comments ADD COLUMN IF NOT EXISTS deleted_at DOUBLE PRECI
 ALTER TABLE game.forum_comments ADD COLUMN IF NOT EXISTS deleted_by BIGINT REFERENCES game.users(id);
 
 ALTER TABLE game.game_saves ADD COLUMN IF NOT EXISTS animal_pets TEXT NOT NULL DEFAULT '{}';
+
+CREATE TABLE IF NOT EXISTS game.world_objects (name TEXT PRIMARY KEY, value INTEGER NOT NULL DEFAULT 0);
+INSERT INTO game.world_objects(name,value) VALUES('room-door',0) ON CONFLICT(name) DO NOTHING;
+ALTER TABLE game.world_objects ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON game.world_objects FROM PUBLIC,anon,authenticated;

@@ -1,0 +1,9 @@
+import assert from 'node:assert/strict';import * as T from '../static/vendor/three.module.js';
+const nativeFetch=globalThis.fetch;globalThis.self=globalThis;globalThis.createImageBitmap=async()=>({width:1,height:1});const {scene,village}=await import('./village_collision.mjs');const diskFetch=globalThis.fetch;globalThis.fetch=(url,...a)=>String(url).startsWith('blob:')?nativeFetch(url,...a):diskFetch(url,...a);
+const {createTrain,trainCycle,TRAIN_PERIOD}=await import('../static/train.js');const {createRoom}=await import('../static/room.js');
+const train=await createTrain(scene);assert.equal(TRAIN_PERIOD,300000);assert.ok(train.route.length>200&&train.route.length<400);assert.equal(train.trains.length,3);assert.ok(train.trains.every(t=>t.cars.length===3&&t.cars.every(c=>c.length>2&&c.length<25)));
+const variants=new Set();for(let i=0;i<40;i++)variants.add(trainCycle(i*TRAIN_PERIOD).type);assert.equal(variants.size,3);assert.deepEqual(trainCycle(15000),trainCycle(15000));
+for(const elapsed of [15000,25000,40000]){train.update(elapsed);let seen=0;for(const t of train.trains)for(const car of t.cars)if(car.root.visible){seen++;assert.ok(car.root.position.toArray().every(Number.isFinite));assert.ok(Math.abs(car.root.position.y-3.55)<.08);}assert.ok(seen>0);}
+train.update(250000);assert.ok(train.trains.every(t=>t.cars.every(c=>!c.root.visible)));
+const room=await createRoom(scene,village);assert.equal(room.open,false);assert.equal(village.canMove(58,-130,58,-129.9),false);room.setOpen(true);room.update(.5);assert.equal(village.canMove(58,-130,58,-129.9),true);assert.equal(village.groundHeight(58,-132),3.27);assert.equal(village.canMove(54,-133,54.3,-133),false);assert.ok(Math.abs(room.hinge.rotation.y)>1);room.setOpen(false);room.update(.5);assert.equal(village.canMove(58,-130,58,-129.9),false);
+console.log('Verified shared five-minute schedule, three train consists, track alignment, door collision and room floor.');
