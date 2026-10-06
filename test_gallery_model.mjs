@@ -1,0 +1,18 @@
+import fs from 'node:fs';
+import zlib from 'node:zlib';
+import assert from 'node:assert/strict';
+import {GLTFLoader} from './static/vendor/GLTFLoader.js';
+const glb=zlib.gunzipSync(fs.readFileSync('static/models/gallery/showroom.glb.gz'));
+assert.equal(glb.readUInt32LE(0),0x46546c67);
+assert.equal(glb.readUInt32LE(8),glb.length);
+const jsonLength=glb.readUInt32LE(12),doc=JSON.parse(glb.subarray(20,20+jsonLength));
+for(const im of doc.images)assert(fs.statSync('static/models/gallery/'+im.uri).size>0);
+for(const m of doc.materials)delete m.pbrMetallicRoughness.baseColorTexture;
+doc.images=[];doc.textures=[];
+const bin=glb.subarray(28+jsonLength),encoded=Buffer.from(JSON.stringify(doc)),pad=Buffer.alloc((4-encoded.length%4)%4,32),js=Buffer.concat([encoded,pad]);
+const rebuilt=Buffer.alloc(28+js.length+bin.length);
+rebuilt.writeUInt32LE(0x46546c67,0);rebuilt.writeUInt32LE(2,4);rebuilt.writeUInt32LE(rebuilt.length,8);rebuilt.writeUInt32LE(js.length,12);rebuilt.writeUInt32LE(0x4e4f534a,16);js.copy(rebuilt,20);rebuilt.writeUInt32LE(bin.length,20+js.length);rebuilt.writeUInt32LE(0x004e4942,24+js.length);bin.copy(rebuilt,28+js.length);
+const model=await new GLTFLoader().parseAsync(rebuilt.buffer,'');let meshes=0,triangles=0;
+model.scene.traverse(m=>{if(m.isMesh){meshes++;triangles+=m.geometry.index.count/3;assert(m.geometry.attributes.normal.count===m.geometry.attributes.position.count);m.geometry.computeBoundingSphere();assert(Number.isFinite(m.geometry.boundingSphere.radius));}});
+assert(meshes>50);assert(triangles>100000);
+console.log('Gallery geometry loaded:',meshes,'meshes,',triangles,'triangles; all texture files present.');

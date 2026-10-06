@@ -55,3 +55,14 @@ ALTER TABLE game.users ADD COLUMN IF NOT EXISTS avatar_frame TEXT NOT NULL DEFAU
 
 -- Associate temporary speech bubbles with the actual sending player.
 ALTER TABLE game.messages ADD COLUMN IF NOT EXISTS player_id TEXT NOT NULL DEFAULT '';
+
+-- Gallery is a separate world. Town Life account and pet saves are never reused.
+CREATE TABLE IF NOT EXISTS game.gallery_players (id TEXT PRIMARY KEY,user_id BIGINT REFERENCES game.users(id),nickname TEXT NOT NULL,avatar TEXT NOT NULL,x DOUBLE PRECISION NOT NULL,z DOUBLE PRECISION NOT NULL,yaw DOUBLE PRECISION NOT NULL,jump DOUBLE PRECISION NOT NULL DEFAULT 0,running INTEGER NOT NULL DEFAULT 0,updated DOUBLE PRECISION NOT NULL);
+CREATE TABLE IF NOT EXISTS game.gallery_saves (user_id BIGINT PRIMARY KEY REFERENCES game.users(id),nickname TEXT NOT NULL,avatar TEXT NOT NULL,x DOUBLE PRECISION NOT NULL,z DOUBLE PRECISION NOT NULL,yaw DOUBLE PRECISION NOT NULL,pitch DOUBLE PRECISION NOT NULL DEFAULT 0,music_muted INTEGER NOT NULL DEFAULT 0,updated DOUBLE PRECISION NOT NULL);
+CREATE TABLE IF NOT EXISTS game.gallery_messages (id BIGSERIAL PRIMARY KEY,player_id TEXT NOT NULL,nickname TEXT NOT NULL,body TEXT NOT NULL,created DOUBLE PRECISION NOT NULL);
+CREATE INDEX IF NOT EXISTS gallery_players_updated_idx ON game.gallery_players(updated);
+ALTER TABLE game.gallery_players ENABLE ROW LEVEL SECURITY;
+ALTER TABLE game.gallery_saves ENABLE ROW LEVEL SECURITY;
+ALTER TABLE game.gallery_messages ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON game.gallery_players,game.gallery_saves,game.gallery_messages FROM PUBLIC,anon,authenticated;
+REVOKE ALL ON SEQUENCE game.gallery_messages_id_seq FROM PUBLIC,anon,authenticated;

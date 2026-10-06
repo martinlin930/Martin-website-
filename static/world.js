@@ -5,6 +5,8 @@ import {mountSeat} from './mounts.js';
 import { clone as cloneSkeleton } from './vendor/SkeletonUtils.js';
 import { GLTFLoader } from './vendor/GLTFLoader.js';
 import { loadVillage } from './village.js';
+import { loadGallery } from './gallery-map.js';
+const galleryMode=window.worldMode==='gallery';
 import {createOcean} from './ocean.js';
 import { worldTime } from './day-night.js';
 import {recentSpeech} from './speech-bubbles.js';
@@ -42,6 +44,7 @@ function selectWorldMusic(day){
  musicLabel();
 }
 function startMusic(){
+ if(galleryMode)return;
  trainSound.unlock();crossingSound.unlock();
  musicWanted=true;
  selectWorldMusic(worldTime(worldClockAnchor+performance.now()-worldClockReceived).day);
@@ -64,6 +67,7 @@ let cachedFloorX,cachedFloorZ,cachedFloor;
 let worldClockAnchor=Date.now(),worldClockReceived=performance.now(),skyDome;
 const skyNight={value:0};
 function updateDayNight(now){
+ if(galleryMode)return;
  const time=worldTime(worldClockAnchor+now-worldClockReceived);
  if(active)selectWorldMusic(time.day);
  const daylight=time.daylight;
@@ -83,7 +87,9 @@ scene.add(sun,sun.target);
 const sunOffset=new THREE.Vector3(0,0,-1).applyQuaternion(new THREE.Quaternion(-.5429736,.7981683,.19599362,.17231831).normalize()).multiplyScalar(-70);
 const camera=new THREE.PerspectiveCamera(70,1,.1,500);camera.rotation.order='YXZ';
 let village,dogs,forage,train,room,ocean,dogCar;const joinButton=$('join').querySelector('button[type="submit"]');joinButton.disabled=true;
-const villageReady=loadVillage(scene,progress=>{joinButton.textContent='Loading village… '+Math.round(progress*100)+'%';},renderer).then(async map=>{village=map;[train,room,ocean]=await Promise.all([createTrain(scene),createRoom(scene,map),createOcean(scene,map.size)]);dogCar=await createDogCar(scene,map,train);dogs=await createDogs(scene,map);animals=await createAnimals(scene,map);forage=await createForage(scene,map);
+const villageReady=(galleryMode?loadGallery:loadVillage)(scene,progress=>{joinButton.textContent=(galleryMode?'Loading gallery… ':'Loading village… ')+Math.round(progress*100)+'%';},renderer).then(async map=>{village=map;
+ if(galleryMode){sun.castShadow=false;sun.intensity=.65;ambient.intensity=1.25;scene.fog=null;joinButton.disabled=false;joinButton.textContent='Enter Gallery →';return;}
+ [train,room,ocean]=await Promise.all([createTrain(scene),createRoom(scene,map),createOcean(scene,map.size)]);dogCar=await createDogCar(scene,map,train);dogs=await createDogs(scene,map);animals=await createAnimals(scene,map);forage=await createForage(scene,map);
  const skyMaterial=new THREE.MeshBasicMaterial({map:scene.background,side:THREE.BackSide,depthWrite:false,fog:false,toneMapped:false});
  skyMaterial.onBeforeCompile=shader=>{shader.uniforms.nightMix=skyNight;shader.uniforms.nightColor={value:nightSky};shader.fragmentShader='uniform float nightMix; uniform vec3 nightColor;\n'+shader.fragmentShader;shader.fragmentShader=shader.fragmentShader.replace('#include <map_fragment>','#include <map_fragment>\n diffuseColor.rgb=mix(diffuseColor.rgb,nightColor,nightMix);');};
  skyDome=new THREE.Mesh(new THREE.SphereGeometry(450,32,16),skyMaterial);skyDome.frustumCulled=false;skyDome.renderOrder=-1;scene.add(skyDome);scene.background=null;
@@ -151,8 +157,8 @@ function avatar(p){
  $('world').appendChild(label);scene.add(group);group.position.set(p.x,village.groundHeight(p.x,p.z),p.z);return {group,root:group,body,motion,restY:body.position.y,label,speech,speechText,bones,phase:0,stride:0};
 }
 
-async function api(route,data){const r=await fetch('/api/world/'+route,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':window.worldToken},body:JSON.stringify({...data,player_id:playerId})});let result;try{result=await r.json();}catch{throw Error('连接异常，请刷新页面后重试。');}if(!r.ok)throw Error(result.error||'Connection unavailable');return result;}
-$('join').onsubmit=async e=>{e.preventDefault();if(!village)return;startMusic();try{const user=await api('join',{nickname:$('nickname').value,avatar:$('skin').value});$('entry').hidden=true;$('world').hidden=false;$('identity').textContent=user.nickname;playerId=user.id;room?.setOpen(user.room_open);animalPets=user.animals||{};dogName=user.dog_name||'';petState=user.pet||petState;active=true;document.querySelector('meta[name="viewport"]').content='width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no';if(Number.isFinite(user.server_time)){worldClockAnchor=user.server_time*1000;worldClockReceived=performance.now();}x=user.state.x;z=user.state.z;yaw=user.state.yaw;pitch=user.state.pitch;music.muted=!!user.state.music_muted;musicLabel();$('saveStatus').textContent=user.persistent?'账户存档：自动保存':'访客模式：不保存进度';if(updateResume?.resume){const safe=Number.isFinite(updateResume.x)&&Number.isFinite(updateResume.z)&&village.canMove(updateResume.x,updateResume.z,updateResume.x,updateResume.z);[x,z]=safe?[updateResume.x,updateResume.z]:village.spawn;yaw=Number.isFinite(updateResume.yaw)?updateResume.yaw:yaw;pitch=Number.isFinite(updateResume.pitch)?Math.max(-.7,Math.min(.7,updateResume.pitch)):pitch;music.muted=updateResume.musicMuted;$('message').value=updateResume.message||'';setChatOpen(!!updateResume.chatOpen);petCooldownUntil=performance.now()+Math.max(0,(updateResume.cooldownEnds||0)-Date.now());updateResume=null;musicLabel();}
+async function api(route,data){const r=await fetch('/api/'+(galleryMode?'gallery':'world')+'/'+route,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':window.worldToken},body:JSON.stringify({...data,player_id:playerId})});let result;try{result=await r.json();}catch{throw Error('连接异常，请刷新页面后重试。');}if(!r.ok)throw Error(result.error||'Connection unavailable');return result;}
+$('join').onsubmit=async e=>{e.preventDefault();if(!village)return;startMusic();try{const user=await api('join',{nickname:$('nickname').value,avatar:$('skin').value});$('entry').hidden=true;$('world').hidden=false;$('identity').textContent=user.nickname;playerId=user.id;room?.setOpen(user.room_open);animalPets=user.animals||{};dogName=user.dog_name||'';petState=user.pet||petState;active=true;document.querySelector('meta[name="viewport"]').content='width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no';if(Number.isFinite(user.server_time)){worldClockAnchor=user.server_time*1000;worldClockReceived=performance.now();}x=user.state.x;z=user.state.z;yaw=user.state.yaw;pitch=user.state.pitch;if(galleryMode&&!village.canMove(x,z,x,z)){[x,z]=village.spawn;yaw=village.yaw;}music.muted=!!user.state.music_muted;musicLabel();$('saveStatus').textContent=user.persistent?'账户存档：自动保存':'访客模式：不保存进度';if(updateResume?.resume){const safe=Number.isFinite(updateResume.x)&&Number.isFinite(updateResume.z)&&village.canMove(updateResume.x,updateResume.z,updateResume.x,updateResume.z);[x,z]=safe?[updateResume.x,updateResume.z]:village.spawn;yaw=Number.isFinite(updateResume.yaw)?updateResume.yaw:yaw;pitch=Number.isFinite(updateResume.pitch)?Math.max(-.7,Math.min(.7,updateResume.pitch)):pitch;music.muted=updateResume.musicMuted;$('message').value=updateResume.message||'';setChatOpen(!!updateResume.chatOpen);petCooldownUntil=performance.now()+Math.max(0,(updateResume.cooldownEnds||0)-Date.now());updateResume=null;musicLabel();}
  jumpHeight=jumpVelocity=0;timer=setInterval(sync,150);sync();if($('chat').hidden)canvas.focus();else $('message').focus({preventScroll:true});window.systemUpdateRestored=true;updateReady();}catch(e){stopMusic();$('entryError').textContent=e.message;updateReady();}};
 async function sync(){if(!active||busy)return;busy=true;try{const data=await api('state',{x,z,yaw,pitch,music_muted:music.muted,jump:jumpHeight,running});if(data.version)window.dispatchEvent(new CustomEvent('site-version',{detail:data.version}));const now=performance.now();if(Number.isFinite(data.server_time)){worldClockAnchor=data.server_time*1000;worldClockReceived=now;}room?.setOpen(data.room_open);animalPets=data.animals||{};dogName=data.dog_name||'';petState=data.pet||petState;const previous=new Map(peers.map(p=>[p.id,p]));peers=data.players.map(p=>{const old=previous.get(p.id);p.movingUntil=old&&Math.hypot(p.x-old.x,p.z-old.z)>.015?now+350:(old?.movingUntil||0);return p;});$('status').textContent=(peers.length+1)+' online';$('saveStatus').textContent=window.worldAccount?'账户存档：已保存':'访客模式：不保存进度';speechByPlayer=recentSpeech(data.messages,worldClockAnchor+now-worldClockReceived);const signature=JSON.stringify(data.messages);if(signature!==lastChatSignature){lastChatSignature=signature;const list=$('messages');list.replaceChildren(...data.messages.map(m=>{const li=document.createElement('li');li.textContent=m.nickname+': '+m.body;return li;}));list.scrollTop=list.scrollHeight;}}catch(e){$('status').textContent='Reconnecting…';$('saveStatus').textContent='连接中断，存档等待同步';}finally{busy=false;}}
 function setChatOpen(open){
@@ -223,9 +229,9 @@ $('dismount').onclick=()=>setMount(null);
 $('world').addEventListener('dblclick',event=>{if(active)event.preventDefault();});
 document.addEventListener('gesturestart',event=>{if(active)event.preventDefault();},{passive:false});
 $('leave').onclick=async()=>{active=false;stopMusic();clearInterval(timer);document.exitPointerLock?.();try{await api('state',{x,z,yaw,pitch,music_muted:music.muted,jump:0,running:false});await api('leave',{});}catch{}location.href='/';};
-document.addEventListener('pointerdown',()=>{if(active){trainSound.unlock();crossingSound.unlock();}},{passive:true});
+document.addEventListener('pointerdown',()=>{if(active&&!galleryMode){trainSound.unlock();crossingSound.unlock();}},{passive:true});
 document.addEventListener('visibilitychange',()=>{if(document.hidden){trainSound.stop();crossingSound.stop();}});
-window.addEventListener('pagehide',()=>{stopMusic();if(active)fetch('/api/world/state',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json','X-CSRF-Token':window.worldToken},body:JSON.stringify({player_id:playerId,x,z,yaw,pitch,music_muted:music.muted,jump:0,running:false})});});
+window.addEventListener('pagehide',()=>{stopMusic();if(active)fetch('/api/'+(galleryMode?'gallery':'world')+'/state',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json','X-CSRF-Token':window.worldToken},body:JSON.stringify({player_id:playerId,x,z,yaw,pitch,music_muted:music.muted,jump:0,running:false})});});
 function lock(){try{const result=canvas.requestPointerLock?.();result?.catch(()=>{$('look').textContent='Drag to look around';});}catch{$('look').textContent='Drag to look around';}}canvas.onclick=lock;$('look').onclick=lock;
 document.addEventListener('pointerlockchange',()=>{$('look').hidden=document.pointerLockElement===canvas;keys.clear();});
 document.addEventListener('mousemove',e=>{if(document.pointerLockElement===canvas){yaw+=e.movementX*.003;pitch=Math.max(-.7,Math.min(.7,pitch+e.movementY*.003));}});
@@ -267,7 +273,7 @@ function animateWalk(avatar,moving,dt,isRunning=false,isJumping=false,mounted=fa
 function draw(now){
  const dt=Math.min((now-last)/1000,.05);last=now;
  if(active){
-  if($('petDialog').open||$('animalDialog').open){keys.clear();stickX=stickY=0;}
+  if($('petDialog').open||$('animalDialog').open||$('galleryPhotoDialog')?.open){keys.clear();stickX=stickY=0;}
   let f=(keys.has('w')?1:0)-(keys.has('s')?1:0)-stickY,s=(keys.has('d')?1:0)-(keys.has('a')?1:0)+stickX;const length=Math.max(1,Math.hypot(f,s));
   running=Math.hypot(f,s)>.1&&(keys.has('shift')||Math.hypot(stickX,stickY)>.9);const speed=animalPets.riding?(running?10:6):(running?7:4);
   const nextX=x+(-Math.sin(yaw)*f-Math.cos(yaw)*s)*dt*speed/length,nextZ=z+(Math.cos(yaw)*f-Math.sin(yaw)*s)*dt*speed/length;
@@ -300,6 +306,7 @@ function draw(now){
     a.speech.style.left=(bubblePoint.x*.5+.5)*w+'px';a.speech.style.top=(-bubblePoint.y*.5+.5)*h+'px';
    }
   });
+  if(galleryMode)$('galleryPhotoAction').hidden=!village.nearPhoto(x,z);
   room?.update(dt);$('roomAction').hidden=!room?.near(x,z);$('roomAction').textContent=room?.open?'关门 · E':'打开小屋门 · E';
   if(train){train.update(worldClockAnchor+now-worldClockReceived);dogCar?.update(worldClockAnchor+now-worldClockReceived);const crossingState=village.crossing.update(train,worldClockAnchor+now-worldClockReceived);crossingSound.update(crossingState.flashing,camera,music.muted);trainSound.update(train,camera,now,music.muted);}
   if(room){const marker=new THREE.Vector3(58,5.9,-129.8).project(camera);$('roomMarker').hidden=Math.hypot(x-58,z+130)>32||marker.z>1||marker.z< -1||Math.abs(marker.x)>1||Math.abs(marker.y)>1;$('roomMarker').style.left=(marker.x*.5+.5)*w+'px';$('roomMarker').style.top=(-marker.y*.5+.5)*h+'px';}
@@ -345,6 +352,10 @@ window.abortSystemUpdate=async saved=>{
  try{const joined=await api('join',{nickname:saved.nickname,avatar:saved.skin});playerId=joined.id;active=true;timer=setInterval(sync,150);startMusic();sync();}
  catch(error){$('world').hidden=true;$('entry').hidden=false;$('entryError').textContent='更新连接中断，请重新进入游戏。';}
 };
+if(galleryMode){
+ $('galleryPhotoAction').onclick=()=>{document.exitPointerLock?.();keys.clear();resetStick();$('galleryPhotoDialog').showModal();};
+ $('galleryPhotoClose').onclick=()=>$('galleryPhotoDialog').close();
+}
 if(updateResume){
  $('nickname').value=updateResume.nickname||$('nickname').value;
  villageReady.then(()=>{if(updateResume?.resume&&village)$('join').requestSubmit();else updateReady();}).catch(()=>updateReady());

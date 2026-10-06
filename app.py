@@ -54,6 +54,7 @@ def build_version():
     return digest.hexdigest()
 
 APP_VERSION=build_version()
+app.config['APP_VERSION']=APP_VERSION
 
 @app.get('/api/version')
 def app_version():
@@ -160,7 +161,7 @@ def home():
 
 @app.route('/work')
 def work():
-    return render_template('work.html')
+    return redirect('/gallery')
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -557,6 +558,9 @@ install_animals(app,database,world_player_id,pet_progress)
 
 from forum import install_forum
 install_forum(app, database)
+
+from gallery import install_gallery
+install_gallery(app,database)
 
 if __name__ == '__main__':
     app.run()
