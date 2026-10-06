@@ -56,10 +56,6 @@
     <style>
         .earth-scene { position: fixed; inset: 0; z-index: 1100; background: #000; display: grid; place-items: center; }
         .earth-scene[hidden] { display: none; }
-        .earth-stars { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
-        .earth-stars i { position: absolute; width: 2px; height: 2px; border-radius: 50%; background: #fff; }
-        #earthModel { width: min(58vw, 480px); height: min(58vh, 480px); background: transparent; --progress-bar-color: #777; }
-        .earth-enter-hint { position: absolute; top: calc(50% + min(29vh, 240px) + 12px); left: 50%; transform: translateX(-50%); margin: 0; color: rgba(255,255,255,.55); font: 400 14px/1.5 Arial, sans-serif; letter-spacing: .06em; white-space: nowrap; pointer-events: none; }
         .earth-back { position: absolute; top: 28px; left: 28px; z-index: 2; background: #000; border: 1px solid #555; color: #eee; padding: 12px 18px; border-radius: 25px; cursor: pointer; }
         .earth-back:focus-visible { outline: 2px solid white; outline-offset: 4px; }
 
@@ -1137,7 +1133,19 @@
 
         }
 
-    </style>
+    
+        #earthHubCanvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;outline:none}
+        #hubMusic{position:absolute;right:24px;top:28px;color:#ddd;background:rgba(0,0,0,.55);border:1px solid #555;border-radius:24px;padding:12px 18px;cursor:pointer}
+        #hubStatus{position:absolute;top:80px;left:50%;transform:translateX(-50%);color:#aaa;font:13px Arial;text-align:center;pointer-events:none;width:80%}
+        .hub-folder-label{position:absolute;transform:translate(-50%,-50%);background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.22);border-radius:12px;padding:10px 16px;color:#fff;font:14px Arial;cursor:pointer;white-space:nowrap}
+        .hub-folder-label[hidden]{display:none}.hub-folder-label:disabled{color:#999;cursor:default}
+        .hub-folder-label:hover:not(:disabled){background:rgba(255,255,255,.2)}
+        #hubHelp{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);color:#888;font:12px Arial;text-align:center;pointer-events:none;width:85%}
+        .hub-mobile-help{display:none}#hubJoystick{display:none;position:absolute;left:25px;bottom:70px;width:110px;height:110px;border:1px solid #666;border-radius:50%;background:rgba(255,255,255,.05);touch-action:none}
+        #hubKnob{position:absolute;left:50%;top:50%;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.28);transform:translate(-50%,-50%);pointer-events:none}
+        @media(pointer:coarse){#hubJoystick{display:block}.hub-mobile-help{display:inline}.hub-desktop-help{display:none}}
+
+</style>
 </head>
 
 
@@ -1347,11 +1355,16 @@
 
 <audio id="earthMusic" src="/static/audio/earth-music.m4a" loop preload="none"></audio>
 
-<section class="earth-scene" id="earthScene" role="dialog" aria-modal="true" aria-label="Earth in space" hidden>
-    <div class="earth-stars" id="earthStars" aria-hidden="true"></div>
+<section class="earth-scene" id="earthScene" role="dialog" aria-modal="true" aria-label="Earth game space" hidden>
+    <canvas id="earthHubCanvas" tabindex="0" aria-label="第一人称地球空间，使用 WASD 或摇杆走动，拖动查看四周"></canvas>
     <button class="earth-back" id="earthBack" type="button">← Back to game</button>
-    <model-viewer id="earthModel" camera-controls disable-pan disable-zoom min-camera-orbit="auto 75deg auto" max-camera-orbit="auto 75deg auto" touch-action="none" data-src="/static/models/earth.glb" alt="Earth by Poly by Google, slowly rotating in space" auto-rotate auto-rotate-delay="0" rotation-per-second="5deg" camera-orbit="0deg 75deg auto" shadow-intensity="0" interaction-prompt="none"></model-viewer>
-    <p class="earth-enter-hint">click earth to enter</p>
+    <button id="hubMusic" type="button">音乐：开</button>
+    <p id="hubStatus" role="status">正在加载地球空间…</p>
+    <button class="hub-folder-label" type="button" hidden>Town Life</button>
+    <button class="hub-folder-label" type="button" disabled hidden>Coming soon</button>
+    <button class="hub-folder-label" type="button" disabled hidden>Coming soon</button>
+    <p id="hubHelp"><span class="hub-desktop-help">WASD 移动 · 拖动查看四周 · 点击 Town Life</span><span class="hub-mobile-help">摇杆移动 · 拖动查看四周 · 点击 Town Life</span></p>
+    <div id="hubJoystick" aria-label="拖动摇杆在空间里行走"><span id="hubKnob"></span></div>
 </section>
 
 <!-- 只新增的电脑点击音效 -->
@@ -4104,16 +4117,8 @@
 
 
     const earthScene = document.getElementById('earthScene');
-    const earthModel = document.getElementById('earthModel');
     const earthMusic = document.getElementById('earthMusic');
-    function resetEarth() {
-        earthModel.cameraOrbit = '0deg 75deg auto';
-        earthModel.resetTurntableRotation(0);
-        earthModel.jumpCameraToGoal();
-    }
-    earthModel.addEventListener('load', () => {
-        if (!earthScene.hidden) resetEarth();
-    });
+    let earthHub, earthHubPromise, earthOpenVersion=0;
     const earthBack = document.getElementById('earthBack');
     const earthFolder = document.getElementById('earthFolder');
     const gameFolder = document.getElementById('gameFolder');
@@ -4130,52 +4135,38 @@
         });
     }
     desktopBack.addEventListener('click', () => { showDesktopFolder(false); gameFolder.focus(); });
-    const stars = document.getElementById('earthStars');
-    for (let i = 0; i < 90; i++) {
-        const star = document.createElement('i');
-        star.style.left = `${Math.random() * 100}%`;
-        star.style.top = `${Math.random() * 100}%`;
-        star.style.opacity = .2 + Math.random() * .6;
-        const size = Math.random() > .9 ? 2 : 1;
-        star.style.width = star.style.height = `${size}px`;
-        stars.appendChild(star);
-    }
-    let earthPress;
-    earthModel.addEventListener('pointerdown', event => {
-        earthPress = { x: event.clientX, y: event.clientY, moved: false, time: performance.now() };
-    });
-    earthModel.addEventListener('pointermove', event => {
-        if (earthPress && Math.hypot(event.clientX - earthPress.x, event.clientY - earthPress.y) > 8) earthPress.moved = true;
-    });
-    earthModel.addEventListener('pointercancel', () => { earthPress = null; });
-    earthModel.addEventListener('pointerup', event => {
-        if (earthPress && !earthPress.moved && performance.now() - earthPress.time < 600) {
-            closeEarth();
-            location.href = '/world';
+    async function openEarth() {
+        const version=++earthOpenVersion;
+        earthScene.hidden=false;
+        earthMusic.currentTime=0;
+        earthMusic.play().catch(()=>{document.getElementById('hubMusic').textContent='播放音乐';});
+        document.getElementById('hubStatus').textContent='正在加载地球空间…';
+        try {
+            if (!earthHubPromise) earthHubPromise=import('/static/earth-hub.js').then(module=>module.createEarthHub({
+                canvas:document.getElementById('earthHubCanvas'),music:earthMusic,
+                onTown:()=>{closeEarth();location.href='/world';}
+            })).catch(error=>{earthHubPromise=null;throw error;});
+            earthHub=await earthHubPromise;
+            if(version===earthOpenVersion&&!earthScene.hidden)earthHub.start();
+        } catch(error) {
+            if(version===earthOpenVersion&&!earthScene.hidden)document.getElementById('hubStatus').textContent='空间加载失败，请返回后重试。';
         }
-        earthPress = null;
-    });
-    function openEarth() {
-        earthScene.hidden = false;
-        if (!earthModel.hasAttribute('src')) earthModel.setAttribute('src', earthModel.dataset.src);
-        if (earthModel.loaded) resetEarth();
-        earthMusic.currentTime = 0;
-        if (earthMusic.hasAttribute('src')) {
-            earthMusic.play().catch(() => {});
-        }
-        earthModel.autoRotate = !matchMedia('(prefers-reduced-motion: reduce)').matches;
-        earthBack.focus();
     }
     function closeEarth() {
-        earthScene.hidden = true;
+        ++earthOpenVersion;
+        earthHub?.stop();
+        earthScene.hidden=true;
         earthMusic.pause();
-        earthMusic.currentTime = 0;
-        earthModel.autoRotate = false;
+        earthMusic.currentTime=0;
         earthFolder.focus();
     }
-    earthBack.addEventListener('click', closeEarth);
-    earthScene.addEventListener('keydown', event => {
-        if (event.key === 'Tab') { event.preventDefault(); earthBack.focus(); }
+    earthBack.addEventListener('click',closeEarth);
+    earthScene.addEventListener('keydown',event=>{
+        if(event.key!=='Tab')return;
+        const focusable=[...earthScene.querySelectorAll('button:not(:disabled),canvas[tabindex]')].filter(el=>!el.hidden);
+        const first=focusable[0],last=focusable.at(-1);
+        if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}
+        else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
     });
 
     document.querySelectorAll('.desktop-folder').forEach(folder => {
