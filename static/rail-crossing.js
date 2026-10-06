@@ -1,6 +1,7 @@
 import * as THREE from './vendor/three.module.js';
+import {TRAIN_SPEED} from './train.js';
 // Geometry and placements come from the existing village crossing, not new gates.
-export function crossingState(elapsed,distance,length,speed=5){
+export function crossingState(elapsed,distance,length,speed=TRAIN_SPEED){
  const arrival=(distance-4)/speed*1000,clear=(distance+4+length)/speed*1000;
  const warning=arrival-10000,lower=arrival-7000,down=arrival-4000,raised=clear+3000;
  const ease=t=>{t=Math.max(0,Math.min(1,t));return t*t*(3-2*t);};
@@ -31,7 +32,7 @@ export function createCrossing(scene,arms,signals){
   }
   const cycle=train.cycle(now),cars=train.trains[cycle.type].cars;
   const length=Math.max(...cars.map(c=>c.offset+c.length/2));
-  const state=crossingState(cycle.elapsed,distance,length);
+  const state=crossingState(cycle.elapsed,distance,length,train.speed);
   for(const arm of arms)arm.pivot.rotation.z=state.openness*Math.PI/2;
   flash.value=state.flashing?(Math.floor(now/450)%2?.22:1):0;
   return state;
