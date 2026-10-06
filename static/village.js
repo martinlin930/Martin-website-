@@ -1,6 +1,7 @@
 import * as THREE from './vendor/three.module.js';
 import { GLTFLoader } from './vendor/GLTFLoader.js';
 import { createNightLights } from './night-lights.js';
+import { createCrossing } from './rail-crossing.js';
 const base='/static/models/village/';
 export async function loadVillage(scene,onProgress=()=>{},renderer){
  const [data,terrain,binary,bounds]=await Promise.all([
@@ -88,9 +89,22 @@ export async function loadVillage(scene,onProgress=()=>{},renderer){
   if(gap>.05&&Number.isFinite(gap))matrix.elements[13]-=gap+.005;
  }
  supportMaterial.dispose();
- const batches=new Map(),walkables=[];
+ const batches=new Map(),walkables=[],crossingArms=[],crossingSignals=[];
+ // Keep the original moving arms and signal heads outside the static batches.
+ const crossingRecords=records.filter(({node})=>/SM_(lever_02_traincrossing|cross_train)\.fbx$/i.test(data.assets[node.asset]));
+ for(const {node,matrix} of crossingRecords){
+  const placement=new THREE.Group();placement.matrixAutoUpdate=false;placement.matrix.copy(matrix);scene.add(placement);
+  const pivot=new THREE.Group();placement.add(pivot);
+  models.get(node.asset).traverse(source=>{if(!source.isMesh)return;
+   const slot=(Array.isArray(source.material)?source.material[0]:source.material).name.match(/slot_(\d+)/)?.[1]||'0';
+   const mesh=new THREE.Mesh(source.geometry.clone().applyMatrix4(source.matrixWorld),material(node.materials[slot]));mesh.castShadow=true;mesh.receiveShadow=true;pivot.add(mesh);
+   if(/SM_cross_train\.fbx$/i.test(data.assets[node.asset]))crossingSignals.push(mesh);
+  });
+  if(/lever_02/.test(data.assets[node.asset]))crossingArms.push({pivot});
+ }
+ const crossing=createCrossing(scene,crossingArms,crossingSignals);
  const isWalkable=node=>/\/Roads\//.test(data.assets[node.asset])&&/road|sidewalk|platform/i.test(node.name)||/staircase|platform/i.test(node.name);
- for(const{node,matrix}of records){models.get(node.asset)?.traverse(mesh=>{
+ for(const{node,matrix}of records){if(crossingRecords.some(r=>r.node===node))continue;models.get(node.asset)?.traverse(mesh=>{
   if(!mesh.isMesh)return;
   const source=Array.isArray(mesh.material)?mesh.material[0]:mesh.material;const slot=source.name.match(/slot_(\d+)/)?.[1]||'0';const guid=node.materials[slot];if(/invisible/i.test(data.materials[guid]?.name||''))return;const key=mesh.geometry.uuid+'-'+guid;
   if(!batches.has(key))batches.set(key,{geometry:mesh.geometry,material:material(guid),matrices:[],walkable:isWalkable(node),shadow:/\/(Buildings|Nature|Props|Roads|Modular pieces)\//.test(data.assets[node.asset])&&!/grass|weeds|cornplant|riceplant/i.test(node.name)});
@@ -117,7 +131,7 @@ export async function loadVillage(scene,onProgress=()=>{},renderer){
  const terrainHeight=groundHeight;
  const surfaceHeight=(x,z)=>{const floor=terrainHeight(x,z);ray.set(new THREE.Vector3(x,floor+10,z),down);const hit=ray.intersectObjects(walkables,false)[0];return hit&&hit.point.y>floor-.08?Math.max(floor,hit.point.y+.035):floor;};
 
- return {size,nightLights,spawn:terrain.spawn,yaw:terrain.yaw,groundHeight:surfaceHeight,canMove(x,z,fromX,fromZ){
+ return {size,nightLights,crossing,spawn:terrain.spawn,yaw:terrain.yaw,groundHeight:surfaceHeight,canMove(x,z,fromX,fromZ){
   if(x<1||x>size-1||z> -1||z<1-size)return false;
   const y=surfaceHeight(x,z);if(y-surfaceHeight(fromX,fromZ)>.45)return false;
   for(const o of obstacles){point.set(x,y+.8,z).applyMatrix4(o.inverse);if(point.y>o.min.y&&point.y<o.max.y&&point.x>o.min.x+.15&&point.x<o.max.x-.15&&point.z>o.min.z+.15&&point.z<o.max.z-.15)return false;}
