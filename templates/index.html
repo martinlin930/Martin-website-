@@ -1342,7 +1342,7 @@
         <div class="desktop-bar"><span>MARTIN</span><span id="desktopPath">Desktop</span><button id="desktopBack" type="button" hidden>← Desktop</button></div>
         <div class="desktop-files" id="desktopRoot">
             <button class="desktop-folder" type="button" aria-label="Open pictures folder"><model-viewer src="/static/models/file-folder.glb" alt="File folder by Ryan Dewalt" camera-orbit="-20deg 75deg auto" shadow-intensity="0.5" interaction-prompt="none" aria-hidden="true"></model-viewer><span>pictures</span></button>
-            <button class="desktop-folder" id="gameFolder" type="button" aria-label="Open game folder"><model-viewer src="/static/models/file-folder.glb" alt="File folder by Ryan Dewalt" camera-orbit="-20deg 75deg auto" shadow-intensity="0.5" interaction-prompt="none" aria-hidden="true"></model-viewer><span>game</span></button>
+            <button class="desktop-folder" id="gameFolder" type="button" aria-label="Open Game folder"><model-viewer src="/static/models/file-folder.glb" alt="File folder by Ryan Dewalt" camera-orbit="-20deg 75deg auto" shadow-intensity="0.5" interaction-prompt="none" aria-hidden="true"></model-viewer><span>Game</span></button>
             <button class="desktop-folder" id="forumFolder" type="button" aria-label="打开Discussion"><model-viewer src="/static/models/file-folder.glb" alt="Discussion文件夹" camera-orbit="-20deg 75deg auto" shadow-intensity="0.5" interaction-prompt="none" aria-hidden="true"></model-viewer><span>Discussion</span></button>
         </div>
         <div class="desktop-files" id="gameFiles" hidden>
@@ -4130,7 +4130,7 @@
         document.getElementById('desktopRoot').hidden = game;
         document.getElementById('gameFiles').hidden = !game;
         desktopBack.hidden = !game;
-        document.getElementById('desktopPath').textContent = game ? 'Desktop / game' : 'Desktop';
+        document.getElementById('desktopPath').textContent = game ? 'Desktop / Game' : 'Desktop';
         document.getElementById('desktopCount').textContent = game ? '1 folder' : '3 folders';
         document.querySelectorAll('.desktop-folder').forEach(folder => {
             folder.classList.remove('selected');
