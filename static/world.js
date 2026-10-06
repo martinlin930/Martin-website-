@@ -2,6 +2,7 @@ import * as THREE from './vendor/three.module.js';
 import { clone as cloneSkeleton } from './vendor/SkeletonUtils.js';
 import { GLTFLoader } from './vendor/GLTFLoader.js';
 import { loadVillage } from './village.js';
+import {createOcean} from './ocean.js';
 import { worldTime } from './day-night.js';
 import { createForage } from './forage.js';
 import {createTrain} from './train.js';
@@ -51,8 +52,8 @@ Object.assign(sun.shadow.camera,{left:-55,right:55,top:55,bottom:-55,near:1,far:
 scene.add(sun,sun.target);
 const sunOffset=new THREE.Vector3(0,0,-1).applyQuaternion(new THREE.Quaternion(-.5429736,.7981683,.19599362,.17231831).normalize()).multiplyScalar(-70);
 const camera=new THREE.PerspectiveCamera(70,1,.1,500);camera.rotation.order='YXZ';
-let village,dogs,forage,train,room;const joinButton=$('join').querySelector('button');joinButton.disabled=true;
-const villageReady=loadVillage(scene,progress=>{joinButton.textContent='Loading village… '+Math.round(progress*100)+'%';},renderer).then(async map=>{village=map;[train,room]=await Promise.all([createTrain(scene),createRoom(scene,map)]);dogs=await createDogs(scene,map);animals=await createAnimals(scene,map);forage=await createForage(scene,map);
+let village,dogs,forage,train,room,ocean;const joinButton=$('join').querySelector('button');joinButton.disabled=true;
+const villageReady=loadVillage(scene,progress=>{joinButton.textContent='Loading village… '+Math.round(progress*100)+'%';},renderer).then(async map=>{village=map;[train,room,ocean]=await Promise.all([createTrain(scene),createRoom(scene,map),createOcean(scene,map.size)]);dogs=await createDogs(scene,map);animals=await createAnimals(scene,map);forage=await createForage(scene,map);
  const skyMaterial=new THREE.MeshBasicMaterial({map:scene.background,side:THREE.BackSide,depthWrite:false,fog:false,toneMapped:false});
  skyMaterial.onBeforeCompile=shader=>{shader.uniforms.nightMix=skyNight;shader.uniforms.nightColor={value:nightSky};shader.fragmentShader='uniform float nightMix; uniform vec3 nightColor;\n'+shader.fragmentShader;shader.fragmentShader=shader.fragmentShader.replace('#include <map_fragment>','#include <map_fragment>\n diffuseColor.rgb=mix(diffuseColor.rgb,nightColor,nightMix);');};
  skyDome=new THREE.Mesh(new THREE.SphereGeometry(450,32,16),skyMaterial);skyDome.frustumCulled=false;skyDome.renderOrder=-1;scene.add(skyDome);scene.background=null;
@@ -213,7 +214,7 @@ function draw(now){
   $('petXp').value=petState.level===100?100:petState.xp%100;
   $('petProgress').textContent=petState.level===100?'已达到 100 级':(petState.xp%100)+' / 100 经验';
   for(const id of ['feedDog','petDog','callDog'])$(id).disabled=petBusy;
-  updateDayNight(now);renderer.render(scene,camera);
+  updateDayNight(now);ocean?.update(camera);renderer.render(scene,camera);
  }
  requestAnimationFrame(draw);
 }

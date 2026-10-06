@@ -117,7 +117,7 @@ export async function loadVillage(scene,onProgress=()=>{},renderer){
  const terrainHeight=groundHeight;
  const surfaceHeight=(x,z)=>{const floor=terrainHeight(x,z);ray.set(new THREE.Vector3(x,floor+10,z),down);const hit=ray.intersectObjects(walkables,false)[0];return hit&&hit.point.y>floor-.08?Math.max(floor,hit.point.y+.035):floor;};
 
- return {nightLights,spawn:terrain.spawn,yaw:terrain.yaw,groundHeight:surfaceHeight,canMove(x,z,fromX,fromZ){
+ return {size,nightLights,spawn:terrain.spawn,yaw:terrain.yaw,groundHeight:surfaceHeight,canMove(x,z,fromX,fromZ){
   if(x<1||x>size-1||z> -1||z<1-size)return false;
   const y=surfaceHeight(x,z);if(y-surfaceHeight(fromX,fromZ)>.45)return false;
   for(const o of obstacles){point.set(x,y+.8,z).applyMatrix4(o.inverse);if(point.y>o.min.y&&point.y<o.max.y&&point.x>o.min.x+.15&&point.x<o.max.x-.15&&point.z>o.min.z+.15&&point.z<o.max.z-.15)return false;}
