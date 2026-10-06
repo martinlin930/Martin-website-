@@ -10,6 +10,7 @@ import {recentSpeech} from './speech-bubbles.js';
 let speechByPlayer=new Map();
 import { createForage } from './forage.js';
 import {createTrain} from './train.js';
+import {createDogCar} from './dog-car.js';
 import {createTrainSound} from './train-sound.js';
 import {createCrossingSound} from './crossing-sound.js';
 const trainSound=createTrainSound();
@@ -79,8 +80,8 @@ Object.assign(sun.shadow.camera,{left:-55,right:55,top:55,bottom:-55,near:1,far:
 scene.add(sun,sun.target);
 const sunOffset=new THREE.Vector3(0,0,-1).applyQuaternion(new THREE.Quaternion(-.5429736,.7981683,.19599362,.17231831).normalize()).multiplyScalar(-70);
 const camera=new THREE.PerspectiveCamera(70,1,.1,500);camera.rotation.order='YXZ';
-let village,dogs,forage,train,room,ocean;const joinButton=$('join').querySelector('button[type="submit"]');joinButton.disabled=true;
-const villageReady=loadVillage(scene,progress=>{joinButton.textContent='Loading village… '+Math.round(progress*100)+'%';},renderer).then(async map=>{village=map;[train,room,ocean]=await Promise.all([createTrain(scene),createRoom(scene,map),createOcean(scene,map.size)]);dogs=await createDogs(scene,map);animals=await createAnimals(scene,map);forage=await createForage(scene,map);
+let village,dogs,forage,train,room,ocean,dogCar;const joinButton=$('join').querySelector('button[type="submit"]');joinButton.disabled=true;
+const villageReady=loadVillage(scene,progress=>{joinButton.textContent='Loading village… '+Math.round(progress*100)+'%';},renderer).then(async map=>{village=map;[train,room,ocean]=await Promise.all([createTrain(scene),createRoom(scene,map),createOcean(scene,map.size)]);dogCar=await createDogCar(scene,map,train);dogs=await createDogs(scene,map);animals=await createAnimals(scene,map);forage=await createForage(scene,map);
  const skyMaterial=new THREE.MeshBasicMaterial({map:scene.background,side:THREE.BackSide,depthWrite:false,fog:false,toneMapped:false});
  skyMaterial.onBeforeCompile=shader=>{shader.uniforms.nightMix=skyNight;shader.uniforms.nightColor={value:nightSky};shader.fragmentShader='uniform float nightMix; uniform vec3 nightColor;\n'+shader.fragmentShader;shader.fragmentShader=shader.fragmentShader.replace('#include <map_fragment>','#include <map_fragment>\n diffuseColor.rgb=mix(diffuseColor.rgb,nightColor,nightMix);');};
  skyDome=new THREE.Mesh(new THREE.SphereGeometry(450,32,16),skyMaterial);skyDome.frustumCulled=false;skyDome.renderOrder=-1;scene.add(skyDome);scene.background=null;
@@ -293,7 +294,7 @@ function draw(now){
    }
   });
   room?.update(dt);$('roomAction').hidden=!room?.near(x,z);$('roomAction').textContent=room?.open?'关门 · E':'打开小屋门 · E';
-  if(train){train.update(worldClockAnchor+now-worldClockReceived);const crossingState=village.crossing.update(train,worldClockAnchor+now-worldClockReceived);crossingSound.update(crossingState.flashing,camera,music.muted);trainSound.update(train,camera,now,music.muted);}
+  if(train){train.update(worldClockAnchor+now-worldClockReceived);dogCar?.update(worldClockAnchor+now-worldClockReceived);const crossingState=village.crossing.update(train,worldClockAnchor+now-worldClockReceived);crossingSound.update(crossingState.flashing,camera,music.muted);trainSound.update(train,camera,now,music.muted);}
   if(room){const marker=new THREE.Vector3(58,5.9,-129.8).project(camera);$('roomMarker').hidden=Math.hypot(x-58,z+130)>32||marker.z>1||marker.z< -1||Math.abs(marker.x)>1||Math.abs(marker.y)>1;$('roomMarker').style.left=(marker.x*.5+.5)*w+'px';$('roomMarker').style.top=(-marker.y*.5+.5)*h+'px';}
   animals?.update(worldClockAnchor+now-worldClockReceived,[{id:playerId,x,z,yaw,jump:jumpHeight,running,moving:Math.hypot(f,s)>.1,local:true,riding:animalPets.riding,animals:animalPets},...peers],dt,camera,w,h);
   nearAnimal=animals?.nearest(x,z)?.kind??null;
