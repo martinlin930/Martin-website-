@@ -407,9 +407,12 @@ def pet_action():
                 return {'error': '狗粮不足，去有食物的草丛采集吧。'}, 400
             cost = 1 if action == 'feed' else 0
             reward = 25 if action == 'feed' else 5 if action == 'pet' else 0
-            changed = db.execute('UPDATE game_saves SET dog_food=dog_food-?, dog_xp=CASE WHEN dog_xp+? > 10000 THEN 10000 ELSE dog_xp+? END, dog_interaction_at=? WHERE user_id=? AND dog_interaction_at=? AND dog_food>=? RETURNING user_id', (cost,reward,reward,now,uid,saved['dog_interaction_at'],cost)).fetchone()
+            changed = db.execute('UPDATE game_saves SET dog_food=dog_food-?, dog_xp=CASE WHEN dog_xp+? > 10000 THEN 10000 ELSE dog_xp+? END, dog_interaction_at=? WHERE user_id=? AND dog_interaction_at<=? AND dog_food>=? RETURNING user_id', (cost,reward,reward,now,uid,now-5,cost)).fetchone()
             if not changed:
-                return {'error': '互动刚刚已完成，请稍后重试。'}, 409
+                latest = db.execute('SELECT dog_food FROM game_saves WHERE user_id=?', (uid,)).fetchone()
+                if action == 'feed' and latest['dog_food'] < cost:
+                    return {'error': '狗粮不足，去有食物的草丛采集吧。'}, 400
+                return {'error': '让狗缓一缓，5 秒后再互动。'}, 429
             message = {'feed':'喂食成功 · +25 经验', 'pet':'狗开心地摇尾巴 · +5 经验', 'call':'狗听见你在呼唤它'}[action]
         else:
             return {'error': '未知互动。'}, 400
