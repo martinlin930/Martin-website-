@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import {GLTFLoader} from './static/vendor/GLTFLoader.js';
 import {galleryLighting,galleryShadows,removePhotoFrame} from './static/gallery-lighting.js';
 import * as THREE from './static/vendor/three.module.js';
+import {removeGalleryFrames,galleryPhotos} from './static/gallery-photos.js';
 const glb=zlib.gunzipSync(fs.readFileSync('static/models/gallery/showroom.glb.gz'));
 assert.equal(glb.readUInt32LE(0),0x46546c67);
 assert.equal(glb.readUInt32LE(8),glb.length);
@@ -18,7 +19,13 @@ const model=await new GLTFLoader().parseAsync(rebuilt.buffer,'');let meshes=0,tr
 model.scene.traverse(m=>{if(m.isMesh){meshes++;triangles+=m.geometry.index.count/3;assert(m.geometry.attributes.normal.count===m.geometry.attributes.position.count);m.geometry.computeBoundingSphere();assert(Number.isFinite(m.geometry.boundingSphere.radius));}});
 assert(meshes>50);assert(triangles>100000);
 const layout=JSON.parse(fs.readFileSync('static/models/gallery/layout.json','utf8'));
-assert.equal(removePhotoFrame(model.scene,layout.photo),26,'Only the selected photo backing is removed');
+const photos=JSON.parse(fs.readFileSync('static/models/gallery/photos.json','utf8'));
+assert.equal(photos.length,58);
+for(const photo of photos){assert(fs.statSync('static/models/gallery/'+photo.thumb).size>0);assert(fs.statSync('static/models/gallery/'+photo.full).size>0);assert(photo.aspect>0);}
+assert.equal(removeGalleryFrames(model.scene,photos),1092,'All 42 original empty frames are removed');
+const exhibition=galleryPhotos(new THREE.Scene(),photos,'/static/models/gallery/');
+assert.equal(exhibition.items.length,58);assert(exhibition.nearest(-20,-17));
+for(const item of exhibition.items){assert(Math.abs(item.mesh.geometry.parameters.width/item.mesh.geometry.parameters.height-item.photo.aspect)<1e-6);}
 galleryShadows(model.scene);let casting=0;model.scene.traverse(m=>{if(m.isMesh&&m.castShadow)casting++;});assert(casting>50);
 const lighting=galleryLighting(new THREE.Scene(),{mobile:true});assert.equal(lighting.lamps.length,3);
 for(const lamp of lighting.lamps){assert(lamp.castShadow);assert.equal(lamp.shadow.mapSize.x,1024);assert.equal(lamp.shadow.autoUpdate,false);lamp.shadow.needsUpdate=false;}

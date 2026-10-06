@@ -3,7 +3,7 @@ import * as THREE from './vendor/three.module.js';
 export function galleryLighting(scene,{mobile=false}={}){
  const lamps=[];
  for(const x of [-14.95,1.18,17.29]){
-  const lamp=new THREE.SpotLight(0xfff2df,115,22,1.17,.55,2);
+  const lamp=new THREE.SpotLight(0xfff2df,180,22,1.17,.55,2);
   lamp.position.set(x,7.85,-11.44);lamp.target.position.set(x,3.49,-11.44);
   lamp.castShadow=true;lamp.shadow.mapSize.set(mobile?1024:2048,mobile?1024:2048);
   lamp.shadow.camera.near=.2;lamp.shadow.camera.far=22;
