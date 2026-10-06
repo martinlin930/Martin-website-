@@ -1147,7 +1147,7 @@
         @media(pointer:coarse){ #hubJoystick{display:block}.hub-mobile-help{display:inline}.hub-desktop-help{display:none}}
 
 </style>
-</head>
+<style>html.system-updating::before{content:"";position:fixed;inset:0;background:#fff;z-index:2147483646}html.system-updating::after{content:"Updating";position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);color:#222;font:400 24px Arial,sans-serif;letter-spacing:.04em;z-index:2147483647}html.system-updating{overflow:hidden}</style><script>try{const pending=JSON.parse(sessionStorage.getItem('martin-system-update')||'null');if(pending&&pending.path===location.pathname&&Date.now()-pending.savedAt<600000)document.documentElement.classList.add('system-updating');}catch{}</script></head>
 
 
 <body>
@@ -4117,6 +4117,8 @@
         );
 
 
+    let homeResume=null;
+    try{const data=JSON.parse(sessionStorage.getItem('martin-system-update')||'null');if(data?.path===location.pathname&&Date.now()-data.savedAt<600000)homeResume=data.saved;}catch{}
     const earthScene = document.getElementById('earthScene');
     const earthMusic = document.getElementById('earthMusic');
     let earthHub, earthHubPromise, earthOpenVersion=0;
@@ -4139,7 +4141,7 @@
     async function openEarth() {
         const version=++earthOpenVersion;
         earthScene.hidden=false;
-        earthMusic.currentTime=0;
+        earthMusic.currentTime=homeResume?.earthOpen?(homeResume.musicTime||0):0;
         earthMusic.play().catch(()=>{document.getElementById('hubMusic').textContent='播放音乐';});
         document.getElementById('hubStatus').textContent='正在加载地球空间…';
         try {
@@ -4148,9 +4150,9 @@
                 onTown:()=>{closeEarth();location.href='/world';}
             })).catch(error=>{earthHubPromise=null;throw error;});
             earthHub=await earthHubPromise;
-            if(version===earthOpenVersion&&!earthScene.hidden)earthHub.start();
+            if(version===earthOpenVersion&&!earthScene.hidden){earthHub.start(homeResume?.earth);homeResume=null;window.systemUpdateRestored=true;window.dispatchEvent(new Event('system-update-ready'));}
         } catch(error) {
-            if(version===earthOpenVersion&&!earthScene.hidden)document.getElementById('hubStatus').textContent='空间加载失败，请返回后重试。';
+            if(version===earthOpenVersion&&!earthScene.hidden){document.getElementById('hubStatus').textContent='空间加载失败，请返回后重试。';window.systemUpdateRestored=true;window.dispatchEvent(new Event('system-update-ready'));}
         }
     }
     function closeEarth() {
@@ -4315,11 +4317,20 @@
 
     );
 
+
+    window.prepareSystemUpdate=async()=>({resume:false,waitForReady:!earthScene.hidden,page:'home',desktopOpen:viewer.classList.contains('open'),gameFolderOpen:document.getElementById('desktopRoot').hidden,earthOpen:!earthScene.hidden,earth:earthHub?.snapshot(),musicTime:earthMusic.currentTime,scroll:window.scrollY});
+    if(homeResume?.page==='home'){
+        window.scrollTo(0,homeResume.scroll||0);
+        showDesktopFolder(!!homeResume.gameFolderOpen);
+        if(homeResume.desktopOpen){viewer.classList.add('open');document.body.style.overflow='hidden';}
+        if(homeResume.earthOpen)openEarth();
+        else{homeResume=null;window.systemUpdateRestored=true;window.dispatchEvent(new Event('system-update-ready'));}
+    }
 })();
 
 </script>
 
 
-</body>
+<script>window.siteVersion={{ app_version|tojson }};</script><script type="module" src="/static/auto-update.js?v={{ app_version }}"></script></body>
 
 </html>

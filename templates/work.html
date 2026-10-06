@@ -84,7 +84,7 @@
             font-size: 12px;
         }
     </style>
-</head>
+<style>html.system-updating::before{content:"";position:fixed;inset:0;background:#fff;z-index:2147483646}html.system-updating::after{content:"Updating";position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);color:#222;font:400 24px Arial,sans-serif;letter-spacing:.04em;z-index:2147483647}html.system-updating{overflow:hidden}</style><script>try{const pending=JSON.parse(sessionStorage.getItem('martin-system-update')||'null');if(pending&&pending.path===location.pathname&&Date.now()-pending.savedAt<600000)document.documentElement.classList.add('system-updating');}catch{}</script></head>
 
 <body>
 
@@ -119,6 +119,6 @@
         <span>Martin</span>
     </footer>
 
-</body>
+<script>window.siteVersion={{ app_version|tojson }};</script><script type="module" src="/static/auto-update.js?v={{ app_version }}"></script></body>
 
 </html>

@@ -1,4 +1,5 @@
 import os
+import hashlib
 import re
 import secrets
 import sqlite3
@@ -40,6 +41,33 @@ if not secret:
     secret = secret_path.read_text().strip()
 app.secret_key = secret
 DUMMY_HASH = generate_password_hash(secrets.token_hex(32))
+
+def build_version():
+    commit=os.environ.get('RENDER_GIT_COMMIT')
+    if commit:
+        return commit
+    digest=hashlib.sha256()
+    files=list(BASE_DIR.glob('*.py'))+list((BASE_DIR/'static').glob('*.js'))+list((BASE_DIR/'static').glob('*.css'))+list((BASE_DIR/'templates').rglob('*.html'))
+    for path in sorted(files):
+        digest.update(str(path.relative_to(BASE_DIR)).encode())
+        digest.update(path.read_bytes())
+    return digest.hexdigest()
+
+APP_VERSION=build_version()
+
+@app.get('/api/version')
+def app_version():
+    response=app.json.response({'version':APP_VERSION})
+    response.headers['Cache-Control']='no-store'
+    return response
+
+@app.after_request
+def revalidate_app_code(response):
+    if request.path.endswith(('.js','.css')) or response.mimetype=='text/html':
+        response.headers['Cache-Control']='no-cache'
+    return response
+
+
 
 
 @contextmanager
@@ -106,7 +134,7 @@ def database():
 def auth_context():
     if 'csrf_token' not in session:
         session['csrf_token'] = secrets.token_urlsafe(32)
-    return {'csrf_token': session['csrf_token']}
+    return {'csrf_token': session['csrf_token'],'app_version':APP_VERSION}
 
 
 @app.before_request
@@ -298,7 +326,7 @@ def world_state():
         peer['animals']={'active':kind,kind:{'name':info['name'],'xp':info['xp']}} if info else {}
         ride=pets.get('riding')
         peer['riding']=ride if (ride=='Dog' and peer['dog_name'] and peer['dog_xp']>=500) or (ride==kind and info and info['xp']>=500) else None
-    return {'room_open':room_open,'animals':saved_animals(dict(pet)) if pet else {},'players': players, 'messages': messages, 'pet': pet_progress(pet), 'dog_name': pet['dog_name'] if pet else '', 'server_time': time.time()}
+    return {'version':APP_VERSION,'room_open':room_open,'animals':saved_animals(dict(pet)) if pet else {},'players': players, 'messages': messages, 'pet': pet_progress(pet), 'dog_name': pet['dog_name'] if pet else '', 'server_time': time.time()}
 
 
 

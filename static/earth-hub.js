@@ -52,7 +52,7 @@ export async function createEarthHub({canvas,music,onTown}){
   space.folders.forEach((folder,i)=>{const point=folder.position.clone().add(new THREE.Vector3(0,-.85,0)).project(camera);labels[i].hidden=point.z>1||point.z< -1||Math.abs(point.x)>.95||Math.abs(point.y)>.95;labels[i].style.left=(point.x*.5+.5)*width+'px';labels[i].style.top=(-point.y*.5+.5)*height+'px';});
   renderer.render(scene,camera);
  }
- function start(){stop();active=true;time=0;yaw=pitch=0;camera.position.set(0,1.65,12);camera.rotation.set(0,0,0);space.update(0);last=performance.now();status.textContent='选择 Town Life 进入村庄';musicLabel();frame=requestAnimationFrame(draw);canvas.focus();}
+ function start(saved){stop();active=true;time=Number.isFinite(saved?.time)?saved.time:0;yaw=Number.isFinite(saved?.yaw)?saved.yaw:0;pitch=Number.isFinite(saved?.pitch)?saved.pitch:0;camera.position.set(0,1.65,12);if(Number.isFinite(saved?.x)&&Number.isFinite(saved?.z)&&Math.hypot(saved.x,saved.z)>=2.2&&Math.hypot(saved.x,saved.z)<=24)camera.position.set(saved.x,1.65,saved.z);camera.rotation.set(pitch,yaw,0);space.update(time);last=performance.now();status.textContent='选择 Town Life 进入村庄';musicLabel();frame=requestAnimationFrame(draw);canvas.focus();}
  function stop(){active=false;cancelAnimationFrame(frame);release();labels.forEach(label=>label.hidden=true);}
- return {start,stop};
+ return {start,stop,snapshot:()=>({x:camera.position.x,z:camera.position.z,yaw,pitch,time})};
 }

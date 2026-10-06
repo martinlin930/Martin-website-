@@ -26,7 +26,7 @@ def install_animals(app,database,world_player_id,pet_progress):
                 if not isinstance(name,str) or not 1<=len(name.strip())<=24:return {'error':'名字请输入 1–24 个字符。'},400
                 if not pet and math.hypot(player['x']-spot['x'],player['z']-spot['z'])>spot['radius']+3:return {'error':'请走近这只动物再领养。'},400
                 if pets.get('riding') not in (None,'Dog',kind):pets['riding']=None
-                pet=pet or {'xp':0,'interaction_at':0};pet['name']=name.strip();pets[kind]=pet;pets['active']=kind;message='动物已领养，正在跟随你。'
+                pet=pet or {'xp':min(10000,max(0,int(pets.get('starting_xp',0)))),'interaction_at':0};pet['name']=name.strip();pets[kind]=pet;pets['active']=kind;message='动物已领养，正在跟随你。'
             elif action in ('feed','pet','call'):
                 if not pet:return {'error':'先领养这只动物吧。'},400
                 if pets.get('active')!=kind:return {'error':'先选择这只动物跟随你。'},400

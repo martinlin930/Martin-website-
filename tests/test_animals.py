@@ -49,3 +49,9 @@ class AnimalTests(unittest.TestCase):
   self.assertEqual(r.json['animals']['active'],'Horse');self.assertEqual(r.json['animals']['Cow']['xp'],10000)
   self.assertEqual(self.action('feed',kind='Cow').status_code,400)
   r=self.action('adopt',kind='Cow');self.assertEqual(r.json['animals']['active'],'Cow')
+ def test_granted_starting_level_applies_only_to_new_pets(self):
+  uid,spot=self.prepare()
+  with database() as db:db.execute('UPDATE game_saves SET animal_pets=? WHERE user_id=?',(json.dumps({'starting_xp':500}),uid))
+  r=self.action('adopt');self.assertEqual(r.json['animals']['Cow']['xp'],500)
+  with database() as db:db.execute('UPDATE game_saves SET animal_pets=? WHERE user_id=?',(json.dumps({'starting_xp':500,'active':'Cow','Cow':{'name':'Cow','xp':1500,'interaction_at':0}}),uid))
+  r=self.action('adopt',name='Renamed');self.assertEqual(r.json['animals']['Cow']['xp'],1500)
