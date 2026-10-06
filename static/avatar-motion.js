@@ -1,0 +1,13 @@
+import * as THREE from './vendor/three.module.js';
+// Give unrigged models a GPU-driven gait without changing their source meshes.
+export function avatarMotion(body){
+ body.updateMatrixWorld(true);const box=new THREE.Box3().setFromObject(body),height=Math.max(.01,box.max.y-box.min.y),center=box.getCenter(new THREE.Vector3());
+ const phase={value:0},stride={value:0},seated={value:0},materials=[];
+ const helpers=`uniform float gaitPhase,gaitStride,gaitSeated,gaitHeight;
+ uniform mat4 gaitToBody,gaitToMesh;uniform vec3 gaitCenter;
+ mat3 gaitRotation(float a){float c=cos(a),s=sin(a);return mat3(1.,0.,0.,0.,c,s,0.,-s,c);}
+ vec3 gaitPoint(vec3 local){vec3 p=(gaitToBody*vec4(local,1.)).xyz;vec3 q=(p-gaitCenter)/gaitHeight;float side=q.x<0.?-1.:1.;float leg=(1.-smoothstep(-.12,.02,q.y))*smoothstep(.025,.095,abs(q.x));float arm=smoothstep(.14,.26,abs(q.x))*smoothstep(-.2,-.08,q.y)*(1.-smoothstep(.25,.38,q.y));float swing=sin(gaitPhase)*gaitStride;vec3 hip=gaitCenter+vec3(side*.1,-.08,0.)*gaitHeight;vec3 shoulder=gaitCenter+vec3(side*.18,.23,0.)*gaitHeight;p=mix(p,hip+gaitRotation(side*swing*.55-gaitSeated*1.15)*(p-hip),leg);p=mix(p,shoulder+gaitRotation(-side*swing*.42-gaitSeated*.55)*(p-shoulder),arm);return (gaitToMesh*vec4(p,1.)).xyz;}
+ `;
+ body.traverse(mesh=>{if(!mesh.isMesh)return;const toBody=mesh.matrixWorld.clone(),toMesh=toBody.clone().invert();mesh.material=(Array.isArray(mesh.material)?mesh.material:[mesh.material]).map(original=>{const material=original.clone();materials.push(material);material.onBeforeCompile=shader=>{Object.assign(shader.uniforms,{gaitPhase:phase,gaitStride:stride,gaitSeated:seated,gaitHeight:{value:height},gaitCenter:{value:center},gaitToBody:{value:toBody},gaitToMesh:{value:toMesh}});shader.vertexShader=helpers+shader.vertexShader;shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\n transformed=gaitPoint(transformed);');shader.vertexShader=shader.vertexShader.replace('#include <beginnormal_vertex>','#include <beginnormal_vertex>\n vec3 gaitBase=gaitPoint(position);\n objectNormal=normalize(gaitPoint(position+objectNormal*.001*gaitHeight)-gaitBase);');};material.customProgramCacheKey=()=> 'avatar-limb-motion-v1';return material;});mesh.customDepthMaterial=new THREE.MeshDepthMaterial({depthPacking:THREE.RGBADepthPacking});mesh.customDepthMaterial.onBeforeCompile=mesh.material[0].onBeforeCompile;mesh.customDepthMaterial.customProgramCacheKey=()=> 'avatar-limb-shadow-v1';materials.push(mesh.customDepthMaterial);if(mesh.material.length===1)mesh.material=mesh.material[0];});
+ return {update(time,weight,mounted){phase.value=time;stride.value=weight;seated.value=mounted?1:0;},dispose(){materials.forEach(m=>m.dispose());}};
+}

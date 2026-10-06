@@ -282,7 +282,42 @@ def world_state():
     for peer in players:
         pets=json.loads(peer.pop('animal_pets'));kind=pets.get('active');info=pets.get(kind) if kind else None
         peer['animals']={'active':kind,kind:{'name':info['name'],'xp':info['xp']}} if info else {}
+        ride=pets.get('riding')
+        peer['riding']=ride if (ride=='Dog' and peer['dog_name']) or (ride==kind and info) else None
     return {'room_open':room_open,'animals':json.loads(pet['animal_pets']) if pet else {},'players': players, 'messages': messages, 'pet': pet_progress(pet), 'dog_name': pet['dog_name'] if pet else '', 'server_time': time.time()}
+
+
+
+@app.post('/api/world/mount')
+def mount_pet():
+    data=request.get_json(silent=True) or {}
+    if not isinstance(data,dict):
+        return {'error':'操作格式不正确。'},400
+    player_id=world_player_id(data)
+    uid=session.get('user_id')
+    if not uid:
+        return {'error':'登录并领养宠物后才能骑乘。'},401
+    kind=data.get('kind')
+    if kind is not None and kind not in ('Dog','Cow','Horse','Llama','Pig','Pug','Sheep','Zebra'):
+        return {'error':'请选择已领养的宠物。'},400
+    with database() as db:
+        player=db.execute('SELECT * FROM players WHERE id=?',(player_id,)).fetchone()
+        if not player or player['user_id']!=uid:
+            return {'error':'请先进入村庄。'},401
+        saved=db.execute('SELECT * FROM game_saves WHERE user_id=?',(uid,)).fetchone()
+        if not saved:
+            return {'error':'账户存档尚未准备好。'},409
+        pets=json.loads(saved['animal_pets'])
+        if kind=='Dog' and not saved['dog_name'] or kind and kind!='Dog' and not pets.get(kind):
+            return {'error':'只能骑乘自己已领养的宠物。'},400
+        pets['riding']=kind
+        if kind and kind!='Dog':
+            pets['active']=kind
+        changed=db.execute('UPDATE game_saves SET animal_pets=? WHERE user_id=? AND animal_pets=? RETURNING user_id',
+            (json.dumps(pets,ensure_ascii=False),uid,saved['animal_pets'])).fetchone()
+        if not changed:
+            return {'error':'存档刚刚更新，请再试一次。'},409
+    return {'animals':pets,'message':'已骑上宠物。' if kind else '已下骑。'}
 
 
 @app.post('/api/world/room-door')

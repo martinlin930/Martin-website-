@@ -1,4 +1,5 @@
 import * as THREE from './vendor/three.module.js';
+import {mountScale} from './mounts.js';
 import {GLTFLoader} from './vendor/GLTFLoader.js';
 import {clone} from './vendor/SkeletonUtils.js';
 import {patrol} from './dogs.js';
@@ -32,6 +33,12 @@ export async function createAnimals(scene,map){
   for(const owner of owners){const kind=owner.animals?.active,info=owner.animals?.[kind];if(!info||!templates.has(kind))continue;alive.add(owner.id);let p=companions.get(owner.id);
    if(p&&p.kind!==kind){dispose(p);companions.delete(owner.id);p=null;}
    if(!p){p={...model(kind),kind,trail:[],last:{x:owner.x,z:owner.z}};p.root.position.set(owner.x,map.groundHeight(owner.x,owner.z),owner.z);p.label=document.createElement('span');p.label.className='dogLabel';document.getElementById('world').append(p.label);companions.set(owner.id,p);}
+   const mounted=owner.riding===kind;p.root.scale.setScalar(mounted?mountScale(kind):1);
+   if(mounted){
+    p.root.position.set(owner.x,map.groundHeight(owner.x,owner.z)+(owner.jump||0),owner.z);p.root.rotation.y=-(owner.yaw||0);p.trail=[];p.last={x:owner.x,z:owner.z};p.reaction=null;
+    animate(p,owner.moving??owner.movingUntil>performance.now(),!!owner.running,dt,time);
+    p.label.textContent=info.name+' · 骑乘中';const q=p.root.position.clone();q.y+=heights[kind]*mountScale(kind)+.3;q.project(camera);p.label.hidden=!!owner.local||q.z>1||q.z< -1||Math.abs(q.x)>1||Math.abs(q.y)>1;p.label.style.left=(q.x*.5+.5)*w+'px';p.label.style.top=(-q.y*.5+.5)*h+'px';continue;
+   }
    if(Math.hypot(owner.x-p.last.x,owner.z-p.last.z)>20){p.trail=[];p.root.position.set(owner.x,map.groundHeight(owner.x,owner.z),owner.z);}
    if(Math.hypot(owner.x-p.last.x,owner.z-p.last.z)>.15){p.trail.push({x:owner.x,z:owner.z});p.last={x:owner.x,z:owner.z};}if(p.trail.length>500)p.trail.splice(0,p.trail.length-500);
    let remaining=0,prev=p.root.position;for(const q of p.trail){remaining+=Math.hypot(q.x-prev.x,q.z-prev.z);prev=q;}const running=remaining>5;let budget=(running?7:3.6)*Math.min(dt,.05),moved=0;
