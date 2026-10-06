@@ -88,7 +88,7 @@ const sunOffset=new THREE.Vector3(0,0,-1).applyQuaternion(new THREE.Quaternion(-
 const camera=new THREE.PerspectiveCamera(70,1,.1,500);camera.rotation.order='YXZ';
 let village,dogs,forage,train,room,ocean,dogCar;const joinButton=$('join').querySelector('button[type="submit"]');joinButton.disabled=true;
 const villageReady=(galleryMode?loadGallery:loadVillage)(scene,progress=>{joinButton.textContent=(galleryMode?'Loading gallery… ':'Loading village… ')+Math.round(progress*100)+'%';},renderer).then(async map=>{village=map;
- if(galleryMode){sun.castShadow=false;sun.intensity=.65;ambient.intensity=1.25;scene.fog=null;joinButton.disabled=false;joinButton.textContent='Enter Gallery →';return;}
+ if(galleryMode){sun.castShadow=false;sun.intensity=0;ambient.color.set(0xfff5e8);ambient.groundColor.set(0x8b929e);ambient.intensity=.32;renderer.toneMappingExposure=1;scene.fog=null;joinButton.disabled=false;joinButton.textContent='Enter Gallery →';return;}
  [train,room,ocean]=await Promise.all([createTrain(scene),createRoom(scene,map),createOcean(scene,map.size)]);dogCar=await createDogCar(scene,map,train);dogs=await createDogs(scene,map);animals=await createAnimals(scene,map);forage=await createForage(scene,map);
  const skyMaterial=new THREE.MeshBasicMaterial({map:scene.background,side:THREE.BackSide,depthWrite:false,fog:false,toneMapped:false});
  skyMaterial.onBeforeCompile=shader=>{shader.uniforms.nightMix=skyNight;shader.uniforms.nightColor={value:nightSky};shader.fragmentShader='uniform float nightMix; uniform vec3 nightColor;\n'+shader.fragmentShader;shader.fragmentShader=shader.fragmentShader.replace('#include <map_fragment>','#include <map_fragment>\n diffuseColor.rgb=mix(diffuseColor.rgb,nightColor,nightMix);');};

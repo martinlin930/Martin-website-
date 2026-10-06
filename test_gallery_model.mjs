@@ -2,6 +2,8 @@ import fs from 'node:fs';
 import zlib from 'node:zlib';
 import assert from 'node:assert/strict';
 import {GLTFLoader} from './static/vendor/GLTFLoader.js';
+import {galleryLighting,galleryShadows,removePhotoFrame} from './static/gallery-lighting.js';
+import * as THREE from './static/vendor/three.module.js';
 const glb=zlib.gunzipSync(fs.readFileSync('static/models/gallery/showroom.glb.gz'));
 assert.equal(glb.readUInt32LE(0),0x46546c67);
 assert.equal(glb.readUInt32LE(8),glb.length);
@@ -15,4 +17,13 @@ rebuilt.writeUInt32LE(0x46546c67,0);rebuilt.writeUInt32LE(2,4);rebuilt.writeUInt
 const model=await new GLTFLoader().parseAsync(rebuilt.buffer,'');let meshes=0,triangles=0;
 model.scene.traverse(m=>{if(m.isMesh){meshes++;triangles+=m.geometry.index.count/3;assert(m.geometry.attributes.normal.count===m.geometry.attributes.position.count);m.geometry.computeBoundingSphere();assert(Number.isFinite(m.geometry.boundingSphere.radius));}});
 assert(meshes>50);assert(triangles>100000);
+const layout=JSON.parse(fs.readFileSync('static/models/gallery/layout.json','utf8'));
+assert.equal(removePhotoFrame(model.scene,layout.photo),26,'Only the selected photo backing is removed');
+galleryShadows(model.scene);let casting=0;model.scene.traverse(m=>{if(m.isMesh&&m.castShadow)casting++;});assert(casting>50);
+const lighting=galleryLighting(new THREE.Scene(),{mobile:true});assert.equal(lighting.lamps.length,3);
+for(const lamp of lighting.lamps){assert(lamp.castShadow);assert.equal(lamp.shadow.mapSize.x,1024);assert.equal(lamp.shadow.autoUpdate,false);lamp.shadow.needsUpdate=false;}
+lighting.update(new THREE.Vector3(-19,5,-14),0);assert(lighting.lamps[0].shadow.needsUpdate);lighting.lamps[0].shadow.needsUpdate=false;
+lighting.update(new THREE.Vector3(-19,5,-14),50);assert(!lighting.lamps[0].shadow.needsUpdate);
+lighting.update(new THREE.Vector3(-19,5,-14),100);assert(lighting.lamps[0].shadow.needsUpdate);
+lighting.lamps[0].shadow.needsUpdate=false;lighting.update(new THREE.Vector3(18,5,-14),110);assert(lighting.lamps[0].shadow.needsUpdate);assert(lighting.lamps[2].shadow.needsUpdate);
 console.log('Gallery geometry loaded:',meshes,'meshes,',triangles,'triangles; all texture files present.');
