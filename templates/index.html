@@ -1157,6 +1157,21 @@
 </style>
 <style>html,body{touch-action:manipulation}@media(any-pointer:coarse){input:not([type=checkbox]):not([type=radio]):not([type=range]),textarea,select{font-size:16px!important}}</style>
 <script src="/static/touch-viewport.js" defer></script>
+<style>
+#viewer{padding:0;background:#f3f3ee;display:block}
+#computerScreenCanvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#viewer .viewer__content.desktop{position:absolute;left:0;top:0;width:640px;max-width:none;min-height:0;border:0;border-radius:0;box-shadow:none;margin:0;transform-origin:0 0;transition:none;opacity:0;pointer-events:none;overflow:hidden;background:#dce6e5;display:flex;flex-direction:column}
+#viewer .desktop-bar{height:60px;flex:0 0 60px;padding:12px 20px;align-items:center;font:22px Arial,sans-serif;border-bottom:1px solid #a8b9b7}
+#viewer #desktopBack{padding:6px 12px;font:22px Arial,sans-serif}
+#viewer .desktop-files{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:8px;padding:12px 25px;min-height:0;align-items:stretch}
+#viewer .desktop-files[hidden]{display:none}
+#viewer .desktop-folder{display:flex;flex-direction:column;justify-content:center;align-items:center;padding:6px;min-width:0;font:28px Arial,sans-serif;touch-action:manipulation}
+#viewer .desktop-folder model-viewer{width:140px;height:108px;flex-shrink:0}
+#viewer .desktop-folder span{padding:3px 10px}
+#viewer .desktop-footer{flex:0 0 34px;height:34px;padding:5px 20px;font:20px Arial,sans-serif}
+#viewer .viewer__close{z-index:3}
+.computer-screen-status{position:absolute;left:20px;right:20px;bottom:22px;text-align:center;font:14px Arial,sans-serif;color:#666;pointer-events:none}
+</style>
 </head>
 
 
@@ -1337,6 +1352,9 @@
 <div
     class="viewer"
     id="viewer"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Computer desktop"
 >
 
 
@@ -1348,10 +1366,12 @@
     </button>
 
 
-    <div class="viewer__content desktop">
+    <canvas id="computerScreenCanvas" aria-hidden="true"></canvas>
+    <p class="computer-screen-status" id="computerScreenStatus" role="status"></p>
+    <div class="viewer__content desktop" id="computerDesktop">
         <div class="desktop-bar"><span>MARTIN</span><span id="desktopPath">Desktop</span><button id="desktopBack" type="button" hidden>← Desktop</button></div>
         <div class="desktop-files" id="desktopRoot">
-            <button class="desktop-folder" type="button" aria-label="Open Gallery folder"><model-viewer src="/static/models/file-folder.glb" alt="File folder by Ryan Dewalt" camera-orbit="-20deg 75deg auto" shadow-intensity="0.5" interaction-prompt="none" aria-hidden="true"></model-viewer><span>Gallery</span></button>
+            <button class="desktop-folder" id="galleryFolder" type="button" aria-label="Open Gallery folder"><model-viewer src="/static/models/file-folder.glb" alt="File folder by Ryan Dewalt" camera-orbit="-20deg 75deg auto" shadow-intensity="0.5" interaction-prompt="none" aria-hidden="true"></model-viewer><span>Gallery</span></button>
             <button class="desktop-folder" id="gameFolder" type="button" aria-label="Open Game folder"><model-viewer src="/static/models/file-folder.glb" alt="File folder by Ryan Dewalt" camera-orbit="-20deg 75deg auto" shadow-intensity="0.5" interaction-prompt="none" aria-hidden="true"></model-viewer><span>Game</span></button>
             <button class="desktop-folder" id="forumFolder" type="button" aria-label="打开Discussion"><model-viewer src="/static/models/file-folder.glb" alt="Discussion文件夹" camera-orbit="-20deg 75deg auto" shadow-intensity="0.5" interaction-prompt="none" aria-hidden="true"></model-viewer><span>Discussion</span></button>
             <button class="desktop-folder" id="musicFolder" type="button" aria-label="Open Music folder"><model-viewer src="/static/models/file-folder.glb" alt="Music folder" camera-orbit="-20deg 75deg auto" shadow-intensity="0.5" interaction-prompt="none" aria-hidden="true"></model-viewer><span>Music</span></button>
@@ -4134,6 +4154,31 @@
         );
 
 
+
+    const computerDesktop=document.getElementById('computerDesktop');
+    const computerScreenStatus=document.getElementById('computerScreenStatus');
+    let computerScreen,computerScreenPromise,computerOpenVersion=0;
+    async function showComputerScreen(instant=false) {
+        const version=++computerOpenVersion;
+        viewer.classList.add('open');document.body.style.overflow='hidden';
+        computerScreenStatus.textContent='正在打开电脑…';
+        closeViewer.focus();
+        try {
+            if(!computerScreenPromise)computerScreenPromise=import('/static/computer-screen.js').then(module=>module.createComputerScreen({canvas:document.getElementById('computerScreenCanvas'),desktop:computerDesktop})).catch(error=>{computerScreenPromise=null;throw error;});
+            computerScreen=await computerScreenPromise;
+            if(version!==computerOpenVersion||!viewer.classList.contains('open'))return;
+            await computerScreen.start(instant);
+            if(version!==computerOpenVersion||!viewer.classList.contains('open'))return;
+            computerScreenStatus.textContent='';
+        } catch(error) {
+            if(version===computerOpenVersion&&viewer.classList.contains('open'))computerScreenStatus.textContent='电脑加载失败，请关闭后重试。';
+        } finally {
+            if(version===computerOpenVersion&&viewer.classList.contains('open')&&homeResume?.page==='home'&&!homeResume.earthOpen&&!homeResume.musicOpen) {
+                homeResume=null;window.systemUpdateRestored=true;window.dispatchEvent(new Event('system-update-ready'));
+            }
+        }
+    }
+
     let homeResume=null;
     try{const data=JSON.parse(sessionStorage.getItem('martin-system-update')||'null');if(data?.path===location.pathname&&Date.now()-data.savedAt<600000)homeResume=data.saved;}catch{}
 
@@ -4242,78 +4287,26 @@
             });
             if (folder === gameFolder) { showDesktopFolder(true); earthFolder.focus(); }
             if (folder === earthFolder) openEarth();
+            if (folder.id === 'galleryFolder') location.href = '/work';
             if (folder.id === 'forumFolder') location.href = '/forum';
             if (folder.id === 'musicFolder') openMusic();
         });
     });
 
+
     function openPhoto() {
         showDesktopFolder(false);
-
-
-        /* 新增：点击电脑立刻播放一次音效 */
-
-        computerSound.currentTime =
-            0;
-
-
-        computerSound
-            .play()
-            .catch(
-                () => {}
-            );
-
-
-        computer
-        .classList
-        .add(
-            "opening"
-        );
-
-
-        setTimeout(
-            () => {
-
-                viewer
-                .classList
-                .add(
-                    "open"
-                );
-
-
-                document.body.style.overflow =
-                    "hidden";
-
-
-                computer
-                .classList
-                .remove(
-                    "opening"
-                );
-
-            },
-
-            430
-
-        );
-
+        computerSound.currentTime=0;
+        computerSound.play().catch(()=>{});
+        showComputerScreen();
     }
-
-
     function closePhoto() {
-
-        viewer
-        .classList
-        .remove(
-            "open"
-        );
-
-
-        document.body.style.overflow =
-            "";
-
+        computerOpenVersion++;
+        computerScreen?.stop();
+        viewer.classList.remove('open');
+        document.body.style.overflow='';
+        computer.focus();
     }
-
 
     computer.addEventListener(
         "click",
@@ -4370,14 +4363,14 @@
     );
 
 
-    window.prepareSystemUpdate=async()=>({resume:false,waitForReady:!earthScene.hidden||!musicScene.hidden,page:'home',desktopOpen:viewer.classList.contains('open'),gameFolderOpen:document.getElementById('desktopRoot').hidden,earthOpen:!earthScene.hidden,musicOpen:!musicScene.hidden,record:recordScene?.snapshot(),earth:earthHub?.snapshot(),musicTime:earthMusic.currentTime,scroll:window.scrollY});
+    window.prepareSystemUpdate=async()=>({resume:false,waitForReady:viewer.classList.contains('open')||!earthScene.hidden||!musicScene.hidden,page:'home',desktopOpen:viewer.classList.contains('open'),gameFolderOpen:document.getElementById('desktopRoot').hidden,earthOpen:!earthScene.hidden,musicOpen:!musicScene.hidden,record:recordScene?.snapshot(),earth:earthHub?.snapshot(),musicTime:earthMusic.currentTime,scroll:window.scrollY});
     if(homeResume?.page==='home'){
         window.scrollTo(0,homeResume.scroll||0);
         showDesktopFolder(!!homeResume.gameFolderOpen);
-        if(homeResume.desktopOpen){viewer.classList.add('open');document.body.style.overflow='hidden';}
+        if(homeResume.desktopOpen)showComputerScreen(true);
         if(homeResume.musicOpen)openMusic();
         else if(homeResume.earthOpen)openEarth();
-        else{homeResume=null;window.systemUpdateRestored=true;window.dispatchEvent(new Event('system-update-ready'));}
+        else if(!homeResume.desktopOpen){homeResume=null;window.systemUpdateRestored=true;window.dispatchEvent(new Event('system-update-ready'));}
     }
 })();
 
