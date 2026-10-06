@@ -212,6 +212,20 @@ def pet_progress(saved):
             'claims': json.loads(saved.get('food_claims', '{}'))}
 
 
+
+def saved_animals(saved):
+    pets=json.loads(saved.get('animal_pets','{}')) if saved else {}
+    kind=pets.get('riding')
+    if kind=='Dog':
+        allowed=bool(saved.get('dog_name')) and saved.get('dog_xp',0)>=500
+    else:
+        info=pets.get(kind) if isinstance(kind,str) else None
+        allowed=bool(info) and pets.get('active')==kind and info.get('xp',0)>=500
+    if kind and not allowed:
+        pets['riding']=None
+    return pets
+
+
 @app.post('/api/world/join')
 def join_world():
     data = request.get_json(silent=True) or {}
@@ -238,7 +252,7 @@ def join_world():
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET nickname = excluded.nickname, avatar = excluded.avatar""",
                 (user_id, nickname, state['avatar'], state['x'], state['z'], state['yaw'], state['pitch'], state['music_muted'], time.time()))
     session['world_message_at'] = 0
-    return {'room_open':room_open,'id': player_id, 'nickname': nickname, 'persistent': bool(user_id), 'animals':json.loads(state.get('animal_pets','{}')), 'pet': pet_progress(state), 'dog_name': state.get('dog_name', ''), 'server_time': time.time(), 'state': {k: state[k] for k in ('x', 'z', 'yaw', 'pitch', 'avatar', 'music_muted')}}
+    return {'room_open':room_open,'id': player_id, 'nickname': nickname, 'persistent': bool(user_id), 'animals':saved_animals(state), 'pet': pet_progress(state), 'dog_name': state.get('dog_name', ''), 'server_time': time.time(), 'state': {k: state[k] for k in ('x', 'z', 'yaw', 'pitch', 'avatar', 'music_muted')}}
 
 
 def world_player_id(data):
@@ -283,8 +297,8 @@ def world_state():
         pets=json.loads(peer.pop('animal_pets'));kind=pets.get('active');info=pets.get(kind) if kind else None
         peer['animals']={'active':kind,kind:{'name':info['name'],'xp':info['xp']}} if info else {}
         ride=pets.get('riding')
-        peer['riding']=ride if (ride=='Dog' and peer['dog_name']) or (ride==kind and info) else None
-    return {'room_open':room_open,'animals':json.loads(pet['animal_pets']) if pet else {},'players': players, 'messages': messages, 'pet': pet_progress(pet), 'dog_name': pet['dog_name'] if pet else '', 'server_time': time.time()}
+        peer['riding']=ride if (ride=='Dog' and peer['dog_name'] and peer['dog_xp']>=500) or (ride==kind and info and info['xp']>=500) else None
+    return {'room_open':room_open,'animals':saved_animals(dict(pet)) if pet else {},'players': players, 'messages': messages, 'pet': pet_progress(pet), 'dog_name': pet['dog_name'] if pet else '', 'server_time': time.time()}
 
 
 
@@ -310,6 +324,9 @@ def mount_pet():
         pets=json.loads(saved['animal_pets'])
         if kind=='Dog' and not saved['dog_name'] or kind and kind!='Dog' and not pets.get(kind):
             return {'error':'只能骑乘自己已领养的宠物。'},400
+        xp=saved['dog_xp'] if kind=='Dog' else pets.get(kind,{}).get('xp',0) if kind else 500
+        if kind and xp < 500:
+            return {'error':'宠物达到 Lv.5 后才能骑乘。'},400
         pets['riding']=kind
         if kind and kind!='Dog':
             pets['active']=kind

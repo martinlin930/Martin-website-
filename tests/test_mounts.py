@@ -8,23 +8,40 @@ class MountTests(unittest.TestCase):
   uid=self.login_as(self.b,'Owner');self.post(self.b,'join',{'nickname':'Owner'})
   for kind in ['Dog','Horse','Pig','unknown']:
    self.assertEqual(self.post(self.b,'mount',{'kind':kind}).status_code,400)
-  with database() as db:db.execute('UPDATE game_saves SET dog_name=?,dog_xp=100,dog_food=3 WHERE user_id=?',('Buddy',uid))
+  with database() as db:db.execute('UPDATE game_saves SET dog_name=?,dog_xp=500,dog_food=3 WHERE user_id=?',('Buddy',uid))
   self.assertEqual(self.post(self.b,'mount',{'kind':'Dog'}).json['animals']['riding'],'Dog')
   state=self.post(self.a,'state',{}).json;self.assertEqual(next(p for p in state['players'] if p['nickname']=='Owner')['riding'],'Dog')
   self.assertIsNone(self.post(self.b,'mount',{'kind':None}).json['animals']['riding'])
   with database() as db:
-   saved=db.execute('SELECT * FROM game_saves WHERE user_id=?',(uid,)).fetchone();self.assertEqual(saved['dog_xp'],100);self.assertEqual(saved['dog_food'],3)
+   saved=db.execute('SELECT * FROM game_saves WHERE user_id=?',(uid,)).fetchone();self.assertEqual(saved['dog_xp'],500);self.assertEqual(saved['dog_food'],3)
  def test_animal_mount_is_saved_and_synced(self):
   uid=self.login_as(self.a,'Rider');self.post(self.a,'join',{'nickname':'Rider'})
-  with database() as db:db.execute('UPDATE game_saves SET animal_pets=? WHERE user_id=?',(json.dumps({'Horse':{'name':'Star','xp':250},'Pig':{'name':'Pink','xp':100}}),uid))
+  with database() as db:db.execute('UPDATE game_saves SET animal_pets=? WHERE user_id=?',(json.dumps({'Horse':{'name':'Star','xp':500},'Pig':{'name':'Pink','xp':100}}),uid))
   self.assertEqual(self.post(self.a,'mount',{'kind':'Horse'}).json['animals']['active'],'Horse')
   restored=self.post(self.a,'join',{'nickname':'Rider'}).json;self.assertEqual(restored['animals']['riding'],'Horse')
   self.post(self.b,'join',{'nickname':'Viewer'});peers=self.post(self.b,'state',{}).json['players'];self.assertTrue(any(p.get('riding')=='Horse' for p in peers))
   self.post(self.a,'animal',{'action':'adopt','kind':'Pig','name':'Pink'})
   self.assertIsNone(self.post(self.a,'state',{}).json['animals']['riding'])
-  with database() as db:self.assertEqual(json.loads(db.execute('SELECT animal_pets FROM game_saves WHERE user_id=?',(uid,)).fetchone()[0])['Horse']['xp'],250)
+  with database() as db:self.assertEqual(json.loads(db.execute('SELECT animal_pets FROM game_saves WHERE user_id=?',(uid,)).fetchone()[0])['Horse']['xp'],500)
  def test_invalid_player_and_csrf_are_rejected(self):
   self.login_as(self.a,'Owner');self.post(self.a,'join',{'nickname':'Owner'})
   self.assertEqual(self.a.post('/api/world/mount',json={'kind':'Dog'}).status_code,400)
   with self.a.session_transaction() as s:token=s['csrf_token']
   self.assertEqual(self.a.post('/api/world/mount',json={'kind':'Dog','player_id':'foreign'},headers={'X-CSRF-Token':token}).status_code,401)
+
+ def test_all_pet_kinds_require_level_five(self):
+  uid=self.login_as(self.a,'LevelRider');self.post(self.a,'join',{'nickname':'Rider'})
+  for kind in ['Dog','Cow','Horse','Llama','Pig','Pug','Sheep','Zebra']:
+   with database() as db:
+    db.execute('UPDATE game_saves SET dog_name=?,dog_xp=499,animal_pets=? WHERE user_id=?',('Buddy',json.dumps({'active':kind,kind:{'name':'Pet','xp':499}}),uid))
+   self.assertEqual(self.post(self.a,'mount',{'kind':kind}).status_code,400)
+   with database() as db:
+    db.execute('UPDATE game_saves SET dog_xp=500,animal_pets=? WHERE user_id=?',(json.dumps({'active':kind,kind:{'name':'Pet','xp':500}}),uid))
+   self.assertEqual(self.post(self.a,'mount',{'kind':kind}).status_code,200)
+   self.assertEqual(self.post(self.a,'state',{}).json['animals']['riding'],kind)
+   self.assertEqual(self.post(self.a,'mount',{'kind':None}).status_code,200)
+ def test_old_low_level_mount_is_hidden(self):
+  uid=self.login_as(self.a,'OldRider');self.post(self.a,'join',{'nickname':'Rider'})
+  with database() as db:db.execute('UPDATE game_saves SET dog_name=?,dog_xp=499,animal_pets=? WHERE user_id=?',('Buddy',json.dumps({'riding':'Dog'}),uid))
+  self.assertIsNone(self.post(self.a,'state',{}).json['animals']['riding'])
+  self.assertIsNone(self.post(self.a,'join',{'nickname':'Rider'}).json['animals']['riding'])

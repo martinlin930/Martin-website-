@@ -147,7 +147,7 @@ $('petAction').onclick=()=>{
 };
 function animalStats(){
  const pet=animalPets[$('animalKind').value];$('animalStats').textContent=pet?'Lv. '+Math.min(100,Math.floor(pet.xp/100))+' · '+(pet.xp>=10000?'已满级':pet.xp%100+' / 100 经验')+' · 食物 '+petState.food+' 份':'尚未领养';
- $('rideAnimal').disabled=!animalPets[$('animalKind').value];$('rideAnimal').textContent=animalPets.riding===$('animalKind').value?'下骑':'骑乘';
+ $('rideAnimal').disabled=!animalPets[$('animalKind').value]||animalPets[$('animalKind').value].xp<500;$('rideAnimal').textContent=animalPets.riding===$('animalKind').value?'下骑':(animalPets[$('animalKind').value]?.xp>=500?'骑乘':'Lv.5 可骑乘');
  for(const id of ['feedAnimal','petAnimal','callAnimal'])$(id).disabled=animalBusy||!pet||animalPets.active!==$('animalKind').value;
 }
 $('animalAction').onclick=()=>{
@@ -251,7 +251,7 @@ function draw(now){
   nearAnimal=animals?.nearest(x,z)?.kind??null;
   $('animalAction').hidden=!nearAnimal&&!animalPets.active;
   $('dismount').hidden=!animalPets.riding;
-  $('rideDog').textContent=animalPets.riding==='Dog'?'下骑':'骑乘狗';
+  $('rideDog').disabled=petState.xp<500;$('rideDog').textContent=animalPets.riding==='Dog'?'下骑':(petState.xp>=500?'骑乘狗':'Lv.5 可骑乘');
   $('animalAction').textContent=nearAnimal?'领养 / 管理'+animalNames[nearAnimal]:'我的动物';
   if($('animalDialog').open)animalStats();
   dogs?.update(worldClockAnchor+now-worldClockReceived,[{id:playerId,x,z,yaw,jump:jumpHeight,running,moving:Math.hypot(f,s)>.1,local:true,riding:animalPets.riding,dog_name:dogName,dog_xp:petState.xp},...peers],dt,camera,w,h);
