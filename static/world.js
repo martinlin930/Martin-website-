@@ -115,8 +115,8 @@ skin.replaceChildren(...avatarNames.map((name,i)=>{const option=document.createE
 skin.value=/^r2-\d{3}$/.test(updateResume?.skin||window.worldAvatar||'')&&Number((updateResume?.skin||window.worldAvatar).slice(3))<avatarNames.length?(updateResume?.skin||window.worldAvatar):skin.options[Math.floor(Math.random()*avatarNames.length)].value;
 const previewScene=new THREE.Scene();previewScene.background=new THREE.Color(0xf5f5f5);
 previewScene.add(new THREE.HemisphereLight(0xffffff,0x8e8e8e,2.5));
-const previewLight=new THREE.DirectionalLight(0xffffff,3);previewLight.position.set(2,3,4);previewScene.add(previewLight);
-const previewCamera=new THREE.PerspectiveCamera(40,1,.1,20);previewCamera.position.set(0,1,3.9);previewCamera.lookAt(0,.9,0);
+const previewLight=new THREE.DirectionalLight(0xffffff,3);previewLight.position.set(4,3,2);previewScene.add(previewLight);
+const previewCamera=new THREE.PerspectiveCamera(40,1,.1,20);previewCamera.position.set(3.9,1,0);previewCamera.lookAt(0,.9,0);
 const previewRenderer=new THREE.WebGLRenderer({canvas:$('skinPreview'),antialias:true});previewRenderer.setPixelRatio(Math.min(devicePixelRatio,1.5));previewRenderer.setSize(200,200,false);
 let previewBody,previewVersion=0;
 async function showSkin(){
