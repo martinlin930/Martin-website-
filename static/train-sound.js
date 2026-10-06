@@ -14,7 +14,7 @@ export function nearestTrain(train,position){
  return {position:closest,distance};
 }
 export function createTrainSound(){
- const audio=new Audio('/static/audio/train-pass.m4a');audio.loop=true;audio.preload='none';audio.volume=0;
+ const audio=new Audio('/static/audio/train-pass.m4a');audio.loop=true;audio.preload='auto';audio.volume=0;
  let context,gain,pan,unlocked=false,pending=false,level=0,lastUpdate=-Infinity,epoch=0;
  function setLevel(value){
   level=value;
@@ -27,7 +27,7 @@ export function createTrainSound(){
   if(pending||!audio.paused)return;
   pending=true;const current=epoch;
   audio.play().then(()=>{
-   if(current!==epoch||level<=0)audio.pause();
+   if(current!==epoch)audio.pause();
   }).catch(()=>{if(current===epoch)unlocked=false;}).finally(()=>{pending=false;});
  }
  function unlock(){
@@ -60,7 +60,8 @@ export function createTrainSound(){
     pan.pan.setTargetAtTime(balance,context.currentTime,.12);
    }
    if(value>0&&unlocked)play();
-   else if(value<=0&&!audio.paused){audio.pause();audio.currentTime=0;}
+   // Keep the gesture-unlocked player running silently out of range.
+   // Pausing and restarting later can lose playback permission on mobile.
   },
   stop(){
    epoch++;lastUpdate=-Infinity;setLevel(0);
