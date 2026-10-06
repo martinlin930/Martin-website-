@@ -26,7 +26,8 @@ export function carTimeline(length,railDistance,trainLength,trainSpeed=TRAIN_SPE
 }
 export async function createDogCar(scene,map,train){
  const body=(await new GLTFLoader().loadAsync('/static/models/dog-car.glb')).scene;
- body.rotation.y=Math.PI;body.updateMatrixWorld(true);const box=new THREE.Box3().setFromObject(body),size=box.getSize(new THREE.Vector3()),scale=1.8/size.x;
+ // The supplied model faces diagonally (+X, -Z). Align its propeller normal to +Z.
+ body.rotation.y=-2.221435142908474;body.updateMatrixWorld(true);const box=new THREE.Box3().setFromObject(body),size=box.getSize(new THREE.Vector3()),scale=1.8/size.x;
  body.scale.multiplyScalar(scale);body.position.set(-(box.min.x+box.max.x)*.5*scale,-box.min.y*scale,-(box.min.z+box.max.z)*.5*scale);
  body.traverse(mesh=>{if(mesh.isMesh){mesh.castShadow=true;mesh.receiveShadow=true;}});
  const root=new THREE.Group();root.add(body);scene.add(root);
