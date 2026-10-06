@@ -30,6 +30,9 @@ export function screenFrame(model) {
         scale, offset
     };
 }
+export function screenViewDirection(screen) {
+    return screen.normal.clone().addScaledVector(screen.right.clone().normalize(), .34).addScaledVector(screen.up, .22).normalize();
+}
 export function fitDistance(width, height, aspect, fov, widthFraction=.84, heightFraction=.72) {
     const tan = Math.tan(THREE.MathUtils.degToRad(fov / 2));
     return Math.max(height / (2 * tan * heightFraction), width / (2 * tan * aspect * widthFraction));
@@ -67,6 +70,7 @@ export async function createComputerScreen({canvas, desktop}) {
     floor.rotation.x=-Math.PI/2;floor.position.y=-.003;floor.receiveShadow=true;scene.add(floor);
     const camera=new THREE.PerspectiveCamera(36,1,.01,100);
     const width=640,height=width*screen.height/screen.width;
+    const viewDirection=screenViewDirection(screen);
     desktop.style.width=width+'px';desktop.style.height=height+'px';
     let active=false, frame=0, token=0, settle=null, progress=1, source=null;
     let viewportWidth=0,viewportHeight=0;
@@ -92,7 +96,7 @@ export async function createComputerScreen({canvas, desktop}) {
             elements[0]*=sx;elements[5]*=sy;elements[8]=elements[8]*sx-ox;elements[9]=elements[9]*sy-oy;
             camera.projectionMatrixInverse.copy(camera.projectionMatrix).invert();
         }
-        const distance=fitDistance(screen.width,screen.height,aspect,36);
+        const distance=fitDistance(screen.width,screen.height,aspect,36,.78,.65);
         const initialDistance=fitDistance(screen.modelSize.x,screen.modelSize.y,aspect,36,.62,.66);
         fromTarget.copy(screen.modelCenter);
         if(source?.orbit&&source?.target){
@@ -101,9 +105,9 @@ export async function createComputerScreen({canvas, desktop}) {
         }else{
             from.set(.4,.25,-.88).normalize().multiplyScalar(initialDistance).add(fromTarget);
         }
-        to.copy(screen.center).addScaledVector(screen.normal,distance);
+        to.copy(screen.center).addScaledVector(viewDirection,distance);
         camera.position.lerpVectors(from,to,t);
-        camera.up.lerpVectors(worldUp,screen.up,t).normalize();
+        camera.up.copy(worldUp);
         target.lerpVectors(fromTarget,screen.center,t);camera.lookAt(target);camera.updateMatrixWorld(true);
         return true;
     }
