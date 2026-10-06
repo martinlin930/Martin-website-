@@ -11,7 +11,9 @@ let speechByPlayer=new Map();
 import { createForage } from './forage.js';
 import {createTrain} from './train.js';
 import {createTrainSound} from './train-sound.js';
+import {createCrossingSound} from './crossing-sound.js';
 const trainSound=createTrainSound();
+const crossingSound=createCrossingSound();
 import {createRoom} from './room.js';
 import {createAnimals,animalNames} from './animals.js';
 import { createDogs } from './dogs.js';
@@ -38,12 +40,12 @@ function selectWorldMusic(day){
  musicLabel();
 }
 function startMusic(){
- trainSound.unlock();
+ trainSound.unlock();crossingSound.unlock();
  musicWanted=true;
  selectWorldMusic(worldTime(worldClockAnchor+performance.now()-worldClockReceived).day);
  if(music.paused)music.play().then(musicLabel).catch(musicLabel);
 }
-function stopMusic(){trainSound.stop();musicWanted=false;music.pause();music.currentTime=0;musicLabel();}
+function stopMusic(){trainSound.stop();crossingSound.stop();musicWanted=false;music.pause();music.currentTime=0;musicLabel();}
 $('music').onclick=()=>{if(music.paused)startMusic();else{music.muted=!music.muted;musicLabel();}};
 function jump(){if(active&&jumpHeight<.01&&jumpVelocity===0){jumpVelocity=6;}}
 $('jump').onpointerdown=e=>{e.preventDefault();document.activeElement?.blur();jump();};
@@ -216,8 +218,8 @@ $('dismount').onclick=()=>setMount(null);
 $('world').addEventListener('dblclick',event=>{if(active)event.preventDefault();});
 document.addEventListener('gesturestart',event=>{if(active)event.preventDefault();},{passive:false});
 $('leave').onclick=async()=>{active=false;stopMusic();clearInterval(timer);document.exitPointerLock?.();try{await api('state',{x,z,yaw,pitch,music_muted:music.muted,jump:0,running:false});await api('leave',{});}catch{}location.href='/';};
-document.addEventListener('pointerdown',()=>{if(active)trainSound.unlock();},{passive:true});
-document.addEventListener('visibilitychange',()=>{if(document.hidden)trainSound.stop();});
+document.addEventListener('pointerdown',()=>{if(active){trainSound.unlock();crossingSound.unlock();}},{passive:true});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){trainSound.stop();crossingSound.stop();}});
 window.addEventListener('pagehide',()=>{stopMusic();if(active)fetch('/api/world/state',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json','X-CSRF-Token':window.worldToken},body:JSON.stringify({player_id:playerId,x,z,yaw,pitch,music_muted:music.muted,jump:0,running:false})});});
 function lock(){try{const result=canvas.requestPointerLock?.();result?.catch(()=>{$('look').textContent='Drag to look around';});}catch{$('look').textContent='Drag to look around';}}canvas.onclick=lock;$('look').onclick=lock;
 document.addEventListener('pointerlockchange',()=>{$('look').hidden=document.pointerLockElement===canvas;keys.clear();});
@@ -291,7 +293,7 @@ function draw(now){
    }
   });
   room?.update(dt);$('roomAction').hidden=!room?.near(x,z);$('roomAction').textContent=room?.open?'关门 · E':'打开小屋门 · E';
-  if(train){train.update(worldClockAnchor+now-worldClockReceived);village.crossing.update(train,worldClockAnchor+now-worldClockReceived);trainSound.update(train,camera,now,music.muted);}
+  if(train){train.update(worldClockAnchor+now-worldClockReceived);const crossingState=village.crossing.update(train,worldClockAnchor+now-worldClockReceived);crossingSound.update(crossingState.flashing,camera,music.muted);trainSound.update(train,camera,now,music.muted);}
   if(room){const marker=new THREE.Vector3(58,5.9,-129.8).project(camera);$('roomMarker').hidden=Math.hypot(x-58,z+130)>32||marker.z>1||marker.z< -1||Math.abs(marker.x)>1||Math.abs(marker.y)>1;$('roomMarker').style.left=(marker.x*.5+.5)*w+'px';$('roomMarker').style.top=(-marker.y*.5+.5)*h+'px';}
   animals?.update(worldClockAnchor+now-worldClockReceived,[{id:playerId,x,z,yaw,jump:jumpHeight,running,moving:Math.hypot(f,s)>.1,local:true,riding:animalPets.riding,animals:animalPets},...peers],dt,camera,w,h);
   nearAnimal=animals?.nearest(x,z)?.kind??null;

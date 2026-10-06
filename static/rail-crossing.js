@@ -34,5 +34,6 @@ export function createCrossing(scene,arms,signals){
   const state=crossingState(cycle.elapsed,distance,length);
   for(const arm of arms)arm.pivot.rotation.z=state.openness*Math.PI/2;
   flash.value=state.flashing?(Math.floor(now/450)%2?.22:1):0;
+  return state;
  }};
 }
