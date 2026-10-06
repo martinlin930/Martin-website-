@@ -26,7 +26,8 @@ export function screenFrame(model) {
         center: corners.reduce((sum,p) => sum.add(p), new THREE.Vector3()).multiplyScalar(.25),
         width: right.length(), height: down.length(),
         modelCenter: new THREE.Box3().setFromObject(model).getCenter(new THREE.Vector3()),
-        modelSize: new THREE.Box3().setFromObject(model).getSize(new THREE.Vector3())
+        modelSize: new THREE.Box3().setFromObject(model).getSize(new THREE.Vector3()),
+        scale, offset
     };
 }
 export function fitDistance(width, height, aspect, fov, widthFraction=.84, heightFraction=.72) {
@@ -48,7 +49,7 @@ export function screenTransform(points, width, height) {
 }
 export async function createComputerScreen({canvas, desktop}) {
     const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
-    renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+    renderer.setPixelRatio(Math.min(devicePixelRatio,matchMedia('(any-pointer: coarse)').matches?1.5:2));
     renderer.outputColorSpace=THREE.SRGBColorSpace;
     renderer.shadowMap.enabled=true;
     renderer.shadowMap.type=THREE.PCFSoftShadowMap;
@@ -67,41 +68,74 @@ export async function createComputerScreen({canvas, desktop}) {
     const camera=new THREE.PerspectiveCamera(36,1,.01,100);
     const width=640,height=width*screen.height/screen.width;
     desktop.style.width=width+'px';desktop.style.height=height+'px';
-    let active=false, frame=0, token=0, settle=null, progress=1;
+    let active=false, frame=0, token=0, settle=null, progress=1, source=null;
+    let viewportWidth=0,viewportHeight=0;
+    const from=new THREE.Vector3(),to=new THREE.Vector3(),fromTarget=new THREE.Vector3(),target=new THREE.Vector3(),worldUp=new THREE.Vector3(0,1,0);
+    const projected=screen.corners.map(()=>new THREE.Vector3());
+    const points=screen.corners.map(()=>({x:0,y:0}));
     function configure(t) {
         const w=canvas.clientWidth,h=canvas.clientHeight;if(!w||!h)return false;
-        renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();
-        const distance=fitDistance(screen.width,screen.height,camera.aspect,camera.fov);
-        const initialDistance=fitDistance(screen.modelSize.x,screen.modelSize.y,camera.aspect,camera.fov,.62,.66);
-        const from=screen.modelCenter.clone().add(new THREE.Vector3(.4,.25,-.88).normalize().multiplyScalar(initialDistance));
-        const to=screen.center.clone().addScaledVector(screen.normal,distance);
+        if(w!==viewportWidth||h!==viewportHeight){
+            viewportWidth=w;viewportHeight=h;renderer.setSize(w,h,false);
+        }
+        const aspect=w/h;
+        const rect=source?.rect;
+        const sourceAspect=rect&&rect.width>0&&rect.height>0?rect.width/rect.height:aspect;
+        camera.aspect=THREE.MathUtils.lerp(sourceAspect,aspect,t);
+        camera.fov=THREE.MathUtils.lerp(source?.fov||36,36,t);
+        camera.updateProjectionMatrix();
+        if(rect&&rect.width>0&&rect.height>0){
+            const sx=THREE.MathUtils.lerp(rect.width/w,1,t),sy=THREE.MathUtils.lerp(rect.height/h,1,t);
+            const ox=((rect.left+rect.width/2)/w*2-1)*(1-t);
+            const oy=(1-(rect.top+rect.height/2)/h*2)*(1-t);
+            const elements=camera.projectionMatrix.elements;
+            elements[0]*=sx;elements[5]*=sy;elements[8]=elements[8]*sx-ox;elements[9]=elements[9]*sy-oy;
+            camera.projectionMatrixInverse.copy(camera.projectionMatrix).invert();
+        }
+        const distance=fitDistance(screen.width,screen.height,aspect,36);
+        const initialDistance=fitDistance(screen.modelSize.x,screen.modelSize.y,aspect,36,.62,.66);
+        fromTarget.copy(screen.modelCenter);
+        if(source?.orbit&&source?.target){
+            fromTarget.set(source.target.x,source.target.y,source.target.z).multiplyScalar(screen.scale).add(screen.offset);
+            from.setFromSphericalCoords(source.orbit.radius*screen.scale,source.orbit.phi,source.orbit.theta).add(fromTarget);
+        }else{
+            from.set(.4,.25,-.88).normalize().multiplyScalar(initialDistance).add(fromTarget);
+        }
+        to.copy(screen.center).addScaledVector(screen.normal,distance);
         camera.position.lerpVectors(from,to,t);
-        camera.up.lerpVectors(new THREE.Vector3(0,1,0),screen.up,t).normalize();
-        camera.lookAt(screen.modelCenter.clone().lerp(screen.center,t));camera.updateMatrixWorld(true);
+        camera.up.lerpVectors(worldUp,screen.up,t).normalize();
+        target.lerpVectors(fromTarget,screen.center,t);camera.lookAt(target);camera.updateMatrixWorld(true);
         return true;
     }
     function render(t) {
         if(!configure(t))return;
         renderer.render(scene,camera);
         const w=canvas.clientWidth,h=canvas.clientHeight;
-        const points=screen.corners.map(p=>{const v=p.clone().project(camera);return{x:(v.x+1)*w/2,y:(1-v.y)*h/2};});
+        screen.corners.forEach((p,i)=>{const v=projected[i].copy(p).project(camera);points[i].x=(v.x+1)*w/2;points[i].y=(1-v.y)*h/2;});
         const matrix=screenTransform(points,width,height);
         if(matrix)desktop.style.transform='matrix3d('+matrix.join(',')+')';
         desktop.style.opacity=String(THREE.MathUtils.smoothstep(t,.2,.85));
         desktop.style.pointerEvents=t>=1?'auto':'none';
     }
+    // Compile and render once while hidden; shadows stay fixed for this static scene.
+    configure(0);
+    if(renderer.compileAsync)await renderer.compileAsync(scene,camera);
+    renderer.render(scene,camera);
+    renderer.shadowMap.autoUpdate=false;
+    desktop.style.opacity='0';
     const resize=new ResizeObserver(()=>{if(active)render(progress);});
     resize.observe(canvas);
     return {
-        start(instant=false){
+        start(instant=false,origin=null){
+            source=origin;
             token++;const thisToken=token;cancelAnimationFrame(frame);settle?.();active=true;
             const reduced=instant||matchMedia('(prefers-reduced-motion: reduce)').matches;
             return new Promise(resolve=>{
                 settle=resolve;const start=performance.now();
                 function tick(now){
                     if(!active||thisToken!==token){resolve();return;}
-                    const raw=reduced?1:Math.min((now-start)/950,1);
-                    progress=1-Math.pow(1-raw,3);render(progress);
+                    const raw=reduced?1:Math.min((now-start)/900,1);
+                    progress=raw*raw*(3-2*raw);render(progress);
                     if(raw<1)frame=requestAnimationFrame(tick);
                     else{desktop.style.pointerEvents='auto';settle=null;resolve();}
                 }
