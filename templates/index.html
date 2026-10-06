@@ -1147,7 +1147,15 @@
         @media(pointer:coarse){ #hubJoystick{display:block}.hub-mobile-help{display:inline}.hub-desktop-help{display:none}}
 
 </style>
-<style>html.system-updating::before{content:"";position:fixed;inset:0;background:#fff;z-index:2147483646}html.system-updating::after{content:"Updating";position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);color:#222;font:400 24px Arial,sans-serif;letter-spacing:.04em;z-index:2147483647}html.system-updating{overflow:hidden}</style><script>try{const pending=JSON.parse(sessionStorage.getItem('martin-system-update')||'null');if(pending&&pending.path===location.pathname&&Date.now()-pending.savedAt<600000)document.documentElement.classList.add('system-updating');}catch{}</script></head>
+<style>html.system-updating::before{content:"";position:fixed;inset:0;background:#fff;z-index:2147483646}html.system-updating::after{content:"Updating";position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);color:#222;font:400 24px Arial,sans-serif;letter-spacing:.04em;z-index:2147483647}html.system-updating{overflow:hidden}</style><script>try{const pending=JSON.parse(sessionStorage.getItem('martin-system-update')||'null');if(pending&&pending.path===location.pathname&&Date.now()-pending.savedAt<600000)document.documentElement.classList.add('system-updating');}catch{}</script><style>
+.music-scene[hidden]{display:none}
+.music-scene{position:fixed;inset:0;z-index:10000;background:#fff;color:#202020}
+.music-scene canvas{width:100%;height:100%;display:block;touch-action:none;outline:none}
+.music-back{position:absolute;top:24px;left:24px;border:1px solid #ddd;border-radius:24px;padding:10px 18px;background:rgba(255,255,255,.9);color:#222;font:14px Arial,sans-serif;cursor:pointer}
+.music-title{position:absolute;top:28px;left:50%;transform:translateX(-50%);margin:0;font:400 18px Arial,sans-serif;letter-spacing:.1em;pointer-events:none}
+.music-status{position:absolute;bottom:30px;left:20px;right:20px;text-align:center;font:14px Arial,sans-serif;color:#777;pointer-events:none}
+</style>
+</head>
 
 
 <body>
@@ -1355,6 +1363,12 @@
 </div>
 
 
+<section class="music-scene" id="musicScene" role="dialog" aria-modal="true" aria-label="Music record player" hidden>
+<canvas id="musicCanvas" tabindex="0" aria-label="3D 唱片机，拖动查看，滚轮缩放"></canvas>
+<button class="music-back" id="musicBack" type="button">← Back to computer</button>
+<h2 class="music-title">Music</h2>
+<p class="music-status" id="musicStatus" role="status">正在加载唱片机…</p>
+</section>
 <audio id="earthMusic" src="/static/audio/earth-music.m4a" loop preload="none"></audio>
 
 <section class="earth-scene" id="earthScene" role="dialog" aria-modal="true" aria-label="Earth game space" hidden>
@@ -4120,6 +4134,39 @@
 
     let homeResume=null;
     try{const data=JSON.parse(sessionStorage.getItem('martin-system-update')||'null');if(data?.path===location.pathname&&Date.now()-data.savedAt<600000)homeResume=data.saved;}catch{}
+
+    const musicScene = document.getElementById('musicScene');
+    const musicCanvas = document.getElementById('musicCanvas');
+    const musicStatus = document.getElementById('musicStatus');
+    let recordScene, recordPromise, musicOpenVersion = 0;
+    async function openMusic() {
+        const version = ++musicOpenVersion;
+        musicScene.hidden = false;
+        document.body.style.overflow = 'hidden';
+        musicStatus.textContent = '正在加载唱片机…';
+        document.getElementById('musicBack').focus();
+        try {
+            if (!recordPromise) recordPromise = import('/static/record-player.js').then(module => module.createRecordScene(musicCanvas)).catch(error => {recordPromise = null; throw error;});
+            recordScene = await recordPromise;
+            if (version !== musicOpenVersion || musicScene.hidden) return;
+            recordScene.start(homeResume?.record);
+            homeResume = null;
+            musicStatus.textContent = '拖动查看 · 滚轮缩放';
+        } catch(error) {
+            if (version === musicOpenVersion && !musicScene.hidden) musicStatus.textContent = '唱片机加载失败，请返回后重试。';
+        } finally {
+            if (version === musicOpenVersion && !musicScene.hidden) {window.systemUpdateRestored = true; window.dispatchEvent(new Event('system-update-ready'));}
+        }
+    }
+    function closeMusic() {
+        musicOpenVersion++;
+        recordScene?.stop();
+        musicScene.hidden = true;
+        document.body.style.overflow = viewer.classList.contains('open') ? 'hidden' : '';
+        document.getElementById('musicFolder').focus();
+    }
+    document.getElementById('musicBack').addEventListener('click', closeMusic);
+
     const earthScene = document.getElementById('earthScene');
     const earthMusic = document.getElementById('earthMusic');
     let earthHub, earthHubPromise, earthOpenVersion=0;
@@ -4194,6 +4241,7 @@
             if (folder === gameFolder) { showDesktopFolder(true); earthFolder.focus(); }
             if (folder === earthFolder) openEarth();
             if (folder.id === 'forumFolder') location.href = '/forum';
+            if (folder.id === 'musicFolder') openMusic();
         });
     });
 
@@ -4308,7 +4356,8 @@
                 "Escape"
             ) {
 
-                if (!earthScene.hidden) closeEarth();
+                if (!musicScene.hidden) closeMusic();
+                else if (!earthScene.hidden) closeEarth();
                 else if (!desktopBack.hidden) { showDesktopFolder(false); gameFolder.focus(); }
                 else closePhoto();
 
@@ -4319,12 +4368,13 @@
     );
 
 
-    window.prepareSystemUpdate=async()=>({resume:false,waitForReady:!earthScene.hidden,page:'home',desktopOpen:viewer.classList.contains('open'),gameFolderOpen:document.getElementById('desktopRoot').hidden,earthOpen:!earthScene.hidden,earth:earthHub?.snapshot(),musicTime:earthMusic.currentTime,scroll:window.scrollY});
+    window.prepareSystemUpdate=async()=>({resume:false,waitForReady:!earthScene.hidden||!musicScene.hidden,page:'home',desktopOpen:viewer.classList.contains('open'),gameFolderOpen:document.getElementById('desktopRoot').hidden,earthOpen:!earthScene.hidden,musicOpen:!musicScene.hidden,record:recordScene?.snapshot(),earth:earthHub?.snapshot(),musicTime:earthMusic.currentTime,scroll:window.scrollY});
     if(homeResume?.page==='home'){
         window.scrollTo(0,homeResume.scroll||0);
         showDesktopFolder(!!homeResume.gameFolderOpen);
         if(homeResume.desktopOpen){viewer.classList.add('open');document.body.style.overflow='hidden';}
-        if(homeResume.earthOpen)openEarth();
+        if(homeResume.musicOpen)openMusic();
+        else if(homeResume.earthOpen)openEarth();
         else{homeResume=null;window.systemUpdateRestored=true;window.dispatchEvent(new Event('system-update-ready'));}
     }
 })();
