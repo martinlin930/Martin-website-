@@ -1,4 +1,5 @@
 import * as THREE from './vendor/three.module.js';
+import {nearby,animationTick} from './nearby.js';
 import {avatarMotion} from './avatar-motion.js';
 import {mountSeat} from './mounts.js';
 import { clone as cloneSkeleton } from './vendor/SkeletonUtils.js';
@@ -55,7 +56,7 @@ const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));
 renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
-const scene=new THREE.Scene();scene.background=new THREE.Color(0x91c8ee);scene.fog=new THREE.Fog(0x91c8ee,80,240);
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x91c8ee);scene.fog=new THREE.Fog(0x91c8ee,80,130);
 const ambient=new THREE.HemisphereLight(0xfff6df,0x667c50,.55);scene.add(ambient);
 const daySky=new THREE.Color(0x91c8ee),nightSky=new THREE.Color(0x071b42);
 const dayAmbient=new THREE.Color(0xfff6df),nightAmbient=new THREE.Color(0x769bd6);
@@ -147,7 +148,7 @@ function avatar(p){
  const speech=document.createElement('div');speech.className='speech-bubble';speech.hidden=true;
  const speechText=document.createElement('span');speech.appendChild(speechText);
  $('world').appendChild(speech);
- $('world').appendChild(label);scene.add(group);group.position.set(p.x,village.groundHeight(p.x,p.z),p.z);return {group,body,motion,restY:body.position.y,label,speech,speechText,bones,phase:0,stride:0};
+ $('world').appendChild(label);scene.add(group);group.position.set(p.x,village.groundHeight(p.x,p.z),p.z);return {group,root:group,body,motion,restY:body.position.y,label,speech,speechText,bones,phase:0,stride:0};
 }
 
 async function api(route,data){const r=await fetch('/api/world/'+route,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':window.worldToken},body:JSON.stringify({...data,player_id:playerId})});let result;try{result=await r.json();}catch{throw Error('连接异常，请刷新页面后重试。');}if(!r.ok)throw Error(result.error||'Connection unavailable');return result;}
@@ -277,14 +278,16 @@ function draw(now){
   if(x!==cachedFloorX||z!==cachedFloorZ){cachedFloor=village.groundHeight(x,z);cachedFloorX=x;cachedFloorZ=z;}
   const floor=cachedFloor;sun.position.set(x+sunOffset.x,floor+sunOffset.y,z+sunOffset.z);sun.target.position.set(x,floor,z);
   camera.position.set(x,floor+(animalPets.riding?mountSeat(animalPets.riding)+.95:1.65)+jumpHeight,z);camera.rotation.set(-pitch,Math.PI-yaw,0);camera.updateMatrixWorld();
-  const alive=new Set(peers.map(p=>p.id));
+  village.updateVisibility(camera.position,now);
+  const nearbyPeers=peers.filter(p=>nearby(p.x,p.z,camera.position));
+  const alive=new Set(nearbyPeers.map(p=>p.id));
   avatars.forEach((a,id)=>{if(!alive.has(id)){scene.remove(a.group);a.label.remove();a.speech.remove();a.motion.dispose();avatars.delete(id);}});
-  peers.forEach(p=>{
+  nearbyPeers.forEach(p=>{
    const kind=avatarKind(p);if(!templates.has(kind)){if(!pendingModels.has(kind))loadAvatar(kind);return;}
    if(!avatars.has(p.id))avatars.set(p.id,avatar(p));
    const a=avatars.get(p.id);a.group.position.lerp(new THREE.Vector3(p.x,village.groundHeight(p.x,p.z)+(p.jump||0)+(p.riding?mountSeat(p.riding)-.78:0),p.z),1-Math.exp(-dt*18));
    const target=-(p.yaw||0);const delta=Math.atan2(Math.sin(target-a.group.rotation.y),Math.cos(target-a.group.rotation.y));a.group.rotation.y+=delta*(1-Math.exp(-dt*18));
-   animateWalk(a,p.movingUntil>now,dt,!!p.running,(p.jump||0)>.1,!!p.riding);
+   const animationDt=animationTick(a,now,camera.position);if(animationDt!==null)animateWalk(a,p.movingUntil>now,animationDt,!!p.running,(p.jump||0)>.1,!!p.riding);
    const point=a.group.position.clone().add(new THREE.Vector3(0,2.05,0)).project(camera);
    a.label.hidden=point.z>1||point.z< -1||Math.abs(point.x)>1||Math.abs(point.y)>1;
    a.label.style.left=(point.x*.5+.5)*w+'px';a.label.style.top=(-point.y*.5+.5)*h+'px';
@@ -300,14 +303,14 @@ function draw(now){
   room?.update(dt);$('roomAction').hidden=!room?.near(x,z);$('roomAction').textContent=room?.open?'关门 · E':'打开小屋门 · E';
   if(train){train.update(worldClockAnchor+now-worldClockReceived);dogCar?.update(worldClockAnchor+now-worldClockReceived);const crossingState=village.crossing.update(train,worldClockAnchor+now-worldClockReceived);crossingSound.update(crossingState.flashing,camera,music.muted);trainSound.update(train,camera,now,music.muted);}
   if(room){const marker=new THREE.Vector3(58,5.9,-129.8).project(camera);$('roomMarker').hidden=Math.hypot(x-58,z+130)>32||marker.z>1||marker.z< -1||Math.abs(marker.x)>1||Math.abs(marker.y)>1;$('roomMarker').style.left=(marker.x*.5+.5)*w+'px';$('roomMarker').style.top=(-marker.y*.5+.5)*h+'px';}
-  animals?.update(worldClockAnchor+now-worldClockReceived,[{id:playerId,x,z,yaw,jump:jumpHeight,running,moving:Math.hypot(f,s)>.1,local:true,riding:animalPets.riding,animals:animalPets},...peers],dt,camera,w,h);
+  animals?.update(worldClockAnchor+now-worldClockReceived,[{id:playerId,x,z,yaw,jump:jumpHeight,running,moving:Math.hypot(f,s)>.1,local:true,riding:animalPets.riding,animals:animalPets},...nearbyPeers],dt,camera,w,h);
   nearAnimal=animals?.nearest(x,z)?.kind??null;
   $('animalAction').hidden=!nearAnimal&&!animalPets.active;
   $('dismount').hidden=!animalPets.riding;
   $('rideDog').disabled=petState.xp<500;$('rideDog').textContent=animalPets.riding==='Dog'?'下骑':(petState.xp>=500?'骑乘狗':'Lv.5 可骑乘');
   $('animalAction').textContent=nearAnimal?'领养 / 管理'+animalNames[nearAnimal]:'我的动物';
   if($('animalDialog').open)animalStats();
-  dogs?.update(worldClockAnchor+now-worldClockReceived,[{id:playerId,x,z,yaw,jump:jumpHeight,running,moving:Math.hypot(f,s)>.1,local:true,riding:animalPets.riding,dog_name:dogName,dog_xp:petState.xp},...peers],dt,camera,w,h);
+  dogs?.update(worldClockAnchor+now-worldClockReceived,[{id:playerId,x,z,yaw,jump:jumpHeight,running,moving:Math.hypot(f,s)>.1,local:true,riding:animalPets.riding,dog_name:dogName,dog_xp:petState.xp},...nearbyPeers],dt,camera,w,h);
   $('petAction').hidden=!dogName&&(!dogs||dogs.nearest(x,z)>3);
   $('petAction').textContent=dogName?dogName+' · 改名字':window.worldAccount?'领养这只狗':'登录后领养狗';
   forageSpot=forage?.update((worldClockAnchor+now-worldClockReceived)/1000,petState.claims||{},x,z)??null;

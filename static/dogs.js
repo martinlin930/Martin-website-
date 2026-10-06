@@ -1,4 +1,5 @@
 import * as THREE from './vendor/three.module.js';
+import {nearby,animationTick} from './nearby.js';
 import {mountScale} from './mounts.js';
 
 import { GLTFLoader } from './vendor/GLTFLoader.js';
@@ -18,7 +19,9 @@ function dogModel(template){
  return {root,body,deformations};
 }
 
+let viewer={x:0,z:0};
 function animateDog(dog,distance,moving,running,time){
+ if(animationTick(dog,time,viewer)===null)return;
  const gait=distance*6;
  dog.body.position.y=moving?Math.abs(Math.sin(gait))*(running?.035:.012):0;
  for(const {geometry,rest} of dog.deformations){
@@ -74,7 +77,7 @@ export async function createDogs(scene,map){
    route=patrol(map,cx,cz,radius);
   }
   if(!route)continue;
-  const dog=dogModel(template);scene.add(dog.root);dogs.push({...dog,route,index});
+  const dog=dogModel(template);dog.root.position.set(route.points[0].x,route.points[0].y,route.points[0].z);scene.add(dog.root);dogs.push({...dog,route,index});
  }
  const companions=new Map();
  function removeCompanion(pet){
@@ -84,6 +87,7 @@ export async function createDogs(scene,map){
  return {count:dogs.length,interact(id,action){const pet=companions.get(id);if(pet)pet.reaction={action,until:performance.now()+3000};},nearest(x,z){
   return Math.min(...dogs.map(d=>Math.hypot(d.root.position.x-x,d.root.position.z-z)));
  },update(serverTimeMs,owners=[],dt=.016,camera=null,width=0,height=0){
+  viewer=camera?.position||viewer;owners=owners.filter(o=>o.local||nearby(o.x,o.z,viewer));
   const alive=new Set(owners.filter(o=>o.dog_name).map(o=>o.id));
   for(const [id,pet] of companions)if(!alive.has(id)){removeCompanion(pet);companions.delete(id);}
   for(const owner of owners){
@@ -142,6 +146,7 @@ export async function createDogs(scene,map){
 
   for(const dog of dogs){
    const {points,length}=dog.route;
+   if(!nearby(points[0].x,points[0].z,viewer,90)){dog.root.visible=false;continue;}dog.root.visible=true;
    const walkDuration=length*.4/1.1,runDuration=length*.6/3.1,period=walkDuration+runDuration+3;
    const time=((serverTimeMs/1000+dog.index*3.7)%period+period)%period;
    const running=time>=walkDuration&&time<walkDuration+runDuration;
@@ -151,7 +156,7 @@ export async function createDogs(scene,map){
    let segment=1;while(segment<points.length-1&&points[segment].distance<target)segment++;
    const a=points[segment-1],b=points[segment];const start=a.distance||0,t=(target-start)/(b.distance-start);
    const x=THREE.MathUtils.lerp(a.x,b.x,t),z=THREE.MathUtils.lerp(a.z,b.z,t);
-   dog.root.position.set(x,map.groundHeight(x,z),z);dog.root.rotation.y=Math.atan2(b.x-a.x,b.z-a.z);
+   dog.root.position.set(x,THREE.MathUtils.lerp(a.y,b.y,t),z);dog.root.rotation.y=Math.atan2(b.x-a.x,b.z-a.z);
    animateDog(dog,distance,moving,running,serverTimeMs);
   }
  }};

@@ -1,4 +1,5 @@
 import * as THREE from './vendor/three.module.js';
+import {nearby,animationTick} from './nearby.js';
 import {mountScale} from './mounts.js';
 import {GLTFLoader} from './vendor/GLTFLoader.js';
 import {clone} from './vendor/SkeletonUtils.js';
@@ -15,19 +16,22 @@ export async function createAnimals(scene,map){
   const mixer=new THREE.AnimationMixer(body),actions={};for(const clip of data.animations)actions[clip.name.split('|').at(-1)]=mixer.clipAction(clip);
   scene.add(root);return {root,body,mixer,actions,baseY:body.position.y,mode:null};
  }
+ let viewer={x:0,z:0};
  function animate(p,moving,running,dt,time){
+  const tick=animationTick(p,time,viewer);if(tick===null)return;dt=tick;
   const reacting=p.reaction?.until>performance.now();const mode=reacting&&p.reaction.action==='pet'&&p.actions.Jump?'Jump':moving?(running&&p.actions.Run?'Run':p.actions.Walk?'Walk':'Idle'):'Idle';
   if(mode!==p.mode){p.actions[p.mode]?.fadeOut(.2);p.actions[mode]?.reset().fadeIn(.2).play();p.mode=mode;}
   p.mixer.update(dt);if(moving&&!p.actions.Walk)p.body.position.y=p.baseY+Math.abs(Math.sin(time*.012))*.035;else p.body.position.y=p.baseY;
  }
- const wild=spots.map(s=>({...model(s.kind),spot:s,route:patrol(map,s.x,s.z,s.radius)})),companions=new Map();
+ const wild=spots.map(s=>{const p={...model(s.kind),spot:s,route:patrol(map,s.x,s.z,s.radius)};p.root.position.set(s.x,map.groundHeight(s.x,s.z),s.z);return p;}),companions=new Map();
  function nearest(x,z){let closest=null;for(const p of wild){const d=Math.hypot(p.root.position.x-x,p.root.position.z-z);if(d<3&&(!closest||d<closest.distance))closest={kind:p.spot.kind,distance:d};}return closest;}
  function dispose(p){scene.remove(p.root);p.label?.remove();p.mixer.stopAllAction();p.mixer.uncacheRoot(p.body);}
  return {nearest,interact(id,action){const p=companions.get(id);if(p)p.reaction={action,until:performance.now()+2000};},update(time,owners,dt,camera,w,h){
+  viewer=camera.position;owners=owners.filter(o=>o.local||nearby(o.x,o.z,viewer));
   for(let i=0;i<wild.length;i++){
-   const p=wild[i];if(!p.route)continue;const {points,length}=p.route,walkTime=length*.4/.6,runTime=length*.6/1.4,period=walkTime+runTime+3,t=((time/1000+i*3)%period+period)%period,moving=t<walkTime+runTime,running=t>=walkTime&&moving,d=moving?(running?length*.4+(t-walkTime)*1.4:t*.6):0;
+   const p=wild[i];if(!p.route)continue;if(!nearby(p.spot.x,p.spot.z,viewer,90+p.spot.radius)){p.root.visible=false;continue;}p.root.visible=true;const {points,length}=p.route,walkTime=length*.4/.6,runTime=length*.6/1.4,period=walkTime+runTime+3,t=((time/1000+i*3)%period+period)%period,moving=t<walkTime+runTime,running=t>=walkTime&&moving,d=moving?(running?length*.4+(t-walkTime)*1.4:t*.6):0;
    let j=1;while(j<points.length-1&&points[j].distance<d)j++;const a=points[j-1],b=points[j],u=(d-(a.distance||0))/(b.distance-(a.distance||0));
-   p.root.position.set(THREE.MathUtils.lerp(a.x,b.x,u),0,THREE.MathUtils.lerp(a.z,b.z,u));p.root.position.y=map.groundHeight(p.root.position.x,p.root.position.z);p.root.rotation.y=Math.atan2(b.x-a.x,b.z-a.z);animate(p,moving,running,dt,time);
+   p.root.position.set(THREE.MathUtils.lerp(a.x,b.x,u),0,THREE.MathUtils.lerp(a.z,b.z,u));p.root.position.y=THREE.MathUtils.lerp(a.y,b.y,u);p.root.rotation.y=Math.atan2(b.x-a.x,b.z-a.z);animate(p,moving,running,dt,time);
   }
   const alive=new Set();
   for(const owner of owners){const kind=owner.animals?.active,info=owner.animals?.[kind];if(!info||!templates.has(kind))continue;alive.add(owner.id);let p=companions.get(owner.id);

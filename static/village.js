@@ -2,6 +2,7 @@ import * as THREE from './vendor/three.module.js';
 import { GLTFLoader } from './vendor/GLTFLoader.js';
 import { createNightLights } from './night-lights.js';
 import { createCrossing } from './rail-crossing.js';
+import {spatialIndex,chunkInstances,updateChunks} from './nearby.js';
 const base='/static/models/village/';
 export async function loadVillage(scene,onProgress=()=>{},renderer){
  const [data,terrain,binary,bounds]=await Promise.all([
@@ -121,20 +122,24 @@ export async function loadVillage(scene,onProgress=()=>{},renderer){
   }
   batches.get(key).matrices.push(matrix.clone().multiply(mesh.matrixWorld));
  });}
- for(const batch of batches.values()){
-  const mesh=new THREE.InstancedMesh(batch.geometry,batch.material,batch.matrices.length);
-  batch.matrices.forEach((matrix,i)=>mesh.setMatrixAt(i,matrix));mesh.computeBoundingSphere();mesh.castShadow=batch.shadow;mesh.receiveShadow=true;scene.add(mesh);if(batch.walkable)walkables.push(mesh);
+ const renderChunks=[];
+ for(const batch of batches.values())for(const matrices of chunkInstances(batch.matrices,batch.geometry)){
+  const mesh=new THREE.InstancedMesh(batch.geometry,batch.material,matrices.length);
+  matrices.forEach((matrix,i)=>mesh.setMatrixAt(i,matrix));mesh.computeBoundingSphere();mesh.computeBoundingBox();mesh.castShadow=batch.shadow;mesh.receiveShadow=true;scene.add(mesh);renderChunks.push(mesh);if(batch.walkable)walkables.push(mesh);
  }
  // Wait for the maps requested by material() before opening the world.
  await Promise.all(texturePromises);
  const point=new THREE.Vector3(),ray=new THREE.Raycaster(),down=new THREE.Vector3(0,-1,0);ray.far=12;
+ const walkableIndex=spatialIndex(walkables,m=>m.boundingBox);
+ const obstacleIndex=spatialIndex(obstacles,o=>new THREE.Box3(o.min.clone(),o.max.clone()).applyMatrix4(o.inverse.clone().invert()));
  const terrainHeight=groundHeight;
- const surfaceHeight=(x,z)=>{const floor=terrainHeight(x,z);ray.set(new THREE.Vector3(x,floor+10,z),down);const hit=ray.intersectObjects(walkables,false)[0];return hit&&hit.point.y>floor-.08?Math.max(floor,hit.point.y+.035):floor;};
+ const surfaceHeight=(x,z)=>{const floor=terrainHeight(x,z);ray.set(new THREE.Vector3(x,floor+10,z),down);const hit=ray.intersectObjects(walkableIndex.at(x,z),false)[0];return hit&&hit.point.y>floor-.08?Math.max(floor,hit.point.y+.035):floor;};
 
- return {size,nightLights,crossing,spawn:terrain.spawn,yaw:terrain.yaw,groundHeight:surfaceHeight,canMove(x,z,fromX,fromZ){
+ let visibilityTime=-Infinity;
+ return {size,nightLights,crossing,updateVisibility(position,now){if(now-visibilityTime<200)return;visibilityTime=now;updateChunks(renderChunks,position);},spawn:terrain.spawn,yaw:terrain.yaw,groundHeight:surfaceHeight,canMove(x,z,fromX,fromZ){
   if(x<1||x>size-1||z> -1||z<1-size)return false;
   const y=surfaceHeight(x,z);if(y-surfaceHeight(fromX,fromZ)>.45)return false;
-  for(const o of obstacles){point.set(x,y+.8,z).applyMatrix4(o.inverse);if(point.y>o.min.y&&point.y<o.max.y&&point.x>o.min.x+.15&&point.x<o.max.x-.15&&point.z>o.min.z+.15&&point.z<o.max.z-.15)return false;}
+  for(const o of obstacleIndex.at(x,z)){point.set(x,y+.8,z).applyMatrix4(o.inverse);if(point.y>o.min.y&&point.y<o.max.y&&point.x>o.min.x+.15&&point.x<o.max.x-.15&&point.z>o.min.z+.15&&point.z<o.max.z-.15)return false;}
   return true;
  }};
 }
