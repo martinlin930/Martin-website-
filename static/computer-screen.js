@@ -122,6 +122,7 @@ export async function createComputerScreen({canvas, desktop}) {
         if(matrix)desktop.style.transform='matrix3d('+matrix.join(',')+')';
         desktop.style.opacity=String(THREE.MathUtils.smoothstep(t,.2,.85));
         desktop.style.pointerEvents=t>=1?'auto':'none';
+        return true;
     }
     // Compile and render once while hidden; shadows stay fixed for this static scene.
     configure(0);
@@ -132,16 +133,19 @@ export async function createComputerScreen({canvas, desktop}) {
     const resize=new ResizeObserver(()=>{if(active)render(progress);});
     resize.observe(canvas);
     return {
-        start(instant=false,origin=null){
+        start(instant=false,origin=null,onFirstFrame=null){
             source=origin;
             token++;const thisToken=token;cancelAnimationFrame(frame);settle?.();active=true;
             const reduced=instant||matchMedia('(prefers-reduced-motion: reduce)').matches;
             return new Promise(resolve=>{
-                settle=resolve;const start=performance.now();
+                settle=resolve;let started=null,revealed=false;
                 function tick(now){
                     if(!active||thisToken!==token){resolve();return;}
-                    const raw=reduced?1:Math.min((now-start)/900,1);
-                    progress=raw*raw*(3-2*raw);render(progress);
+                    if(started===null)started=now;
+                    const raw=reduced?1:Math.min((now-started)/900,1);
+                    progress=raw*raw*(3-2*raw);
+                    const painted=render(progress);
+                    if(painted&&!revealed){revealed=true;onFirstFrame?.();}
                     if(raw<1)frame=requestAnimationFrame(tick);
                     else{desktop.style.pointerEvents='auto';settle=null;resolve();}
                 }

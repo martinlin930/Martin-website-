@@ -4159,7 +4159,7 @@
     const computerScreenStatus=document.getElementById('computerScreenStatus');
     let computerScreen,computerScreenPromise,computerOpenVersion=0;
     function prepareComputerScreen(){
-        prepareComputerScreen();
+        if(!computerScreenPromise)computerScreenPromise=import('/static/computer-screen.js').then(module=>module.createComputerScreen({canvas:document.getElementById('computerScreenCanvas'),desktop:computerDesktop})).catch(error=>{computerScreenPromise=null;throw error;});
         return computerScreenPromise;
     }
     const computerPreparationObserver=new IntersectionObserver(entries=>{
@@ -4169,22 +4169,27 @@
     computer.addEventListener('pointerenter',()=>prepareComputerScreen().catch(()=>{}),{once:true});
     async function showComputerScreen(instant=false) {
         const version=++computerOpenVersion;
-        const bounds=computerModel.getBoundingClientRect();
-        const origin={rect:{left:bounds.left,top:bounds.top,width:bounds.width,height:bounds.height},orbit:computerModel.getCameraOrbit?.(),target:computerModel.getCameraTarget?.(),fov:computerModel.getFieldOfView?.()};
-        viewer.classList.add('open');document.body.style.overflow='hidden';
-        computerScreenStatus.textContent='正在打开电脑…';
-        closeViewer.focus();
+        computer.setAttribute('aria-busy','true');
+        modelStatus.textContent='正在打开电脑…';modelStatus.hidden=false;
         try {
-            if(!computerScreenPromise)computerScreenPromise=import('/static/computer-screen.js').then(module=>module.createComputerScreen({canvas:document.getElementById('computerScreenCanvas'),desktop:computerDesktop})).catch(error=>{computerScreenPromise=null;throw error;});
-            computerScreen=await computerScreenPromise;
-            if(version!==computerOpenVersion||!viewer.classList.contains('open'))return;
-            await computerScreen.start(instant,instant?null:origin);
-            if(version!==computerOpenVersion||!viewer.classList.contains('open'))return;
-            computerScreenStatus.textContent='';
+            computerScreen=await prepareComputerScreen();
+            if(version!==computerOpenVersion)return;
+            const bounds=computerModel.getBoundingClientRect();
+            const origin={rect:{left:bounds.left,top:bounds.top,width:bounds.width,height:bounds.height},orbit:computerModel.getCameraOrbit?.(),target:computerModel.getCameraTarget?.(),fov:computerModel.getFieldOfView?.()};
+            await computerScreen.start(instant,instant?null:origin,()=>{
+                if(version!==computerOpenVersion)return;
+                // Reveal only after the first complete WebGL frame is drawn.
+                viewer.classList.add('open');document.body.style.overflow='hidden';
+                computerScreenStatus.textContent='';modelStatus.hidden=true;
+                computer.setAttribute('aria-busy','false');closeViewer.focus();
+            });
         } catch(error) {
-            if(version===computerOpenVersion&&viewer.classList.contains('open'))computerScreenStatus.textContent='电脑加载失败，请关闭后重试。';
+            if(version===computerOpenVersion){
+                modelStatus.textContent='电脑暂时未准备好，请再点一次重试。';modelStatus.hidden=false;
+            }
         } finally {
-            if(version===computerOpenVersion&&viewer.classList.contains('open')&&homeResume?.page==='home'&&!homeResume.earthOpen&&!homeResume.musicOpen) {
+            if(version===computerOpenVersion)computer.setAttribute('aria-busy','false');
+            if(version===computerOpenVersion&&homeResume?.page==='home'&&!homeResume.earthOpen&&!homeResume.musicOpen) {
                 homeResume=null;window.systemUpdateRestored=true;window.dispatchEvent(new Event('system-update-ready'));
             }
         }
@@ -4313,6 +4318,7 @@
     }
     function closePhoto() {
         computerOpenVersion++;
+        computer.setAttribute('aria-busy','false');modelStatus.hidden=true;
         computerScreen?.stop();
         viewer.classList.remove('open');
         document.body.style.overflow='';
