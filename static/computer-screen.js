@@ -20,7 +20,9 @@ export function screenFrame(model) {
     const right = corners[1].clone().sub(corners[0]);
     const down = corners[3].clone().sub(corners[0]);
     const normal = down.clone().cross(right).normalize();
-    corners.forEach(p => p.addScaledVector(normal, .001));
+    // Keep the desktop inside the glass, with the model's screen rim exposed.
+    const displayCenter=corners.reduce((sum,p)=>sum.add(p),new THREE.Vector3()).multiplyScalar(.25);
+    corners.forEach(p=>p.sub(displayCenter).multiplyScalar(.92).add(displayCenter).addScaledVector(normal,.0002));
     return {
         corners, right, up: down.clone().negate().normalize(), normal,
         center: corners.reduce((sum,p) => sum.add(p), new THREE.Vector3()).multiplyScalar(.25),
