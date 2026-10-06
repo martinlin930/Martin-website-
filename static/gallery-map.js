@@ -1,6 +1,6 @@
 import * as THREE from './vendor/three.module.js';
 import {GLTFLoader} from './vendor/GLTFLoader.js';
-import {galleryLighting,galleryShadows} from './gallery-lighting.js';
+import {galleryLighting,galleryShadows,galleryReflections} from './gallery-lighting.js';
 import {galleryPhotos,removeGalleryFrames} from './gallery-photos.js';
 import {normalizePictureFrame} from './gallery-frame.js';
 const base='/static/models/gallery/';
@@ -41,6 +41,7 @@ export async function loadGallery(scene,onProgress=()=>{},renderer){
  removeGalleryFrames(model.scene,photos);
  galleryShadows(model.scene);
  scene.add(model.scene);scene.background=new THREE.Color(0xeceae5);
+ galleryReflections(scene,renderer);
  for(const b of galleryThresholds(layout)){const floor=new THREE.Mesh(new THREE.PlaneGeometry(b.max[0]-b.min[0],b.max[2]-b.min[2]),new THREE.MeshStandardMaterial({color:0xdedcd5,roughness:.85}));floor.rotation.x=-Math.PI/2;floor.position.set((b.min[0]+b.max[0])/2,layout.floor,(b.min[2]+b.max[2])/2);scene.add(floor);}
  const lighting=galleryLighting(scene,{mobile:matchMedia('(pointer: coarse)').matches});
  const exhibition=galleryPhotos(scene,photos,base,normalizePictureFrame(frame.scene));
