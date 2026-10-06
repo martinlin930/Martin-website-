@@ -16,7 +16,7 @@ let playerId=null, active=false, x=0,z=0,yaw=0,pitch=0, peers=[],keys=new Set(),
 const canvas=$('view');
 let animalPets={},animals,nearAnimal=null,animalBusy=false;
 let dogName='',petState={food:0,xp:0,level:0,claims:{}},forageSpot=null,petBusy=false;
-let noticeTimer;
+let noticeTimer,petCooldownUntil=0;
 let jumpHeight=0,jumpVelocity=0,running=false;
 const music=new Audio('/static/world-music.m4a');music.loop=true;music.volume=.45;music.preload='none';music.muted=!!window.worldMusicMuted;
 function musicLabel(){$('music').textContent=music.paused?'播放音乐':music.muted?'音乐：关':'音乐：开';}
@@ -128,7 +128,7 @@ async function petInteract(action){
  if(!window.worldAccount){location.href='/login';return;}
  petBusy=true;
  try{const result=await api('pet-action',{action,spot:forageSpot});petState=result.pet;
-  if(action!=='collect')dogs?.interact(playerId,action);
+  if(action!=='collect'){dogs?.interact(playerId,action);petCooldownUntil=performance.now()+5000;}
   $('petNotice').textContent=result.message;
  }catch(error){$('petNotice').textContent=error.message;}
  finally{petBusy=false;clearTimeout(noticeTimer);noticeTimer=setTimeout(()=>$('petNotice').textContent='',4000);}
@@ -263,7 +263,9 @@ function draw(now){
   $('petStats').textContent='Lv. '+petState.level+' · 狗粮 '+petState.food+' 份';
   $('petXp').value=petState.level===100?100:petState.xp%100;
   $('petProgress').textContent=petState.level===100?'已达到 100 级':(petState.xp%100)+' / 100 经验';
-  for(const id of ['feedDog','petDog','callDog'])$(id).disabled=petBusy;
+  const petWait=Math.max(0,Math.ceil((petCooldownUntil-now)/1000));
+  for(const id of ['feedDog','petDog','callDog'])$(id).disabled=petBusy||petWait>0;
+  $('feedDog').textContent=petWait?'喂食 · '+petWait+' 秒':'喂食';
   updateDayNight(now);ocean?.update(camera);renderer.render(scene,camera);
  }
  requestAnimationFrame(draw);
