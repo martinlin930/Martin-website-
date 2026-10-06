@@ -73,7 +73,10 @@ function loadAvatar(kind){
  if(pendingModels.has(kind))return pendingModels.get(kind);
  const promise=fetch('/static/models/avatars-r2/'+kind+'.glb.gz').then(async response=>{
   if(!response.ok)throw Error('Character unavailable');
-  const buffer=await new Response(response.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
+  let buffer=await response.arrayBuffer();
+  const magic=new Uint8Array(buffer,0,Math.min(2,buffer.byteLength));
+  // Hosting proxies may already decode Content-Encoding: gzip.
+  if(magic[0]===0x1f&&magic[1]===0x8b)buffer=await new Response(new Blob([buffer]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
   return new GLTFLoader().parseAsync(buffer,'');
  }).then(g=>{
   const model=g.scene;model.updateMatrixWorld(true);
