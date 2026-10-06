@@ -49,3 +49,6 @@ CREATE TABLE IF NOT EXISTS game.world_objects (name TEXT PRIMARY KEY, value INTE
 INSERT INTO game.world_objects(name,value) VALUES('room-door',0) ON CONFLICT(name) DO NOTHING;
 ALTER TABLE game.world_objects ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON game.world_objects FROM PUBLIC,anon,authenticated;
+
+-- Account cosmetics are managed only by the backend, and survive deployments.
+ALTER TABLE game.users ADD COLUMN IF NOT EXISTS avatar_frame TEXT NOT NULL DEFAULT '';

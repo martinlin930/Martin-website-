@@ -1,5 +1,8 @@
 {% extends 'auth_base.html' %}
+{% from 'avatar.html' import user_avatar %}
 {% block content %}
+<link rel="stylesheet" href="/static/avatar-frame.css">
+{% if avatar_frame %}<div class="account-avatar">{{ user_avatar(session['username'], avatar_frame) }}</div>{% endif %}
 <h1>WELCOME.</h1>
 <p>You're logged in as <strong>{{ session['username'] }}</strong>.</p>
 <p><a href="{{ url_for('world') }}">进入村庄 · 自动恢复账户存档</a></p>

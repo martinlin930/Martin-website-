@@ -17,7 +17,13 @@ def install_forum(app, database):
         if not uid:
             return None
         with database() as db:
-            return db.execute('SELECT id,username,is_admin FROM users WHERE id=?', (uid,)).fetchone()
+            return db.execute('SELECT id,username,is_admin,avatar_frame FROM users WHERE id=?', (uid,)).fetchone()
+
+    def decorate_avatar(item):
+        username = item.pop('avatar_username', '')
+        item['avatar_frame'] = 'pig' if item.get('avatar_frame') == 'pig' else ''
+        item['avatar_label'] = username if item['avatar_frame'] else ''
+        return item
 
     def before_id():
         value = request.args.get('before', '')
@@ -26,19 +32,20 @@ def install_forum(app, database):
     @app.get('/forum')
     def forum_page():
         user = author()
-        return render_template('forum.html', forum_admin=bool(user and user['is_admin']))
+        return render_template('forum.html', forum_admin=bool(user and user['is_admin']), forum_avatar_frame='pig' if user and user['avatar_frame'] == 'pig' else '')
 
     @app.get('/api/forum/posts')
     def forum_posts():
         with database() as db:
-            rows = [dict(r) for r in db.execute('''SELECT p.id,p.display_name,p.body,p.created,
+            rows = [dict(r) for r in db.execute('''SELECT p.id,p.display_name,p.body,p.created,u.username AS avatar_username,u.avatar_frame,
                 (SELECT COUNT(*) FROM forum_comments c WHERE c.post_id=p.id AND c.deleted_at IS NULL) AS comment_count
-                FROM forum_posts p WHERE p.deleted_at IS NULL AND p.id < ? ORDER BY p.id DESC LIMIT 20''', (before_id(),))]
+                FROM forum_posts p LEFT JOIN users u ON u.id=p.user_id WHERE p.deleted_at IS NULL AND p.id < ? ORDER BY p.id DESC LIMIT 20''', (before_id(),))]
             images = []
             if rows:
                 ids = [p['id'] for p in rows]
                 images = db.execute('SELECT id,post_id FROM forum_images WHERE post_id IN (' + ','.join('?' for _ in ids) + ') ORDER BY id', tuple(ids)).fetchall()
             for post in rows:
+                decorate_avatar(post)
                 post['images'] = ['/api/forum/images/'+str(i['id']) for i in images if i['post_id']==post['id']]
         return {'posts': rows, 'next': rows[-1]['id'] if len(rows)==20 else None}
 
@@ -101,7 +108,7 @@ def install_forum(app, database):
         with database() as db:
             if not db.execute('SELECT id FROM forum_posts WHERE id=? AND deleted_at IS NULL',(post_id,)).fetchone():
                 return error('动态不存在。',404)
-            rows=[dict(r) for r in db.execute('SELECT id,display_name,body,created FROM forum_comments WHERE deleted_at IS NULL AND post_id=? AND id<? ORDER BY id DESC LIMIT 20',(post_id,before_id()))]
+            rows=[decorate_avatar(dict(r)) for r in db.execute('SELECT c.id,c.display_name,c.body,c.created,u.username AS avatar_username,u.avatar_frame FROM forum_comments c LEFT JOIN users u ON u.id=c.user_id WHERE c.deleted_at IS NULL AND c.post_id=? AND c.id<? ORDER BY c.id DESC LIMIT 20',(post_id,before_id()))]
         return {'comments':rows[::-1], 'next':rows[-1]['id'] if len(rows)==20 else None}
 
     @app.post('/api/forum/posts/<int:post_id>/comments')

@@ -1,0 +1,5 @@
+{% macro user_avatar(username, frame='') -%}
+<span class="avatar{% if frame == 'pig' %} avatar--pig{% endif %}"{% if frame == 'pig' %} aria-label="{{ username }} 的小猪头像框"{% endif %}>
+{% if frame == 'pig' %}<span class="avatar-center">{{ username }}</span><img class="avatar-frame" src="/static/avatar-frames/pig.png" alt="" decoding="async">{% else %}{{ username[0]|upper }}{% endif %}
+</span>
+{%- endmacro %}

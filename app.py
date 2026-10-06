@@ -83,6 +83,8 @@ def database():
     user_columns = {row['name'] for row in connection.execute('PRAGMA table_info(users)')}
     if 'is_admin' not in user_columns:
         connection.execute('ALTER TABLE users ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 0')
+    if 'avatar_frame' not in user_columns:
+        connection.execute("ALTER TABLE users ADD COLUMN avatar_frame TEXT NOT NULL DEFAULT ''")
     connection.execute('CREATE TABLE IF NOT EXISTS login_attempts (username TEXT PRIMARY KEY, failures INTEGER NOT NULL, last_attempt INTEGER NOT NULL)')
     connection.execute('CREATE TABLE IF NOT EXISTS players (id TEXT PRIMARY KEY, nickname TEXT NOT NULL, x REAL NOT NULL, z REAL NOT NULL, updated REAL NOT NULL)')
     columns = {row['name'] for row in connection.execute('PRAGMA table_info(players)')}
@@ -214,7 +216,10 @@ def register():
 def account():
     if not session.get('user_id'):
         return redirect(url_for('login'))
-    return render_template('account.html')
+    with database() as db:
+        user = db.execute('SELECT avatar_frame FROM users WHERE id=?', (session['user_id'],)).fetchone()
+    frame = 'pig' if user and user['avatar_frame'] == 'pig' else ''
+    return render_template('account.html', avatar_frame=frame)
 
 
 @app.post('/logout')

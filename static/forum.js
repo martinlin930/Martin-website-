@@ -1,6 +1,15 @@
 const $=id=>document.getElementById(id);
 let next=null,loading=false,selected=[];
 function node(tag,className,text){const el=document.createElement(tag);if(className)el.className=className;if(text!==undefined)el.textContent=text;return el;}
+function avatar(data){
+ const label=data.avatar_frame==='pig'?(data.avatar_label||'hi'):([...data.display_name][0]?.toUpperCase()||'M');
+ const el=node('span','avatar',data.avatar_frame==='pig'?undefined:label);
+ if(data.avatar_frame==='pig'){
+  el.classList.add('avatar--pig');el.append(node('span','avatar-center',label));
+  const frame=node('img','avatar-frame');frame.src='/static/avatar-frames/pig.png';frame.alt='';frame.decoding='async';el.append(frame);el.setAttribute('aria-label',label+' 的小猪头像框');
+ }
+ return el;
+}
 function timestamp(seconds){const el=node('time');const date=new Date(seconds*1000);el.dateTime=date.toISOString();el.textContent=date.toLocaleString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false});el.title=date.toLocaleString();return el;}
 async function api(path,options={}){const response=await fetch('/api/forum'+path,{...options,headers:{'X-CSRF-Token':window.forumToken,...options.headers}});let data;try{data=await response.json();}catch{throw Error(response.status===413?'照片太大了，请选择较小的图片。':'暂时无法连接，请稍后重试。');}if(!response.ok)throw Error(data.error||'操作失败，请稍后重试。');return data;}
 function showError(el,message){el.textContent=message;el.classList.add('error');}
@@ -14,13 +23,13 @@ function deleteButton(path,description,onDeleted,status){
  return button;
 }
 function postCard(post){
- const card=node('article','post');const top=node('div','post-top');top.append(node('span','avatar',[...post.display_name][0]?.toUpperCase()||'M'));
+ const card=node('article','post');const top=node('div','post-top');top.append(avatar(post));
  const identity=node('div');identity.append(node('div','post-author',post.display_name),timestamp(post.created));top.append(identity);if(window.forumAdmin)top.append(deleteButton('/posts/'+post.id+'/delete','删除后，这条动态及其照片、评论将不再公开显示。',()=>{card.remove();$('feedStatus').classList.remove('error');$('feedStatus').textContent='动态已删除。';},$('feedStatus')));card.append(top);
  if(post.body)card.append(node('p','post-body',post.body));
  if(post.images.length){const photos=node('div','post-photos'+(post.images.length===1?' single':''));post.images.forEach((src,index)=>{const button=node('button');button.type='button';button.setAttribute('aria-label','查看照片 '+(index+1));const image=node('img');image.src=src;image.alt=post.display_name+' 发布的照片';image.loading='lazy';button.append(image);button.onclick=()=>{$('fullPhoto').src=src;$('photoDialog').showModal();};photos.append(button);});card.append(photos);}
  const toggle=node('button','comments-toggle','评论 · '+post.comment_count);toggle.type='button';toggle.setAttribute('aria-expanded','false');card.append(toggle);
  const section=node('section','comments');section.hidden=true;const list=node('div'),status=node('p','status'),earlier=node('button','quiet','查看更早评论');earlier.hidden=true;section.append(list,earlier,status);let cursor=null,fetched=false;
- async function loadComments(older=false){status.textContent='加载评论…';status.classList.remove('error');earlier.disabled=true;try{const data=await api('/posts/'+post.id+'/comments'+(older?'?before='+cursor:''));const fragment=document.createDocumentFragment();data.comments.forEach(c=>{const item=node('div','comment');item.append(node('strong','',c.display_name),node('p','',c.body),timestamp(c.created));if(window.forumAdmin)item.append(deleteButton('/comments/'+c.id+'/delete','删除后，这条评论将不再公开显示。',()=>{item.remove();post.comment_count=Math.max(0,post.comment_count-1);toggle.textContent='评论 · '+post.comment_count;status.textContent='评论已删除。';},status));fragment.append(item);});if(older)list.prepend(fragment);else list.replaceChildren(fragment);cursor=data.next;earlier.hidden=!cursor;status.textContent=list.children.length?'':'还没有评论，来聊聊吧。';fetched=true;}catch(error){showError(status,error.message);}finally{earlier.disabled=false;}}
+ async function loadComments(older=false){status.textContent='加载评论…';status.classList.remove('error');earlier.disabled=true;try{const data=await api('/posts/'+post.id+'/comments'+(older?'?before='+cursor:''));const fragment=document.createDocumentFragment();data.comments.forEach(c=>{const item=node('div','comment');if(c.avatar_frame==='pig'){const identity=node('div','comment-identity');identity.append(avatar(c),node('strong','',c.display_name));item.append(identity);}else item.append(node('strong','',c.display_name));item.append(node('p','',c.body),timestamp(c.created));if(window.forumAdmin)item.append(deleteButton('/comments/'+c.id+'/delete','删除后，这条评论将不再公开显示。',()=>{item.remove();post.comment_count=Math.max(0,post.comment_count-1);toggle.textContent='评论 · '+post.comment_count;status.textContent='评论已删除。';},status));fragment.append(item);});if(older)list.prepend(fragment);else list.replaceChildren(fragment);cursor=data.next;earlier.hidden=!cursor;status.textContent=list.children.length?'':'还没有评论，来聊聊吧。';fetched=true;}catch(error){showError(status,error.message);}finally{earlier.disabled=false;}}
  earlier.onclick=()=>loadComments(true);
  if(window.forumAccount){const form=node('form','comment-form'),input=node('input'),submit=node('button','','评论');input.placeholder='写一条评论…';input.maxLength=1000;input.required=true;input.setAttribute('aria-label','评论内容');form.append(input,submit);form.onsubmit=async event=>{event.preventDefault();submit.disabled=true;try{await api('/posts/'+post.id+'/comments',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({body:input.value})});input.value='';post.comment_count++;toggle.textContent='评论 · '+post.comment_count;await loadComments();}catch(error){showError(status,error.message);}finally{submit.disabled=false;}};section.append(form);}else{const info=node('p','status');const link=node('a','','登录后参与评论');link.href='/login?next=/forum';info.append(link);section.append(info);}
  toggle.onclick=()=>{section.hidden=!section.hidden;toggle.setAttribute('aria-expanded',String(!section.hidden));if(!section.hidden&&!fetched)loadComments();};card.append(section);return card;
