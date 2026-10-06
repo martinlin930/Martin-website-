@@ -2,6 +2,7 @@ import * as THREE from './vendor/three.module.js';
 import {GLTFLoader} from './vendor/GLTFLoader.js';
 import {galleryLighting,galleryShadows} from './gallery-lighting.js';
 import {galleryPhotos,removeGalleryFrames} from './gallery-photos.js';
+import {normalizePictureFrame} from './gallery-frame.js';
 const base='/static/models/gallery/';
 
 export function galleryNavigation(layout){
@@ -31,7 +32,7 @@ function galleryThresholds(layout){
 }
 
 export async function loadGallery(scene,onProgress=()=>{},renderer){
- const [layout,response,photos]=await Promise.all([fetch(base+'layout.json').then(r=>r.json()),fetch(base+'showroom.glb.gz'),fetch(base+'photos.json').then(r=>r.json())]);
+ const [layout,response,photos,frame]=await Promise.all([fetch(base+'layout.json').then(r=>r.json()),fetch(base+'showroom.glb.gz'),fetch(base+'photos.json').then(r=>r.json()),new GLTFLoader().loadAsync(base+'picture-frame.glb')]);
  if(!response.ok)throw Error('Gallery unavailable');
  onProgress(.2);let buffer=await response.arrayBuffer();
  const magic=new Uint8Array(buffer,0,Math.min(2,buffer.byteLength));
@@ -42,7 +43,7 @@ export async function loadGallery(scene,onProgress=()=>{},renderer){
  scene.add(model.scene);scene.background=new THREE.Color(0xeceae5);
  for(const b of galleryThresholds(layout)){const floor=new THREE.Mesh(new THREE.PlaneGeometry(b.max[0]-b.min[0],b.max[2]-b.min[2]),new THREE.MeshStandardMaterial({color:0xdedcd5,roughness:.85}));floor.rotation.x=-Math.PI/2;floor.position.set((b.min[0]+b.max[0])/2,layout.floor,(b.min[2]+b.max[2])/2);scene.add(floor);}
  const lighting=galleryLighting(scene,{mobile:matchMedia('(pointer: coarse)').matches});
- const exhibition=galleryPhotos(scene,photos,base);
+ const exhibition=galleryPhotos(scene,photos,base,normalizePictureFrame(frame.scene));
  exhibition.update(new THREE.Vector3(layout.spawn[0],layout.floor+1.65,layout.spawn[1]),0);
  onProgress(1);const navigation=galleryNavigation(layout);navigation.updateVisibility=(camera,now)=>{lighting.update(camera,now);exhibition.update(camera,now);};navigation.nearestPhoto=(x,z,yaw,pitch)=>exhibition.nearest(x,z,yaw,pitch);navigation.nearPhoto=(x,z)=>!!exhibition.nearest(x,z);return navigation;
 }

@@ -1,7 +1,7 @@
 import * as THREE from './vendor/three.module.js';
 import {GLTFLoader} from './vendor/GLTFLoader.js';
 export const TRAIN_PERIOD=120000;
-export const TRAIN_SPEED=10.5;
+export const TRAIN_SPEED=14.7;
 export function trainCycle(now){const cycle=Math.floor(now/TRAIN_PERIOD);let hash=(cycle^0x9e3779b9)>>>0;hash=Math.imul(hash^(hash>>>16),0x85ebca6b)>>>0;return {cycle,elapsed:((now%TRAIN_PERIOD)+TRAIN_PERIOD)%TRAIN_PERIOD,type:hash%3};}
 export function railPath(raw){const points=raw.map(p=>new THREE.Vector3(...p)),distances=[0];for(let i=1;i<points.length;i++)distances.push(distances.at(-1)+points[i].distanceTo(points[i-1]));return {length:distances.at(-1),at(distance){const d=THREE.MathUtils.clamp(distance,0,distances.at(-1));let lo=1,hi=points.length-1;while(lo<hi){const mid=(lo+hi)>>1;if(distances[mid]<d)lo=mid+1;else hi=mid;}const a=lo-1;return points[a].clone().lerp(points[lo],(d-distances[a])/(distances[lo]-distances[a]));}};}
 const types=[{name:'高速列车',cars:['High Speed Front','High Speed Wagon','High Speed Wagon','High Speed Wagon','High Speed Wagon','High Speed Wagon']},{name:'货运列车',cars:['Cargo Train Front','Cargo Train Container','Cargo Train Coal Conta','Cargo Train Container','Cargo Train Coal Conta','Cargo Train Container']},{name:'蒸汽机车',cars:['Locomotive Front','Locomotive Passenger Carriage','Locomotive Passenger Carriage','Locomotive Wagon','Locomotive Passenger Carriage','Locomotive Wagon']}];

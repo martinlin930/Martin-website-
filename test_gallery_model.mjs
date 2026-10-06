@@ -5,6 +5,7 @@ import {GLTFLoader} from './static/vendor/GLTFLoader.js';
 import {galleryLighting,galleryShadows,removePhotoFrame} from './static/gallery-lighting.js';
 import * as THREE from './static/vendor/three.module.js';
 import {removeGalleryFrames,galleryPhotos} from './static/gallery-photos.js';
+import {normalizePictureFrame,fitPictureFrame} from './static/gallery-frame.js';
 const glb=zlib.gunzipSync(fs.readFileSync('static/models/gallery/showroom.glb.gz'));
 assert.equal(glb.readUInt32LE(0),0x46546c67);
 assert.equal(glb.readUInt32LE(8),glb.length);
@@ -23,9 +24,14 @@ const photos=JSON.parse(fs.readFileSync('static/models/gallery/photos.json','utf
 assert.equal(photos.length,58);
 for(const photo of photos){assert(fs.statSync('static/models/gallery/'+photo.thumb).size>0);assert(fs.statSync('static/models/gallery/'+photo.full).size>0);assert(photo.aspect>0);}
 assert.equal(removeGalleryFrames(model.scene,photos),1092,'All 42 original empty frames are removed');
-const exhibition=galleryPhotos(new THREE.Scene(),photos,'/static/models/gallery/');
+const frameBytes=fs.readFileSync('static/models/gallery/picture-frame.glb');
+const frameModel=await new GLTFLoader().parseAsync(frameBytes.buffer.slice(frameBytes.byteOffset,frameBytes.byteOffset+frameBytes.byteLength),'');
+const frameTemplate=normalizePictureFrame(frameModel.scene);
+assert.equal(frameTemplate.root.children.length,1,'Original dark placeholder is replaced by the photograph');
+const exhibition=galleryPhotos(new THREE.Scene(),photos,'/static/models/gallery/',frameTemplate);
 assert.equal(exhibition.items.length,58);assert(exhibition.nearest(-20,-17));
-for(const item of exhibition.items){assert(Math.abs(item.mesh.geometry.parameters.width/item.mesh.geometry.parameters.height-item.photo.aspect)<1e-6);}
+for(const item of exhibition.items){assert(Math.abs(item.mesh.geometry.parameters.width/item.mesh.geometry.parameters.height-item.photo.aspect)<1e-6);assert.equal(item.display.children.length,2);const fit=fitPictureFrame(frameTemplate,item.mesh.geometry.parameters.width,item.mesh.geometry.parameters.height);assert(fit.photoDepth<frameTemplate.bounds.max.z*fit.group.scale.z);}
+for(let i=0;i<photos.length;i++)for(let j=i+1;j<photos.length;j++){if(photos[i].normal.every((n,k)=>n===photos[j].normal[k]))assert(new THREE.Vector3().fromArray(photos[i].position).distanceTo(new THREE.Vector3().fromArray(photos[j].position))>1.6);}
 galleryShadows(model.scene);let casting=0;model.scene.traverse(m=>{if(m.isMesh&&m.castShadow)casting++;});assert(casting>50);
 const lighting=galleryLighting(new THREE.Scene(),{mobile:true});assert.equal(lighting.lamps.length,3);
 for(const lamp of lighting.lamps){assert(lamp.castShadow);assert.equal(lamp.shadow.mapSize.x,1024);assert.equal(lamp.shadow.autoUpdate,false);lamp.shadow.needsUpdate=false;}
