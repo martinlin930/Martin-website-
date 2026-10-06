@@ -6,6 +6,8 @@ import { GLTFLoader } from './vendor/GLTFLoader.js';
 import { loadVillage } from './village.js';
 import {createOcean} from './ocean.js';
 import { worldTime } from './day-night.js';
+import {recentSpeech} from './speech-bubbles.js';
+let speechByPlayer=new Map();
 import { createForage } from './forage.js';
 import {createTrain} from './train.js';
 import {createRoom} from './room.js';
@@ -24,8 +26,21 @@ let noticeTimer,petCooldownUntil=0;
 let jumpHeight=0,jumpVelocity=0,running=false;
 const music=new Audio('/static/world-music.m4a');music.loop=true;music.volume=.45;music.preload='none';music.muted=!!window.worldMusicMuted;
 function musicLabel(){$('music').textContent=music.paused?'播放音乐':music.muted?'音乐：关':'音乐：开';}
-function startMusic(){music.play().then(musicLabel).catch(musicLabel);}
-function stopMusic(){music.pause();music.currentTime=0;musicLabel();}
+let musicWanted=false,musicPhase=null;
+function selectWorldMusic(day){
+ if(musicPhase===day)return;
+ musicPhase=day;
+ music.pause();
+ music.src=day?'/static/world-music.m4a':'/static/world-night-music.m4a';
+ if(musicWanted)music.play().then(musicLabel).catch(musicLabel);
+ musicLabel();
+}
+function startMusic(){
+ musicWanted=true;
+ selectWorldMusic(worldTime(worldClockAnchor+performance.now()-worldClockReceived).day);
+ if(music.paused)music.play().then(musicLabel).catch(musicLabel);
+}
+function stopMusic(){musicWanted=false;music.pause();music.currentTime=0;musicLabel();}
 $('music').onclick=()=>{if(music.paused)startMusic();else{music.muted=!music.muted;musicLabel();}};
 function jump(){if(active&&jumpHeight<.01&&jumpVelocity===0){jumpVelocity=6;}}
 $('jump').onpointerdown=e=>{e.preventDefault();document.activeElement?.blur();jump();};
@@ -42,6 +57,7 @@ let worldClockAnchor=Date.now(),worldClockReceived=performance.now(),skyDome;
 const skyNight={value:0};
 function updateDayNight(now){
  const time=worldTime(worldClockAnchor+now-worldClockReceived);
+ if(active)selectWorldMusic(time.day);
  const daylight=time.daylight;
  village?.nightLights.update(1-daylight,camera.position);
  skyNight.value=1-daylight;scene.fog.color.copy(nightSky).lerp(daySky,daylight);
@@ -119,15 +135,27 @@ function avatar(p){
  const bones=[];body.traverse(n=>{if(/^(Left|Right)(Arm|UpLeg|Leg)(?:_\d+)?$/.test(n.name)&&n.position.lengthSq()>1e-8){bones.push({bone:n,rest:n.quaternion.clone()});}});
  const motion=avatarMotion(body);
  const label=document.createElement('span');label.textContent=p.nickname;label.style.cssText='position:fixed;pointer-events:none;color:#fff;text-shadow:0 1px 3px #000;font:13px Arial;transform:translate(-50%,-100%);';
- $('world').appendChild(label);scene.add(group);group.position.set(p.x,village.groundHeight(p.x,p.z),p.z);return {group,body,motion,restY:body.position.y,label,bones,phase:0,stride:0};
+ const speech=document.createElement('div');speech.className='speech-bubble';speech.hidden=true;
+ const speechText=document.createElement('span');speech.appendChild(speechText);
+ $('world').appendChild(speech);
+ $('world').appendChild(label);scene.add(group);group.position.set(p.x,village.groundHeight(p.x,p.z),p.z);return {group,body,motion,restY:body.position.y,label,speech,speechText,bones,phase:0,stride:0};
 }
 
 async function api(route,data){const r=await fetch('/api/world/'+route,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':window.worldToken},body:JSON.stringify({...data,player_id:playerId})});let result;try{result=await r.json();}catch{throw Error('连接异常，请刷新页面后重试。');}if(!r.ok)throw Error(result.error||'Connection unavailable');return result;}
-$('join').onsubmit=async e=>{e.preventDefault();if(!village)return;startMusic();try{const user=await api('join',{nickname:$('nickname').value,avatar:$('skin').value});$('entry').hidden=true;$('world').hidden=false;$('identity').textContent=user.nickname;playerId=user.id;room?.setOpen(user.room_open);animalPets=user.animals||{};dogName=user.dog_name||'';petState=user.pet||petState;active=true;document.querySelector('meta[name="viewport"]').content='width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no';if(Number.isFinite(user.server_time)){worldClockAnchor=user.server_time*1000;worldClockReceived=performance.now();}x=user.state.x;z=user.state.z;yaw=user.state.yaw;pitch=user.state.pitch;music.muted=!!user.state.music_muted;musicLabel();$('saveStatus').textContent=user.persistent?'账户存档：自动保存':'访客模式：不保存进度';if(updateResume?.resume){const safe=Number.isFinite(updateResume.x)&&Number.isFinite(updateResume.z)&&village.canMove(updateResume.x,updateResume.z,updateResume.x,updateResume.z);[x,z]=safe?[updateResume.x,updateResume.z]:village.spawn;yaw=Number.isFinite(updateResume.yaw)?updateResume.yaw:yaw;pitch=Number.isFinite(updateResume.pitch)?Math.max(-.7,Math.min(.7,updateResume.pitch)):pitch;music.muted=updateResume.musicMuted;$('message').value=updateResume.message||'';petCooldownUntil=performance.now()+Math.max(0,(updateResume.cooldownEnds||0)-Date.now());updateResume=null;musicLabel();}
- jumpHeight=jumpVelocity=0;timer=setInterval(sync,150);sync();canvas.focus();window.systemUpdateRestored=true;updateReady();}catch(e){stopMusic();$('entryError').textContent=e.message;updateReady();}};
-async function sync(){if(!active||busy)return;busy=true;try{const data=await api('state',{x,z,yaw,pitch,music_muted:music.muted,jump:jumpHeight,running});if(data.version)window.dispatchEvent(new CustomEvent('site-version',{detail:data.version}));const now=performance.now();if(Number.isFinite(data.server_time)){worldClockAnchor=data.server_time*1000;worldClockReceived=now;}room?.setOpen(data.room_open);animalPets=data.animals||{};dogName=data.dog_name||'';petState=data.pet||petState;const previous=new Map(peers.map(p=>[p.id,p]));peers=data.players.map(p=>{const old=previous.get(p.id);p.movingUntil=old&&Math.hypot(p.x-old.x,p.z-old.z)>.015?now+350:(old?.movingUntil||0);return p;});$('status').textContent=(peers.length+1)+' online';$('saveStatus').textContent=window.worldAccount?'账户存档：已保存':'访客模式：不保存进度';const list=$('messages');list.replaceChildren(...data.messages.map(m=>{const li=document.createElement('li');li.textContent=m.nickname+': '+m.body;return li;}));list.scrollTop=list.scrollHeight;}catch(e){$('status').textContent='Reconnecting…';$('saveStatus').textContent='连接中断，存档等待同步';}finally{busy=false;}}
+$('join').onsubmit=async e=>{e.preventDefault();if(!village)return;startMusic();try{const user=await api('join',{nickname:$('nickname').value,avatar:$('skin').value});$('entry').hidden=true;$('world').hidden=false;$('identity').textContent=user.nickname;playerId=user.id;room?.setOpen(user.room_open);animalPets=user.animals||{};dogName=user.dog_name||'';petState=user.pet||petState;active=true;document.querySelector('meta[name="viewport"]').content='width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no';if(Number.isFinite(user.server_time)){worldClockAnchor=user.server_time*1000;worldClockReceived=performance.now();}x=user.state.x;z=user.state.z;yaw=user.state.yaw;pitch=user.state.pitch;music.muted=!!user.state.music_muted;musicLabel();$('saveStatus').textContent=user.persistent?'账户存档：自动保存':'访客模式：不保存进度';if(updateResume?.resume){const safe=Number.isFinite(updateResume.x)&&Number.isFinite(updateResume.z)&&village.canMove(updateResume.x,updateResume.z,updateResume.x,updateResume.z);[x,z]=safe?[updateResume.x,updateResume.z]:village.spawn;yaw=Number.isFinite(updateResume.yaw)?updateResume.yaw:yaw;pitch=Number.isFinite(updateResume.pitch)?Math.max(-.7,Math.min(.7,updateResume.pitch)):pitch;music.muted=updateResume.musicMuted;$('message').value=updateResume.message||'';setChatOpen(!!updateResume.chatOpen);petCooldownUntil=performance.now()+Math.max(0,(updateResume.cooldownEnds||0)-Date.now());updateResume=null;musicLabel();}
+ jumpHeight=jumpVelocity=0;timer=setInterval(sync,150);sync();if($('chat').hidden)canvas.focus();else $('message').focus({preventScroll:true});window.systemUpdateRestored=true;updateReady();}catch(e){stopMusic();$('entryError').textContent=e.message;updateReady();}};
+async function sync(){if(!active||busy)return;busy=true;try{const data=await api('state',{x,z,yaw,pitch,music_muted:music.muted,jump:jumpHeight,running});if(data.version)window.dispatchEvent(new CustomEvent('site-version',{detail:data.version}));const now=performance.now();if(Number.isFinite(data.server_time)){worldClockAnchor=data.server_time*1000;worldClockReceived=now;}room?.setOpen(data.room_open);animalPets=data.animals||{};dogName=data.dog_name||'';petState=data.pet||petState;const previous=new Map(peers.map(p=>[p.id,p]));peers=data.players.map(p=>{const old=previous.get(p.id);p.movingUntil=old&&Math.hypot(p.x-old.x,p.z-old.z)>.015?now+350:(old?.movingUntil||0);return p;});$('status').textContent=(peers.length+1)+' online';$('saveStatus').textContent=window.worldAccount?'账户存档：已保存':'访客模式：不保存进度';speechByPlayer=recentSpeech(data.messages,worldClockAnchor+now-worldClockReceived);const list=$('messages');list.replaceChildren(...data.messages.map(m=>{const li=document.createElement('li');li.textContent=m.nickname+': '+m.body;return li;}));list.scrollTop=list.scrollHeight;}catch(e){$('status').textContent='Reconnecting…';$('saveStatus').textContent='连接中断，存档等待同步';}finally{busy=false;}}
+function setChatOpen(open){
+ $('chat').hidden=!open;$('chatToggle').setAttribute('aria-expanded',String(open));
+ keys.clear();
+ if(open){document.exitPointerLock?.();resetStick();$('message').focus({preventScroll:true});}
+ else{$('message').blur();canvas.focus({preventScroll:true});}
+}
+$('chatToggle').onclick=()=>setChatOpen($('chat').hidden);
+$('chatClose').onclick=()=>setChatOpen(false);
+$('message').addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();setChatOpen(false);}});
 $('message').addEventListener('focus',()=>keys.clear());
-$('send').onsubmit=async e=>{e.preventDefault();try{await api('chat',{message:$('message').value});$('message').value='';$('chatError').textContent='';sync();}catch(e){$('chatError').textContent=e instanceof DOMException ? '消息未发送成功，请重试或刷新页面。' : e.message;}};
+$('send').onsubmit=async e=>{e.preventDefault();try{await api('chat',{message:$('message').value});$('message').value='';$('chatError').textContent='';setChatOpen(false);sync();}catch(e){$('chatError').textContent=e instanceof DOMException ? '消息未发送成功，请重试或刷新页面。' : e.message;}};
 async function petInteract(action){
  if(petBusy)return;
  if(!window.worldAccount){location.href='/login';return;}
@@ -207,7 +235,7 @@ joystick.onpointerup=joystick.onpointercancel=joystick.onlostpointercapture=e=>{
 window.addEventListener('blur',resetStick);document.addEventListener('visibilitychange',()=>{if(document.hidden)resetStick();});
 $('message').addEventListener('focus',resetStick);
 
-window.onkeydown=e=>{if(!active||e.target.matches('input,select,textarea')||$('animalDialog').open||$('petDialog').open)return;if(e.code==='KeyR'){e.preventDefault();if(!e.repeat)setMount(animalPets.riding?null:(animalPets.active||(dogName?'Dog':null)));return;}if(e.code==='KeyE'&&room?.near(x,z)){e.preventDefault();if(!e.repeat)$('roomAction').click();return;}if(e.code==='Space'){e.preventDefault();if(!e.repeat)jump();return;}if(e.key==='Shift'){keys.add('shift');return;}if(e.key==='Enter'){document.exitPointerLock?.();$('message').focus();return;}const map={ArrowUp:'w',ArrowDown:'s',ArrowLeft:'a',ArrowRight:'d'};let k=map[e.key]||({'KeyW':'w','KeyA':'a','KeyS':'s','KeyD':'d'}[e.code])||e.key.toLowerCase();if(['w','a','s','d'].includes(k)){e.preventDefault();keys.add(k);}};window.onkeyup=e=>{const map={ArrowUp:'w',ArrowDown:'s',ArrowLeft:'a',ArrowRight:'d'};keys.delete(map[e.key]||({'KeyW':'w','KeyA':'a','KeyS':'s','KeyD':'d'}[e.code])||e.key.toLowerCase());};window.onblur=()=>keys.clear();
+window.onkeydown=e=>{if(!active||e.target.matches('input,select,textarea')||$('animalDialog').open||$('petDialog').open)return;if(e.code==='KeyR'){e.preventDefault();if(!e.repeat)setMount(animalPets.riding?null:(animalPets.active||(dogName?'Dog':null)));return;}if(e.code==='KeyE'&&room?.near(x,z)){e.preventDefault();if(!e.repeat)$('roomAction').click();return;}if(e.code==='Space'){e.preventDefault();if(!e.repeat)jump();return;}if(e.key==='Shift'){keys.add('shift');return;}if(e.key==='Enter'){e.preventDefault();setChatOpen(true);return;}const map={ArrowUp:'w',ArrowDown:'s',ArrowLeft:'a',ArrowRight:'d'};let k=map[e.key]||({'KeyW':'w','KeyA':'a','KeyS':'s','KeyD':'d'}[e.code])||e.key.toLowerCase();if(['w','a','s','d'].includes(k)){e.preventDefault();keys.add(k);}};window.onkeyup=e=>{const map={ArrowUp:'w',ArrowDown:'s',ArrowLeft:'a',ArrowRight:'d'};keys.delete(map[e.key]||({'KeyW':'w','KeyA':'a','KeyS':'s','KeyD':'d'}[e.code])||e.key.toLowerCase());};window.onblur=()=>keys.clear();
 function animateWalk(avatar,moving,dt,isRunning=false,isJumping=false,mounted=false){
  avatar.stride+=(Number(moving)-avatar.stride)*(1-Math.exp(-dt*10));
  if(moving)avatar.phase+=dt*(isRunning?12:8);
@@ -238,16 +266,24 @@ function draw(now){
   const floor=village.groundHeight(x,z);sun.position.set(x+sunOffset.x,floor+sunOffset.y,z+sunOffset.z);sun.target.position.set(x,floor,z);
   camera.position.set(x,floor+(animalPets.riding?mountSeat(animalPets.riding)+.95:1.65)+jumpHeight,z);camera.rotation.set(-pitch,Math.PI-yaw,0);camera.updateMatrixWorld();
   const alive=new Set(peers.map(p=>p.id));
-  avatars.forEach((a,id)=>{if(!alive.has(id)){scene.remove(a.group);a.label.remove();a.motion.dispose();avatars.delete(id);}});
+  avatars.forEach((a,id)=>{if(!alive.has(id)){scene.remove(a.group);a.label.remove();a.speech.remove();a.motion.dispose();avatars.delete(id);}});
   peers.forEach(p=>{
    const kind=avatarKind(p);loadAvatar(kind);if(!templates.has(kind))return;
    if(!avatars.has(p.id))avatars.set(p.id,avatar(p));
    const a=avatars.get(p.id);a.group.position.lerp(new THREE.Vector3(p.x,village.groundHeight(p.x,p.z)+(p.jump||0)+(p.riding?mountSeat(p.riding)-.78:0),p.z),1-Math.exp(-dt*18));
    const target=-(p.yaw||0);const delta=Math.atan2(Math.sin(target-a.group.rotation.y),Math.cos(target-a.group.rotation.y));a.group.rotation.y+=delta*(1-Math.exp(-dt*18));
    animateWalk(a,p.movingUntil>now,dt,!!p.running,(p.jump||0)>.1,!!p.riding);
-   const point=new THREE.Vector3(p.x,village.groundHeight(p.x,p.z)+2.05+(p.jump||0),p.z).project(camera);
+   const point=a.group.position.clone().add(new THREE.Vector3(0,2.05,0)).project(camera);
    a.label.hidden=point.z>1||point.z< -1||Math.abs(point.x)>1||Math.abs(point.y)>1;
    a.label.style.left=(point.x*.5+.5)*w+'px';a.label.style.top=(-point.y*.5+.5)*h+'px';
+   const speech=speechByPlayer.get(p.id);
+   const clock=worldClockAnchor+now-worldClockReceived;
+   const bubblePoint=a.group.position.clone().add(new THREE.Vector3(0,2.45,0)).project(camera);
+   a.speech.hidden=!speech||speech.expires<=clock||Math.hypot(p.x-x,p.z-z)>30||bubblePoint.z>1||bubblePoint.z< -1||Math.abs(bubblePoint.x)>1||Math.abs(bubblePoint.y)>1;
+   if(!a.speech.hidden){
+    if(a.speechText.textContent!==speech.text)a.speechText.textContent=speech.text;
+    a.speech.style.left=(bubblePoint.x*.5+.5)*w+'px';a.speech.style.top=(-bubblePoint.y*.5+.5)*h+'px';
+   }
   });
   room?.update(dt);$('roomAction').hidden=!room?.near(x,z);$('roomAction').textContent=room?.open?'关门 · E':'打开小屋门 · E';
   if(train)train.update(worldClockAnchor+now-worldClockReceived);
@@ -283,7 +319,7 @@ window.prepareSystemUpdate=async()=>{
   if(performance.now()>deadline)throw Error('Waiting for an interaction to finish');
   await new Promise(resolve=>setTimeout(resolve,50));
  }
- const saved={resume:active,nickname:$('nickname').value,skin:$('skin').value,x,z,yaw,pitch,musicMuted:music.muted,message:$('message').value,cooldownEnds:Date.now()+Math.max(0,petCooldownUntil-performance.now())};
+ const saved={resume:active,nickname:$('nickname').value,skin:$('skin').value,x,z,yaw,pitch,musicMuted:music.muted,message:$('message').value,chatOpen:!$('chat').hidden,cooldownEnds:Date.now()+Math.max(0,petCooldownUntil-performance.now())};
  if(!active)return saved;
  active=false;keys.clear();resetStick();finger=null;clearInterval(timer);
  try{await api('state',{x,z,yaw,pitch,music_muted:music.muted,jump:0,running:false});await api('leave',{});stopMusic();return saved;}

@@ -112,6 +112,9 @@ def database():
     connection.execute('CREATE TABLE IF NOT EXISTS world_objects (name TEXT PRIMARY KEY, value INTEGER NOT NULL DEFAULT 0)')
     connection.execute("INSERT INTO world_objects(name,value) VALUES('room-door',0) ON CONFLICT(name) DO NOTHING")
     connection.execute('CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY, nickname TEXT NOT NULL, body TEXT NOT NULL, created REAL NOT NULL)')
+    message_columns = {row['name'] for row in connection.execute('PRAGMA table_info(messages)')}
+    if 'player_id' not in message_columns:
+        connection.execute("ALTER TABLE messages ADD COLUMN player_id TEXT NOT NULL DEFAULT ''")
     connection.execute('CREATE TABLE IF NOT EXISTS forum_posts (id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id), display_name TEXT NOT NULL, body TEXT NOT NULL, created REAL NOT NULL)')
     connection.execute('CREATE TABLE IF NOT EXISTS forum_images (id INTEGER PRIMARY KEY, post_id INTEGER NOT NULL REFERENCES forum_posts(id), jpeg_base64 TEXT NOT NULL)')
     connection.execute('CREATE TABLE IF NOT EXISTS forum_comments (id INTEGER PRIMARY KEY, post_id INTEGER NOT NULL REFERENCES forum_posts(id), user_id INTEGER NOT NULL REFERENCES users(id), display_name TEXT NOT NULL, body TEXT NOT NULL, created REAL NOT NULL)')
@@ -323,7 +326,7 @@ def world_state():
                        (*coordinates, yaw, pitch, int(music_muted), time.time(), player['user_id']))
         db.execute('DELETE FROM players WHERE updated < ?', (time.time() - 30,))
         players = [dict(row) for row in db.execute("SELECT p.id, p.nickname, p.x, p.z, p.yaw, p.avatar, p.jump, p.running, COALESCE(s.dog_name, '') AS dog_name, COALESCE(s.dog_xp, 0) AS dog_xp, COALESCE(s.animal_pets, '{}') AS animal_pets FROM players p LEFT JOIN game_saves s ON s.user_id=p.user_id WHERE p.id != ?", (player['id'],))]
-        messages = [dict(row) for row in db.execute('SELECT id, nickname, body FROM messages ORDER BY id DESC LIMIT 40')][::-1]
+        messages = [dict(row) for row in db.execute('SELECT id, nickname, body, created, player_id FROM messages ORDER BY id DESC LIMIT 40')][::-1]
         pet = db.execute('SELECT * FROM game_saves WHERE user_id = ?', (player['user_id'],)).fetchone() if player['user_id'] else None
         room_open=bool(db.execute("SELECT value FROM world_objects WHERE name='room-door'").fetchone()['value'])
     for peer in players:
@@ -466,7 +469,7 @@ def world_chat():
         player = db.execute('SELECT nickname FROM players WHERE id = ?', (player_id,)).fetchone()
         if not player:
             return {'error': 'Join the world first.'}, 401
-        db.execute('INSERT INTO messages (nickname, body, created) VALUES (?, ?, ?)', (player['nickname'], body, time.time()))
+        db.execute('INSERT INTO messages (nickname, body, created, player_id) VALUES (?, ?, ?, ?)', (player['nickname'], body, time.time(), player_id))
         db.execute('DELETE FROM messages WHERE id < (SELECT COALESCE(MAX(id), 0) - 200 FROM messages)')
     session['world_message_at'] = time.time()
     return {'ok': True}

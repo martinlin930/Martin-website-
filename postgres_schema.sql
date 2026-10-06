@@ -52,3 +52,6 @@ REVOKE ALL ON game.world_objects FROM PUBLIC,anon,authenticated;
 
 -- Account cosmetics are managed only by the backend, and survive deployments.
 ALTER TABLE game.users ADD COLUMN IF NOT EXISTS avatar_frame TEXT NOT NULL DEFAULT '';
+
+-- Associate temporary speech bubbles with the actual sending player.
+ALTER TABLE game.messages ADD COLUMN IF NOT EXISTS player_id TEXT NOT NULL DEFAULT '';
