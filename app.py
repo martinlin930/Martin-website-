@@ -1,4 +1,5 @@
 import os
+import re
 import secrets
 import sqlite3
 import psycopg
@@ -218,6 +219,9 @@ def join_world():
     if not isinstance(nickname, str) or not 1 <= len(nickname.strip()) <= 24:
         return {'error': 'Enter a nickname of 1–24 characters.'}, 400
     nickname = nickname.strip()
+    chosen_avatar = data.get('avatar')
+    if chosen_avatar is not None and (not isinstance(chosen_avatar, str) or not re.fullmatch(r'r2-\d{3}', chosen_avatar) or int(chosen_avatar[3:]) >= 94):
+        return {'error': '请选择有效的角色皮肤。'}, 400
     player_id = secrets.token_urlsafe(24)
     session['world_players'] = (session.get('world_players', []) + [player_id])[-12:]
     session['world_player'] = player_id
@@ -226,10 +230,12 @@ def join_world():
         saved = db.execute('SELECT * FROM game_saves WHERE user_id = ?', (user_id,)).fetchone() if user_id else None
         room_open=bool(db.execute("SELECT value FROM world_objects WHERE name='room-door'").fetchone()['value'])
         state = dict(saved) if saved else {'x': 70.4, 'z': -132.8, 'yaw': .7853981634, 'pitch': 0, 'music_muted': 0, 'avatar': secrets.choice(['01m', '02m', '01f', '02f'])}
+        if chosen_avatar is not None:
+            state['avatar'] = chosen_avatar
         db.execute('INSERT INTO players (id, nickname, x, z, yaw, updated, avatar, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', (player_id, nickname, state['x'], state['z'], state['yaw'], time.time(), state['avatar'], user_id))
         if user_id:
             db.execute("""INSERT INTO game_saves (user_id, nickname, avatar, x, z, yaw, pitch, music_muted, updated)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET nickname = excluded.nickname""",
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET nickname = excluded.nickname, avatar = excluded.avatar""",
                 (user_id, nickname, state['avatar'], state['x'], state['z'], state['yaw'], state['pitch'], state['music_muted'], time.time()))
     session['world_message_at'] = 0
     return {'room_open':room_open,'id': player_id, 'nickname': nickname, 'persistent': bool(user_id), 'animals':json.loads(state.get('animal_pets','{}')), 'pet': pet_progress(state), 'dog_name': state.get('dog_name', ''), 'server_time': time.time(), 'state': {k: state[k] for k in ('x', 'z', 'yaw', 'pitch', 'avatar', 'music_muted')}}

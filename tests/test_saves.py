@@ -138,3 +138,30 @@ class SaveTests(unittest.TestCase):
             self.assertEqual(self.post(self.b,'pet-action',{'action':'collect','spot':spot['id']}).json['pet']['food'],3)
         guest=app.test_client();guest.get('/world');self.post(guest,'join',{'nickname':'G'})
         self.assertEqual(self.post(guest,'pet-action',{'action':'collect','spot':spot['id']}).status_code,401)
+
+    def test_selected_skin_is_saved_without_resetting_world_or_pets(self):
+        uid=self.login_as(self.a,'SkinOwner')
+        self.assertEqual(self.post(self.a,'join',{'nickname':'A','avatar':'r2-093'}).json['state']['avatar'],'r2-093')
+        self.post(self.a,'state',{'x':82,'z':-125})
+        with database() as db:
+            db.execute('UPDATE game_saves SET dog_name=?,dog_xp=420 WHERE user_id=?',('Buddy',uid))
+        self.post(self.a,'leave',{})
+        self.login_as(self.b,'SkinOwner')
+        self.assertIn('r2-093',self.b.get('/world').text)
+        joined=self.post(self.b,'join',{'nickname':'A','avatar':'r2-000'}).json
+        self.assertEqual(joined['state']['avatar'],'r2-000')
+        self.assertEqual(joined['state']['x'],82)
+        self.assertEqual(joined['dog_name'],'Buddy')
+        self.assertEqual(joined['pet']['xp'],420)
+        with database() as db:
+            self.assertEqual(db.execute('SELECT avatar FROM game_saves WHERE user_id=?',(uid,)).fetchone()[0],'r2-000')
+
+    def test_guest_skin_is_visible_to_other_players(self):
+        self.post(self.a,'join',{'nickname':'A','avatar':'r2-011'})
+        self.post(self.b,'join',{'nickname':'B','avatar':'r2-092'})
+        players=self.post(self.a,'state',{}).json['players']
+        self.assertEqual(next(p for p in players if p['nickname']=='B')['avatar'],'r2-092')
+
+    def test_invalid_skin_ids_are_rejected(self):
+        for value in ['r2-094','r2-999','r2-1','../../file',12,False,'r2-１２３']:
+            self.assertEqual(self.post(self.a,'join',{'nickname':'A','avatar':value}).status_code,400)
