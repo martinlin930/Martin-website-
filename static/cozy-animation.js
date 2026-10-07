@@ -1,7 +1,8 @@
 import * as THREE from './vendor/three.module.js';
 import {createCozyCharacter} from './cozy-characters.js';
+import {loadCozyCharacter} from './cozy-imported.js';
 
-export function createAnimationWorld(scene){
+export async function createAnimationWorld(scene){
  const ink='#64433e',materials=new Map(),blockers=[],characters=[];
  const geometry={sphere:new THREE.SphereGeometry(1,24,16),box:new THREE.BoxGeometry(1,1,1),cylinder:new THREE.CylinderGeometry(1,1,1,20),cone:new THREE.ConeGeometry(1,1,24),cap:new THREE.SphereGeometry(1,24,12,0,Math.PI*2,0,Math.PI/2)};
  const outline=new THREE.MeshBasicMaterial({color:ink,side:THREE.BackSide,toneMapped:false});let meshes=0;
@@ -34,11 +35,11 @@ export function createAnimationWorld(scene){
  const stump=shape('cylinder','#c6a080',[-12,.45,4],[1,.9,1]);shape('cylinder','#e8c6a0',[-12,.91,4],[.93,.025,.93],scene,false);blockers.push({x:-12,z:4,rx:1.2,rz:1.2});
  scene.add(new THREE.HemisphereLight(0xfffaf3,0xc8c3bf,2.7));
  const keyLight=new THREE.DirectionalLight(0xfff6e9,2.5);keyLight.position.set(-5,8,6);scene.add(keyLight);
- function character(kind,x,z){const model=createCozyCharacter(kind),g=model.root;g.position.set(x,0,z);scene.add(g);
+ async function character(kind,x,z){const model=kind==='cat'?createCozyCharacter(kind):await loadCozyCharacter(kind),g=model.root;g.position.set(x,0,z);scene.add(g);
   const shadow=new THREE.Mesh(new THREE.CircleGeometry(.65,24),new THREE.MeshBasicMaterial({color:ink,transparent:true,opacity:.18,depthWrite:false,toneMapped:false}));shadow.rotation.x=-Math.PI/2;shadow.scale.y=.6;shadow.position.set(x,.008,z);scene.add(shadow);
   characters.push({g,limbs:model.limbs,shadow,x,z});blockers.push({x,z,rx:.85,rz:.7});
  }
- character('bear',-2.3,7);character('rabbit',0,6.8);character('cat',2.3,7);
+ await Promise.all([character('bear',-2.3,7),character('rabbit',0,6.8),character('cat',2.3,7)]);
  // Batch static outlines, grass and scenery; animated character parts stay separate.
  scene.updateMatrixWorld(true);const batches=new Map();
  scene.traverse(mesh=>{if(!mesh.isMesh||mesh.material.transparent)return;let ancestor=mesh;while(ancestor){if(ancestor.userData.animated)return;ancestor=ancestor.parent;}

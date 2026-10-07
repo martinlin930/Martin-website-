@@ -5,7 +5,8 @@ const renderer=new THREE.WebGLRenderer({canvas:$('view'),antialias:true});render
 const scene=new THREE.Scene();
 const camera=new THREE.PerspectiveCamera(65,1,.1,130);camera.rotation.order='YXZ';
 renderer.shadowMap.enabled=false;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.2;
-const art=createAnimationWorld(scene),{blockers,meshes}=art;
+let art;try{art=await createAnimationWorld(scene);}catch(error){$('notice').textContent='模型加载失败，请刷新重试';$('enter').textContent='加载失败';throw error;}
+const {blockers,meshes}=art;
 let x=0,z=12,yaw=0,pitch=0,height=0,velocity=0,active=false,last=performance.now(),sx=0,sy=0,finger=null,stickId=null;const keys=new Set();
 function canMove(px,pz){return Math.hypot(px,pz)<46&&!blockers.some(b=>Math.abs(px-b.x)<b.rx+.25&&Math.abs(pz-b.z)<b.rz+.25);}
 function reset(){keys.clear();finger=null;stickId=null;sx=sy=0;$('knob').style.transform='translate(-50%,-50%)';}
