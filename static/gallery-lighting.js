@@ -14,7 +14,7 @@ export function galleryLighting(scene,{mobile=false}={}){
  sunlight.shadow.autoUpdate=false;sunlight.shadow.needsUpdate=true;
  scene.add(sunlight,sunlight.target);
  for(const x of [-14.95,1.18,17.29]){
-  const lamp=new THREE.SpotLight(0xfff4e7,45,22,.95,.55,2);
+  const lamp=new THREE.SpotLight(0xfff4e7,28,22,.95,.55,2);
   lamp.position.set(x,7.85,-11.44);lamp.target.position.set(x,3.49,-11.44);
   lamp.castShadow=false;
   scene.add(lamp,lamp.target);lamps.push(lamp);
@@ -45,7 +45,7 @@ export function galleryReflections(scene,renderer){
   panel.position.set(x,4.8,z);panel.rotation.x=Math.PI/2;studio.add(panel);
  }
  const generator=new THREE.PMREMGenerator(renderer),environment=generator.fromScene(studio,.06,.1,60);
- scene.environment=environment.texture;scene.environmentIntensity=.4;
+ scene.environment=environment.texture;scene.environmentIntensity=.3;
  studio.traverse(m=>{if(m.isMesh){m.geometry.dispose();m.material.dispose();}});generator.dispose();
  return environment;
 }
