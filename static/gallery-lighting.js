@@ -1,9 +1,10 @@
 import * as THREE from './vendor/three.module.js';
+import {galleryShafts} from './gallery-shafts.js';
 
 export function galleryLighting(scene,{mobile=false}={}){
  const lamps=[];
  for(const x of [-14.95,1.18,17.29]){
-  const lamp=new THREE.SpotLight(0xfff4e7,155,22,1.17,.72,2);
+  const lamp=new THREE.SpotLight(0xfff4e7,175,22,.95,.55,2);
   lamp.position.set(x,7.85,-11.44);lamp.target.position.set(x,3.49,-11.44);
   lamp.castShadow=true;lamp.shadow.mapSize.set(mobile?1024:2048,mobile?1024:2048);
   lamp.shadow.camera.near=.2;lamp.shadow.camera.far=22;
@@ -11,21 +12,10 @@ export function galleryLighting(scene,{mobile=false}={}){
   lamp.shadow.autoUpdate=false;lamp.shadow.needsUpdate=true;
   scene.add(lamp,lamp.target);lamps.push(lamp);
  }
- // Broad, feathered pools of light along the exhibit walls.
- for(const x of [-14.95,1.18,17.29]){
-  for(const [z,targetZ] of [[-12.8,-4.2],[-10.1,-18.7]]){
-   const lamp=new THREE.SpotLight(0xfff2dd,75,20,.96,.85,2);
-   lamp.position.set(x,7.7,z);lamp.target.position.set(x,4.85,targetZ);
-   scene.add(lamp,lamp.target);
-  }
- }
- for(const [x,targetX] of [[-18,-22.74],[-1,-6.68],[3,9.04],[21,25.1]]){
-  const lamp=new THREE.SpotLight(0xfff5e9,45,17,1.12,.9,2);
-  lamp.position.set(x,7.5,-11.44);lamp.target.position.set(targetX,4.9,-11.44);
-  scene.add(lamp,lamp.target);
- }
+ const shafts=galleryShafts(scene);
  let previous=-1,lastUpdate=-Infinity;
  return {lamps,update(camera,now){
+  shafts.update(camera);
   const closest=lamps.reduce((best,lamp,i)=>Math.abs(lamp.position.x-camera.x)<Math.abs(lamps[best].position.x-camera.x)?i:best,0);
   if(closest!==previous){if(previous>=0)lamps[previous].shadow.needsUpdate=true;lamps[closest].shadow.needsUpdate=true;previous=closest;}
   if(now-lastUpdate>=100){lamps[closest].shadow.needsUpdate=true;lastUpdate=now;}
