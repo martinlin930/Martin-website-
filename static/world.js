@@ -1,5 +1,6 @@
 import * as THREE from './vendor/three.module.js';
 import {nearby,animationTick} from './nearby.js';
+import {prepareAvatarShadow} from './avatar-shadow.js';
 import {avatarMotion} from './avatar-motion.js';
 import {mountSeat} from './mounts.js';
 import { clone as cloneSkeleton } from './vendor/SkeletonUtils.js';
@@ -96,6 +97,7 @@ const villageReady=(galleryMode?loadGallery:loadVillage)(scene,progress=>{joinBu
  skyDome=new THREE.Mesh(new THREE.SphereGeometry(450,32,16),skyMaterial);skyDome.frustumCulled=false;skyDome.renderOrder=-1;scene.add(skyDome);scene.background=null;
  joinButton.disabled=false;joinButton.textContent='Enter the village →';}).catch(()=>{$('entryError').textContent='村庄加载失败，请刷新后重试。';joinButton.textContent='Village unavailable';});
 const avatars=new Map(), templates=new Map(), pendingModels=new Map();
+let ownShadow=null;
 let lastChatSignature='';
 function textIfChanged(id,value){const element=$(id);if(element.textContent!==value)element.textContent=value;}
 
@@ -146,6 +148,20 @@ async function showSkin(){
 skin.onchange=showSkin;
 for(const [id,step] of [['skinPrevious',-1],['skinNext',1]])$(id).onclick=()=>{skin.selectedIndex=(skin.selectedIndex+step+avatarNames.length)%avatarNames.length;showSkin();};
 showSkin();
+
+function updateOwnShadow(dt,moving){
+ const kind=skin.value.slice(3);
+ if(!ownShadow){
+  if(!templates.has(kind)){if(!pendingModels.has(kind))loadAvatar(kind);return;}
+  const group=new THREE.Group(),body=cloneSkeleton(templates.get(kind));group.add(body);
+  prepareAvatarShadow(body);
+  const bones=[];body.traverse(n=>{if(/^(Left|Right)(Arm|UpLeg|Leg)(?:_\d+)?$/.test(n.name)&&n.position.lengthSq()>1e-8)bones.push({bone:n,rest:n.quaternion.clone()});});
+  ownShadow={group,body,motion:avatarMotion(body),restY:body.position.y,bones,phase:0,stride:0};scene.add(group);
+ }
+ ownShadow.group.position.set(x,village.groundHeight(x,z)+jumpHeight+(animalPets.riding?mountSeat(animalPets.riding)-.78:0),z);
+ ownShadow.group.rotation.y=-yaw;
+ animateWalk(ownShadow,moving,dt,running,jumpHeight>.1,!!animalPets.riding);
+}
 
 function avatar(p){
  const group=new THREE.Group(),body=cloneSkeleton(templates.get(avatarKind(p)));group.add(body);
@@ -285,6 +301,7 @@ function draw(now){
   if(x!==cachedFloorX||z!==cachedFloorZ){cachedFloor=village.groundHeight(x,z);cachedFloorX=x;cachedFloorZ=z;}
   const floor=cachedFloor;sun.position.set(x+sunOffset.x,floor+sunOffset.y,z+sunOffset.z);sun.target.position.set(x,floor,z);
   camera.position.set(x,floor+(animalPets.riding?mountSeat(animalPets.riding)+.95:1.65)+jumpHeight,z);camera.rotation.set(-pitch,Math.PI-yaw,0);camera.updateMatrixWorld();
+  updateOwnShadow(dt,Math.hypot(f,s)>.1);
   village.updateVisibility(camera.position,now);
   const nearbyPeers=peers.filter(p=>nearby(p.x,p.z,camera.position));
   const alive=new Set(nearbyPeers.map(p=>p.id));
