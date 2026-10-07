@@ -9,7 +9,8 @@ export function galleryLighting(scene,{mobile=false}={}){
  sunlight.position.copy(sunlight.target.position).add(new THREE.Vector3(-3.3,4.32,-3.55).multiplyScalar(9));
  sunlight.castShadow=true;sunlight.shadow.mapSize.set(mobile?2048:4096,mobile?2048:4096);
  Object.assign(sunlight.shadow.camera,{left:-30,right:30,top:20,bottom:-20,near:1,far:100});
- sunlight.shadow.bias=-.00015;sunlight.shadow.normalBias=.035;
+ sunlight.shadow.bias=-.00015;sunlight.shadow.normalBias=.018;
+ sunlight.shadow.camera.updateProjectionMatrix();
  sunlight.shadow.autoUpdate=false;sunlight.shadow.needsUpdate=true;
  scene.add(sunlight,sunlight.target);
  for(const x of [-14.95,1.18,17.29]){
