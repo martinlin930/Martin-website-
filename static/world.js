@@ -6,6 +6,7 @@ import { clone as cloneSkeleton } from './vendor/SkeletonUtils.js';
 import { GLTFLoader } from './vendor/GLTFLoader.js';
 import { loadVillage } from './village.js';
 import { loadGallery } from './gallery-map.js';
+import {createDaySky} from './day-sky.js';
 const galleryMode=window.worldMode==='gallery';
 import {createOcean} from './ocean.js';
 import { worldTime } from './day-night.js';
@@ -90,7 +91,7 @@ let village,dogs,forage,train,room,ocean,dogCar;const joinButton=$('join').query
 const villageReady=(galleryMode?loadGallery:loadVillage)(scene,progress=>{joinButton.textContent=(galleryMode?'Loading gallery… ':'Loading village… ')+Math.round(progress*100)+'%';},renderer).then(async map=>{village=map;
  if(galleryMode){sun.castShadow=false;sun.color.set(0xfff6eb);sun.intensity=.7;ambient.color.set(0xfff7ee);ambient.groundColor.set(0x8593a8);ambient.intensity=.85;renderer.shadowMap.type=THREE.PCFShadowMap;renderer.toneMappingExposure=1.2;scene.fog=null;joinButton.disabled=false;joinButton.textContent='Enter Gallery →';return;}
  [train,room,ocean]=await Promise.all([createTrain(scene),createRoom(scene,map),createOcean(scene,map.size)]);dogCar=await createDogCar(scene,map,train);dogs=await createDogs(scene,map);animals=await createAnimals(scene,map);forage=await createForage(scene,map);
- const skyMaterial=new THREE.MeshBasicMaterial({map:scene.background,side:THREE.BackSide,depthWrite:false,fog:false,toneMapped:false});
+ const skyMaterial=new THREE.MeshBasicMaterial({map:createDaySky(),side:THREE.BackSide,depthWrite:false,fog:false,toneMapped:false});
  skyMaterial.onBeforeCompile=shader=>{shader.uniforms.nightMix=skyNight;shader.uniforms.nightColor={value:nightSky};shader.fragmentShader='uniform float nightMix; uniform vec3 nightColor;\n'+shader.fragmentShader;shader.fragmentShader=shader.fragmentShader.replace('#include <map_fragment>','#include <map_fragment>\n diffuseColor.rgb=mix(diffuseColor.rgb,nightColor,nightMix);');};
  skyDome=new THREE.Mesh(new THREE.SphereGeometry(450,32,16),skyMaterial);skyDome.frustumCulled=false;skyDome.renderOrder=-1;scene.add(skyDome);scene.background=null;
  joinButton.disabled=false;joinButton.textContent='Enter the village →';}).catch(()=>{$('entryError').textContent='村庄加载失败，请刷新后重试。';joinButton.textContent='Village unavailable';});

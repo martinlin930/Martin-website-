@@ -22,6 +22,7 @@ assert(meshes>50);assert(triangles>100000);
 const layout=JSON.parse(fs.readFileSync('static/models/gallery/layout.json','utf8'));
 const photos=JSON.parse(fs.readFileSync('static/models/gallery/photos.json','utf8'));
 assert.equal(photos.length,58);
+assert(photos.every(p=>p.position[1]>=4.8),'Photographs must hang at eye level, never on the low plinths');
 for(const photo of photos){assert(fs.statSync('static/models/gallery/'+photo.thumb).size>0);assert(fs.statSync('static/models/gallery/'+photo.full).size>0);assert(photo.aspect>0);}
 assert.equal(removeGalleryFrames(model.scene,photos),1092,'All 42 original empty frames are removed');
 const frameBytes=fs.readFileSync('static/models/gallery/picture-frame.glb');
