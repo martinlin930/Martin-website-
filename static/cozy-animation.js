@@ -1,4 +1,5 @@
 import * as THREE from './vendor/three.module.js';
+import {createCozyCharacter} from './cozy-characters.js';
 
 export function createAnimationWorld(scene){
  const ink='#64433e',materials=new Map(),blockers=[],characters=[];
@@ -31,24 +32,13 @@ export function createAnimationWorld(scene){
  house(-18,-14,'#dfb1ba');house(18,-16,'#92b8ce');
  // A wooded clearing with a stump, matching the quieter forest reference.
  const stump=shape('cylinder','#c6a080',[-12,.45,4],[1,.9,1]);shape('cylinder','#e8c6a0',[-12,.91,4],[.93,.025,.93],scene,false);blockers.push({x:-12,z:4,rx:1.2,rz:1.2});
- function face(kind){const c=document.createElement('canvas');c.width=512;c.height=384;const d=c.getContext('2d');d.lineCap='round';d.lineJoin='round';
-  d.fillStyle='#f9bacb';for(const x of [96,416]){d.beginPath();d.ellipse(x,226,51,28,0,0,Math.PI*2);d.fill();d.strokeStyle=ink;d.lineWidth=7;for(let j=0;j<3;j++){d.beginPath();d.moveTo(x-22+j*19,216);d.lineTo(x-29+j*19,235);d.stroke();}}
-  for(const x of [164,348]){d.fillStyle=ink;d.beginPath();d.ellipse(x,176,27,32,0,0,Math.PI*2);d.fill();d.fillStyle='#fffaf5';d.beginPath();d.ellipse(x-5,163,10,11,0,0,Math.PI*2);d.fill();d.beginPath();d.ellipse(x+7,187,5,4,0,0,Math.PI*2);d.fill();}
-  d.strokeStyle=ink;d.lineWidth=7;for(const x of [164,348]){d.beginPath();d.moveTo(x-20,111);d.quadraticCurveTo(x,99,x+17,112);d.stroke();}
-  d.fillStyle=ink;d.beginPath();d.ellipse(256,224,9,7,0,0,Math.PI*2);d.fill();d.lineWidth=6;d.beginPath();d.moveTo(235,239);d.quadraticCurveTo(242,255,256,240);d.quadraticCurveTo(270,255,277,239);d.stroke();
-  if(kind==='rabbit'){d.fillStyle='#eaa1ad';d.beginPath();d.ellipse(256,261,10,12,0,0,Math.PI*2);d.fill();}
-  const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;return new THREE.MeshBasicMaterial({map:tex,transparent:true,depthWrite:false,toneMapped:false});
- }
- function character(kind,x,z){const g=new THREE.Group();g.userData.animated=true;g.position.set(x,0,z);scene.add(g);const color=kind==='rabbit'?'#fff0c8':'#fff7fa';shape('sphere',color,[0,.97,0],[.66,.82,.43],g);
-  if(kind==='rabbit'){for(const side of [-1,1]){shape('sphere',color,[side*.27,1.98,0],[.16,.57,.14],g).rotation.z=-side*.2;shape('sphere','#f6bed0',[side*.27,1.99,.17],[.085,.43,.02],g,false).rotation.z=-side*.2;}}
-  else if(kind==='cat'){shape('cap','#80a7c6',[0,1.43,0],[.65,.4,.435],g);for(const side of [-1,1])shape('cone','#80a7c6',[side*.44,1.75,-.025],[.22,.44,.2],g);shape('sphere','#80a7c6',[.65,.46,-.2],[.25,.12,.12],g);}
-  else for(const side of [-1,1])shape('sphere',color,[side*.4,1.62,-.02],[.15,.15,.13],g);
-  const limbs=[];for(const side of [-1,1]){limbs.push(shape('sphere',color,[side*.38,.14,.03],[.13,.21,.13],g));shape('sphere',color,[side*.63,.7,.02],[.16,.11,.13],g);}
-  const expression=new THREE.Mesh(new THREE.PlaneGeometry(1.13,.85),face(kind));expression.position.set(0,1.06,.434);g.add(expression);
+ scene.add(new THREE.HemisphereLight(0xfffaf3,0xc8c3bf,2.7));
+ const keyLight=new THREE.DirectionalLight(0xfff6e9,2.5);keyLight.position.set(-5,8,6);scene.add(keyLight);
+ function character(kind,x,z){const model=createCozyCharacter(kind),g=model.root;g.position.set(x,0,z);scene.add(g);
   const shadow=new THREE.Mesh(new THREE.CircleGeometry(.65,24),new THREE.MeshBasicMaterial({color:ink,transparent:true,opacity:.18,depthWrite:false,toneMapped:false}));shadow.rotation.x=-Math.PI/2;shadow.scale.y=.6;shadow.position.set(x,.008,z);scene.add(shadow);
-  characters.push({g,limbs,shadow,x,z});blockers.push({x,z,rx:.7,rz:.55});
+  characters.push({g,limbs:model.limbs,shadow,x,z});blockers.push({x,z,rx:.85,rz:.7});
  }
- character('rabbit',-2.3,7);character('bear',0,6.8);character('cat',2.3,7);
+ character('bear',-2.3,7);character('rabbit',0,6.8);character('cat',2.3,7);
  // Batch static outlines, grass and scenery; animated character parts stay separate.
  scene.updateMatrixWorld(true);const batches=new Map();
  scene.traverse(mesh=>{if(!mesh.isMesh||mesh.material.transparent)return;let ancestor=mesh;while(ancestor){if(ancestor.userData.animated)return;ancestor=ancestor.parent;}

@@ -4,7 +4,7 @@ const $=id=>document.getElementById(id),mobile=matchMedia('(pointer:coarse)').ma
 const renderer=new THREE.WebGLRenderer({canvas:$('view'),antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,mobile?1.4:1.8));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.18;
 const scene=new THREE.Scene();
 const camera=new THREE.PerspectiveCamera(65,1,.1,130);camera.rotation.order='YXZ';
-renderer.shadowMap.enabled=false;renderer.toneMapping=THREE.NoToneMapping;
+renderer.shadowMap.enabled=false;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.2;
 const art=createAnimationWorld(scene),{blockers,meshes}=art;
 let x=0,z=12,yaw=0,pitch=0,height=0,velocity=0,active=false,last=performance.now(),sx=0,sy=0,finger=null,stickId=null;const keys=new Set();
 function canMove(px,pz){return Math.hypot(px,pz)<46&&!blockers.some(b=>Math.abs(px-b.x)<b.rx+.25&&Math.abs(pz-b.z)<b.rz+.25);}
