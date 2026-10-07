@@ -16,8 +16,9 @@ export function galleryPhotos(scene,photos,base,frameTemplate){
  const loader=new THREE.TextureLoader(),items=photos.map(photo=>{
   const width=photo.aspect>=1?1.15:1.15*photo.aspect,height=photo.aspect>=1?1.15/photo.aspect:1.15;
   const display=new THREE.Group();display.position.fromArray(photo.position);display.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),new THREE.Vector3().fromArray(photo.normal));scene.add(display);
-  const mesh=new THREE.Mesh(new THREE.PlaneGeometry(width,height),new THREE.MeshBasicMaterial({color:0xe9e6df,toneMapped:false}));
+  const mesh=new THREE.Mesh(new THREE.PlaneGeometry(width,height),new THREE.MeshStandardMaterial({color:0xe9e6df,roughness:.85,metalness:0}));
   if(frameTemplate){const fitted=fitPictureFrame(frameTemplate,width,height);display.add(fitted.group);mesh.position.z=fitted.photoDepth;}
+  mesh.receiveShadow=true;
   display.add(mesh);return {photo,mesh,display,loaded:false,loading:false};
  });let last=-Infinity,inFlight=0;
  function update(camera,now){
