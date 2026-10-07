@@ -1,11 +1,10 @@
 import * as THREE from './vendor/three.module.js';
 
 export function galleryShafts(scene){
- const positions=[[-22.2,-17.35,-18.9,-13.8],[-7.8,-5.8,-10,-8.2],[-6.1,-15.1,-3.9,-13.1],[8.45,-7.4,6.3,-9.5],[9.98,-15.1,12.2,-13.1],[24.6,-5.8,22.4,-8]];
+ const positions=[-21,-13,-5,3,11,19].map(x=>[x,-17.35,x+3.3,-13.8]);
  const shafts=[];
  for(const [x,z,tx,tz] of positions){
   const start=new THREE.Vector3(x,7.85,z),end=new THREE.Vector3(tx,3.53,tz),length=start.distanceTo(end);
-  const light=new THREE.SpotLight(0xfff2d9,105,10,.27,.78,2);light.position.copy(start);light.target.position.copy(end);scene.add(light,light.target);
   const group=new THREE.Group();group.position.copy(start).add(end).multiplyScalar(.5);group.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),start.clone().sub(end).normalize());
   const material=new THREE.ShaderMaterial({transparent:true,depthWrite:false,depthTest:true,side:THREE.DoubleSide,blending:THREE.AdditiveBlending,uniforms:{beamColor:{value:new THREE.Color(0xffefd3)}},
    vertexShader:'varying vec2 beamUv;void main(){beamUv=uv;vec3 p=position;p.x*=mix(1.8,.10,uv.y);gl_Position=projectionMatrix*modelViewMatrix*vec4(p,1.0);}',

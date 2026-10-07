@@ -35,9 +35,11 @@ for(const item of exhibition.items){assert(Math.abs(item.mesh.geometry.parameter
 for(let i=0;i<photos.length;i++)for(let j=i+1;j<photos.length;j++){if(photos[i].normal.every((n,k)=>n===photos[j].normal[k]))assert(new THREE.Vector3().fromArray(photos[i].position).distanceTo(new THREE.Vector3().fromArray(photos[j].position))>1.6);}
 galleryShadows(model.scene);let casting=0;model.scene.traverse(m=>{if(m.isMesh&&m.castShadow)casting++;});assert(casting>50);
 const lighting=galleryLighting(new THREE.Scene(),{mobile:true});assert.equal(lighting.lamps.length,3);
-for(const lamp of lighting.lamps){assert(lamp.castShadow);assert.equal(lamp.shadow.mapSize.x,1024);assert.equal(lamp.shadow.autoUpdate,false);lamp.shadow.needsUpdate=false;}
-lighting.update(new THREE.Vector3(-19,5,-14),0);assert(lighting.lamps[0].shadow.needsUpdate);lighting.lamps[0].shadow.needsUpdate=false;
-lighting.update(new THREE.Vector3(-19,5,-14),50);assert(!lighting.lamps[0].shadow.needsUpdate);
-lighting.update(new THREE.Vector3(-19,5,-14),100);assert(lighting.lamps[0].shadow.needsUpdate);
-lighting.lamps[0].shadow.needsUpdate=false;lighting.update(new THREE.Vector3(18,5,-14),110);assert(lighting.lamps[0].shadow.needsUpdate);assert(lighting.lamps[2].shadow.needsUpdate);
+for(const lamp of lighting.lamps)assert(!lamp.castShadow);
+assert(lighting.sunlight.castShadow);assert.equal(lighting.sunlight.shadow.mapSize.x,2048);
+const sunPosition=lighting.sunlight.position.clone(),sunTarget=lighting.sunlight.target.position.clone();
+lighting.sunlight.shadow.needsUpdate=false;lighting.update(new THREE.Vector3(-19,5,-14),0);assert(lighting.sunlight.shadow.needsUpdate);
+lighting.sunlight.shadow.needsUpdate=false;lighting.update(new THREE.Vector3(-19,5,-14),50);assert(!lighting.sunlight.shadow.needsUpdate);
+lighting.update(new THREE.Vector3(18,5,-14),100);assert(lighting.sunlight.shadow.needsUpdate);
+assert(lighting.sunlight.position.equals(sunPosition));assert(lighting.sunlight.target.position.equals(sunTarget));
 console.log('Gallery geometry loaded:',meshes,'meshes,',triangles,'triangles; all texture files present.');

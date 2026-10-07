@@ -3,22 +3,26 @@ import {galleryShafts} from './gallery-shafts.js';
 
 export function galleryLighting(scene,{mobile=false}={}){
  const lamps=[];
+ // A single fixed sun casts the same direction of shadows throughout the gallery.
+ const sunlight=new THREE.DirectionalLight(0xfff2d9,2.8);
+ sunlight.target.position.set(1,3.53,-11.44);
+ sunlight.position.copy(sunlight.target.position).add(new THREE.Vector3(-3.3,4.32,-3.55).multiplyScalar(9));
+ sunlight.castShadow=true;sunlight.shadow.mapSize.set(mobile?2048:4096,mobile?2048:4096);
+ Object.assign(sunlight.shadow.camera,{left:-30,right:30,top:20,bottom:-20,near:1,far:100});
+ sunlight.shadow.bias=-.00015;sunlight.shadow.normalBias=.035;
+ sunlight.shadow.autoUpdate=false;sunlight.shadow.needsUpdate=true;
+ scene.add(sunlight,sunlight.target);
  for(const x of [-14.95,1.18,17.29]){
-  const lamp=new THREE.SpotLight(0xfff4e7,175,22,.95,.55,2);
+  const lamp=new THREE.SpotLight(0xfff4e7,45,22,.95,.55,2);
   lamp.position.set(x,7.85,-11.44);lamp.target.position.set(x,3.49,-11.44);
-  lamp.castShadow=true;lamp.shadow.mapSize.set(mobile?1024:2048,mobile?1024:2048);
-  lamp.shadow.camera.near=.2;lamp.shadow.camera.far=22;
-  lamp.shadow.bias=-.0002;lamp.shadow.normalBias=.045;lamp.shadow.radius=3;
-  lamp.shadow.autoUpdate=false;lamp.shadow.needsUpdate=true;
+  lamp.castShadow=false;
   scene.add(lamp,lamp.target);lamps.push(lamp);
  }
  const shafts=galleryShafts(scene);
- let previous=-1,lastUpdate=-Infinity;
- return {lamps,update(camera,now){
+ let lastUpdate=-Infinity;
+ return {lamps,sunlight,update(camera,now){
   shafts.update(camera);
-  const closest=lamps.reduce((best,lamp,i)=>Math.abs(lamp.position.x-camera.x)<Math.abs(lamps[best].position.x-camera.x)?i:best,0);
-  if(closest!==previous){if(previous>=0)lamps[previous].shadow.needsUpdate=true;lamps[closest].shadow.needsUpdate=true;previous=closest;}
-  if(now-lastUpdate>=100){lamps[closest].shadow.needsUpdate=true;lastUpdate=now;}
+  if(now-lastUpdate>=100){sunlight.shadow.needsUpdate=true;lastUpdate=now;}
  }};
 }
 
