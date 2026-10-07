@@ -3,6 +3,7 @@ import {GLTFLoader} from './vendor/GLTFLoader.js';
 import {galleryLighting,galleryShadows,galleryReflections} from './gallery-lighting.js';
 import {galleryPhotos,removeGalleryFrames} from './gallery-photos.js';
 import {normalizePictureFrame} from './gallery-frame.js';
+import {galleryMaterialDetails} from './gallery-materials.js';
 import {createDaySky} from './day-sky.js';
 const base='/static/models/gallery/';
 
@@ -41,6 +42,7 @@ export async function loadGallery(scene,onProgress=()=>{},renderer){
  const model=await new GLTFLoader().parseAsync(buffer,base);
  removeGalleryFrames(model.scene,photos);
  galleryShadows(model.scene);
+ await galleryMaterialDetails(model.scene,base,renderer);
  scene.add(model.scene);scene.background=createDaySky();
  galleryReflections(scene,renderer);
  for(const b of galleryThresholds(layout)){const floor=new THREE.Mesh(new THREE.PlaneGeometry(b.max[0]-b.min[0],b.max[2]-b.min[2]),new THREE.MeshStandardMaterial({color:0xdedcd5,roughness:.85}));floor.rotation.x=-Math.PI/2;floor.position.set((b.min[0]+b.max[0])/2,layout.floor,(b.min[2]+b.max[2])/2);scene.add(floor);}

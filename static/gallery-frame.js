@@ -7,6 +7,7 @@ export function normalizePictureFrame(model){
  const backing=root.children.find(m=>m.material.name==='02___Default');backing.geometry.computeBoundingBox();
  const opening=backing.geometry.boundingBox.clone(),bounds=new THREE.Box3().setFromObject(root);
  root.remove(backing);
+ root.traverse(mesh=>{if(mesh.isMesh){mesh.material.roughness=.52;mesh.material.metalness=0;}});
  return {root,opening,bounds};
 }
 export function fitPictureFrame(template,width,height){
