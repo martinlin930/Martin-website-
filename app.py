@@ -145,6 +145,8 @@ def auth_context():
 
 @app.before_request
 def check_csrf():
+    if request.path == '/api/live/signal' and request.method == 'POST':
+        request.max_content_length = 64 * 1024
     if request.path == '/api/forum/posts' and request.method == 'POST':
         request.max_content_length = 17 * 1024 * 1024
     if request.method == 'POST':
@@ -561,6 +563,9 @@ install_forum(app, database)
 
 from gallery import install_gallery
 install_gallery(app,database)
+
+from broadcast import install_broadcast
+install_broadcast(app, database)
 
 if __name__ == '__main__':
     app.run()
