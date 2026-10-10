@@ -42,7 +42,7 @@ def install_broadcast(app, database):
     @app.get('/live')
     def live_page():
         token()
-        return render_template('live.html', live_admin=admin())
+        return render_template('live.html', live_admin=admin(), live_signed_in=bool(session.get('user_id')))
 
     @app.after_request
     def live_no_cache(response):
